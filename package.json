@@ -145,10 +145,13 @@
   },
   "main": "./dist/video.cjs.js",
   "module": "./dist/video.es.js",
-  "name": "video.js",
+  "name": "@689Cloud-LLC/custom-videojs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/videojs/video.js.git"
+    "url": "git+https://github.com/689Cloud-LLC/custom-videojs.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/689Cloud-LLC"
   },
   "scripts": {
     "assets": "node build/assets.js",
