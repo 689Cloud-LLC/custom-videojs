@@ -1,0 +1,123 @@
+<svg version="1.1" baseProfile="full" width="299.0" height="622.0" viewbox="0 0 299 622" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">
+	<title >Playlist Loader States</title>
+	<desc >#title: Playlist Loader States
+	#arrowSize: 0.5
+	#bendSize: 1
+	#direction: down
+	#gutter: 10
+	#edgeMargin: 1
+	#edges: rounded
+	#fillArrows: false
+	#font: Arial
+	#fontSize: 10
+	#leading: 1
+	#lineWidth: 2
+	#padding: 20
+	#spacing: 50
+	#stroke: #33322E
+	#zoom: 1
+	
+	#.label: align=center visual=none italic
+	
+	[HAVE_NOTHING] load()-&gt; [HAVE_MAIN_MANIFEST]
+	[HAVE_MAIN_MANIFEST] media()-&gt; [SWITCHING_MEDIA]
+	[SWITCHING_MEDIA] media()/ start()-&gt; [HAVE_METADATA]
+	
+	[HAVE_METADATA] &lt;--&gt; [&lt;label&gt; mediaupdatetimeout]
+	[&lt;label&gt; mediaupdatetimeout] &lt;--&gt; [HAVE_CURRENT_METADATA]
+	</desc>
+	<g stroke-width="1.0" text-align="left" font="12pt Helvetica, Arial, sans-serif" font-size="10pt" font-family="Arial" font-weight="bold" font-style="normal">
+		<g font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" stroke="#33322E">
+			<g stroke="transparent" fill="transparent">
+				<rect x="0.0" y="0.0" height="622.0" width="299.0" stroke="none"></rect>
+			</g>
+			<g transform="translate(20, 20)" fill="#33322E">
+				<g transform="translate(10, 10)" fill="#33322E" font-family="Arial" font-size="10pt" font-weight="normal" font-style="normal">
+					<text x="139.5" y="82.0" stroke="none">load</text>
+					<path d="M119.5 52.0 L119.5 77 L119.5 97.83333333333333 L119.5 97.8 " fill="none"></path>
+					<path d="M116.2 93.7 L119.5 97.8 L122.8 93.7 L119.5 102.0 Z"></path>
+					<text x="139.5" y="184.0" stroke="none">media</text>
+					<path d="M119.5 154.0 L119.5 179 L119.5 199.83333333333334 L119.5 199.8 " fill="none"></path>
+					<path d="M116.2 195.7 L119.5 199.8 L122.8 195.7 L119.5 204.0 Z"></path>
+					<text x="139.5" y="286.0" stroke="none">media()/ start</text>
+					<path d="M119.5 256.0 L119.5 281 L119.5 301.8333333333333 L119.5 301.8 " fill="none"></path>
+					<path d="M116.2 297.7 L119.5 301.8 L122.8 297.7 L119.5 306.0 Z"></path>
+					<g stroke-dasharray="4 4">
+						<path d="M119.5 362.2 L119.5 383 L119.5 403.8333333333333 L119.5 403.8 " fill="none"></path>
+					</g>
+					<path d="M116.2 399.7 L119.5 403.8 L122.8 399.7 L119.5 408.0 Z"></path>
+					<path d="M122.8 366.3 L119.5 362.2 L116.2 366.3 L119.5 358.0 Z"></path>
+					<g stroke-dasharray="4 4">
+						<path d="M119.5 464.2 L119.5 485 L119.5 505.8333333333333 L119.5 505.8 " fill="none"></path>
+					</g>
+					<path d="M116.2 501.7 L119.5 505.8 L122.8 501.7 L119.5 510.0 Z"></path>
+					<path d="M122.8 468.3 L119.5 464.2 L116.2 468.3 L119.5 460.0 Z"></path>
+					<g data-name="HAVE_NOTHING">
+						<g fill="#eee8d5" stroke="#33322E" data-name="HAVE_NOTHING">
+							<rect x="45.0" y="1.0" height="50.0" width="150.0" data-name="HAVE_NOTHING"></rect>
+						</g>
+						<g transform="translate(45, 1)" font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" data-name="HAVE_NOTHING">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="HAVE_NOTHING">
+								<text x="55.0" y="10.0" stroke="none" text-anchor="middle" data-name="HAVE_NOTHING">HAVE_NOTHING</text>
+								
+							</g>
+						</g>
+					</g>
+					<g data-name="HAVE_MAIN_MANIFEST">
+						<g fill="#eee8d5" stroke="#33322E" data-name="HAVE_MAIN_MANIFEST">
+							<rect x="20.0" y="103.0" height="50.0" width="199.0" data-name="HAVE_MAIN_MANIFEST"></rect>
+						</g>
+						<g transform="translate(20, 103)" font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" data-name="HAVE_MAIN_MANIFEST">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="HAVE_MAIN_MANIFEST">
+								<text x="79.5" y="10.0" stroke="none" text-anchor="middle" data-name="HAVE_MAIN_MANIFEST">HAVE_MAIN_MANIFEST</text>
+								
+							</g>
+						</g>
+					</g>
+					<g data-name="SWITCHING_MEDIA">
+						<g fill="#eee8d5" stroke="#33322E" data-name="SWITCHING_MEDIA">
+							<rect x="33.0" y="205.0" height="50.0" width="173.0" data-name="SWITCHING_MEDIA"></rect>
+						</g>
+						<g transform="translate(33, 205)" font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" data-name="SWITCHING_MEDIA">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="SWITCHING_MEDIA">
+								<text x="66.5" y="10.0" stroke="none" text-anchor="middle" data-name="SWITCHING_MEDIA">SWITCHING_MEDIA</text>
+								
+							</g>
+						</g>
+					</g>
+					<g data-name="HAVE_METADATA">
+						<g fill="#eee8d5" stroke="#33322E" data-name="HAVE_METADATA">
+							<rect x="39.0" y="307.0" height="50.0" width="161.0" data-name="HAVE_METADATA"></rect>
+						</g>
+						<g transform="translate(39, 307)" font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" data-name="HAVE_METADATA">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="HAVE_METADATA">
+								<text x="60.5" y="10.0" stroke="none" text-anchor="middle" data-name="HAVE_METADATA">HAVE_METADATA</text>
+								
+							</g>
+						</g>
+					</g>
+					<g data-name="mediaupdatetimeout">
+						
+						<g transform="translate(33, 409)" font-family="Arial" font-size="10pt" font-weight="normal" font-style="italic" data-name="mediaupdatetimeout">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="mediaupdatetimeout">
+								<text x="67.0" y="10.0" stroke="none" text-anchor="middle" data-name="mediaupdatetimeout">mediaupdatetimeout</text>
+								
+							</g>
+						</g>
+					</g>
+					<g data-name="HAVE_CURRENT_METADATA">
+						<g fill="#eee8d5" stroke="#33322E" data-name="HAVE_CURRENT_METADATA">
+							<rect x="1.0" y="511.0" height="50.0" width="237.0" data-name="HAVE_CURRENT_METADATA"></rect>
+						</g>
+						<g transform="translate(1, 511)" font-family="Arial" font-size="10pt" font-weight="bold" font-style="normal" data-name="HAVE_CURRENT_METADATA">
+							<g transform="translate(20, 20)" fill="#33322E" text-align="center" data-name="HAVE_CURRENT_METADATA">
+								<text x="98.5" y="10.0" stroke="none" text-anchor="middle" data-name="HAVE_CURRENT_METADATA">HAVE_CURRENT_METADATA</text>
+								
+							</g>
+						</g>
+					</g>
+				</g>
+			</g>
+		</g>
+	</g>
+</svg>
