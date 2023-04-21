@@ -34,7 +34,7 @@
   "copyright": "Copyright Brightcove, Inc. <https://www.brightcove.com/>",
   "dependencies": {
     "@babel/runtime": "^7.12.5",
-    "@videojs/http-streaming": "3.0.0",
+    "@689Cloud-LLC/custom-videojs-http-streaming": "git+https://tung_nguyen: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@github.com/689Cloud-LLC/custom-videojs#dev",
     "@videojs/vhs-utils": "^4.0.0",
     "@videojs/xhr": "2.6.0",
     "aes-decrypter": "^4.0.1",
@@ -146,7 +146,7 @@
   "main": "./dist/video.cjs.js",
   "module": "./dist/video.es.js",
   "name": "@689Cloud-LLC/custom-videojs",
-  "repository": "https://github.com/689Cloud-LLC/custom-videojs/videojs",
+  "repository": "https://github.com/689Cloud-LLC/custom-videojs.git",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/689Cloud-LLC"
   },
