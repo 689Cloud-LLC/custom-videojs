@@ -9,7 +9,7 @@ videojs.addLanguage('zh-Hant', {
   "Loaded": "載入完畢",
   "Progress": "進度",
   "Fullscreen": "全螢幕",
-  "Exit Fullscreen": "退出全螢幕",
+  "Non-Fullscreen": "退出全螢幕",
   "Picture-in-Picture": "子母畫面",
   "Exit Picture-in-Picture": "退出子母畫面",
   "Mute": "靜音",

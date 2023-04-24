@@ -16,7 +16,7 @@ videojs.addLanguage('en', {
   "Progress Bar": "Progress Bar",
   "progress bar timing: currentTime={1} duration={2}": "{1} of {2}",
   "Fullscreen": "Fullscreen",
-  "Exit Fullscreen": "Exit Fullscreen",
+  "Non-Fullscreen": "Exit Fullscreen",
   "Mute": "Mute",
   "Unmute": "Unmute",
   "Playback Rate": "Playback Rate",

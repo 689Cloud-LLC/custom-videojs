@@ -10,7 +10,7 @@ videojs.addLanguage('de', {
   "Loaded": "Geladen",
   "Progress": "Status",
   "Fullscreen": "Vollbild",
-  "Exit Fullscreen": "Vollbildmodus beenden",
+  "Non-Fullscreen": "Vollbildmodus beenden",
   "Mute": "Ton aus",
   "Unmute": "Ton ein",
   "Playback Rate": "Wiedergabegeschwindigkeit",

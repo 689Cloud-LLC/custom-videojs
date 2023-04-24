@@ -9,7 +9,7 @@ videojs.addLanguage('ar', {
   "Loaded": "تم التحميل",
   "Progress": "التقدم",
   "Fullscreen": "ملء الشاشة",
-  "Exit Fullscreen": "تعطيل ملء الشاشة",
+  "Non-Fullscreen": "تعطيل ملء الشاشة",
   "Mute": "صامت",
   "Unmute": "غير الصامت",
   "Playback Rate": "معدل التشغيل",

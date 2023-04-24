@@ -16,7 +16,7 @@ videojs.addLanguage('ru', {
   "Progress Bar": "Индикатор загрузки",
   "progress bar timing: currentTime={1} duration={2}": "{1} из {2}",
   "Fullscreen": "Полноэкранный режим",
-  "Exit Fullscreen": "Неполноэкранный режим",
+  "Non-Fullscreen": "Неполноэкранный режим",
   "Mute": "Без звука",
   "Unmute": "Со звуком",
   "Playback Rate": "Скорость воспроизведения",
