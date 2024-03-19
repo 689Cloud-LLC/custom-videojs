@@ -27,7 +27,7 @@ import parseSidx from 'mux.js/lib/tools/parse-sidx';
 import { getId3Offset } from '@videojs/vhs-utils/es/id3-helpers';
 import { detectContainerForBytes, isLikelyFmp4MediaSegment } from '@videojs/vhs-utils/es/containers';
 import { ONE_SECOND_IN_TS } from 'mux.js/lib/utils/clock';
-import decryptKeyFile from "../custom/decrypt-key-cs";
+import decryptKeyFile from 'custom/decrypt-key-cs';
 
 var version$6 = "8.10.0";
 
@@ -39430,9 +39430,9 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
       }
       console.log("buf ", buf);
 
-      response = buf;
+      // response = buf;
 
-      const view = new DataView(response);
+      const view = new DataView(buf);
       const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
 
       for (let i = 0; i < objects.length; i++) {
