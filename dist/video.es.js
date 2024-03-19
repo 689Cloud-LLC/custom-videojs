@@ -39459,9 +39459,9 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
     }
     console.log("buf ", buf);
 
-    response = buf;
+    // response = buf;
 
-    const view = new DataView(response);
+    const view = new DataView(buf);
     const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
 
     for (let i = 0; i < objects.length; i++) {
