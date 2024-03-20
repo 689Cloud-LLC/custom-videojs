@@ -39397,7 +39397,7 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
   }
-  if (request.response.byteLength !== 16 || request.response.byteLength !== 32) {
+  if (request.response.byteLength !== 16 && request.response.byteLength !== 32) {
     return finishProcessingFn({
       status: request.status,
       message: 'Invalid HLS key at URL: ' + request.uri,
