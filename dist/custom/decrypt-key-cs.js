@@ -25,7 +25,7 @@ var _base64ToArrayBuffer = function _base64ToArrayBuffer(string) {
 var decryptKeyFile = function decryptKeyFile(encryptedBytes, callback) {
 
     // a string
-    const key = "urEyxMazRdsCI+AkPcGbaw==";
+    const key = "DMccJgvqUuVPVrZ9vdVfOw==";
     const pwUtf8 = _base64ToArrayBuffer(key);
     console.log('pwUtf8', pwUtf8);
 

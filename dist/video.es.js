@@ -27,7 +27,7 @@ import parseSidx from 'mux.js/lib/tools/parse-sidx';
 import { getId3Offset } from '@videojs/vhs-utils/es/id3-helpers';
 import { detectContainerForBytes, isLikelyFmp4MediaSegment } from '@videojs/vhs-utils/es/containers';
 import { ONE_SECOND_IN_TS } from 'mux.js/lib/utils/clock';
-import decryptKeyFile from 'custom/decrypt-key-cs';
+import decryptKeyFile from './custom/decrypt-key-cs';
 
 var version$6 = "8.10.0";
 
