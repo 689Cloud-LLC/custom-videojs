@@ -27,7 +27,7 @@ import parseSidx from 'mux.js/lib/tools/parse-sidx';
 import { getId3Offset } from '@videojs/vhs-utils/es/id3-helpers';
 import { detectContainerForBytes, isLikelyFmp4MediaSegment } from '@videojs/vhs-utils/es/containers';
 import { ONE_SECOND_IN_TS } from 'mux.js/lib/utils/clock';
-import decryptKeyFile from './custom/decrypt-key-cs';
+import customHandleKeyResponse from './custom/handle-key-cs';
 
 var version$6 = "8.10.0";
 
@@ -33996,7 +33996,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       Utf8: 0x03 // UTF-8 encoded Unicode, terminated with \0
     },
     // return a percent-encoded representation of the specified byte range
-    // @see http://en.wikipedia.org/wiki/Percent-encoding 
+    // @see http://en.wikipedia.org/wiki/Percent-encoding
     percentEncode$1 = function (bytes, start, end) {
       var i,
         result = '';
@@ -34125,7 +34125,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       frameHeader,
       frameStart = 10,
       tagSize = 0,
-      frames = []; // If we don't have enough data for a header, 10 bytes, 
+      frames = []; // If we don't have enough data for a header, 10 bytes,
     // or 'ID3' in the first 3 bytes this is not a valid ID3 tag.
 
     if (data.length < 10 || data[0] !== 'I'.charCodeAt(0) || data[1] !== 'D'.charCodeAt(0) || data[2] !== '3'.charCodeAt(0)) {
@@ -37506,7 +37506,7 @@ const workerCode$1 = transform(getWorkerString(function () {
   var captionParser = CaptionParser;
   /**
    * Returns the first string in the data array ending with a null char '\0'
-   * @param {UInt8} data 
+   * @param {UInt8} data
    * @returns the string with the null char
    */
 
@@ -37533,7 +37533,7 @@ const workerCode$1 = transform(getWorkerString(function () {
    * References:
    * https://dashif-documents.azurewebsites.net/Events/master/event.html#emsg-format
    * https://aomediacodec.github.io/id3-emsg/
-   * 
+   *
    * Takes emsg box data as a uint8 array and returns a emsg box object
    * @param {UInt8Array} boxData data from emsg box
    * @returns A parsed emsg box object
@@ -37577,7 +37577,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     var emsgBox = {
       scheme_id_uri,
       value,
-      // if timescale is undefined or 0 set to 1 
+      // if timescale is undefined or 0 set to 1
       timescale: timescale ? timescale : 1,
       presentation_time,
       presentation_time_delta,
@@ -37589,10 +37589,10 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   /**
    * Scales a presentation time or time delta with an offset with a provided timescale
-   * @param {number} presentationTime 
-   * @param {number} timescale 
-   * @param {number} timeDelta 
-   * @param {number} offset 
+   * @param {number} presentationTime
+   * @param {number} timescale
+   * @param {number} timeDelta
+   * @param {number} offset
    * @returns the scaled time as a number
    */
 
@@ -37928,12 +37928,12 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   /**
    * Returns an array of emsg ID3 data from the provided segmentData.
-   * An offset can also be provided as the Latest Arrival Time to calculate 
-   * the Event Start Time of v0 EMSG boxes. 
+   * An offset can also be provided as the Latest Arrival Time to calculate
+   * the Event Start Time of v0 EMSG boxes.
    * See: https://dashif-documents.azurewebsites.net/Events/master/event.html#Inband-event-timing
-   * 
+   *
    * @param {Uint8Array} segmentData the segment byte array.
-   * @param {number} offset the segment start time or Latest Arrival Time, 
+   * @param {number} offset the segment start time or Latest Arrival Time,
    * @return {Object[]} an array of ID3 parsed from EMSG boxes
    */
 
@@ -39391,85 +39391,15 @@ const handleErrors = (error, request) => {
  */
 
 const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, request) => {
-  // const response = request.response;
-    console.log('handleKeyResponse', request.response)
+
+  console.log('handleKeyResponse', request.response)
   const errorObj = handleErrors(error, request);
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
   }
-  if (request.response.byteLength !== 16 && request.response.byteLength !== 32) {
-    return finishProcessingFn({
-      status: request.status,
-      message: 'Invalid HLS key at URL: ' + request.uri,
-      code: REQUEST_ERRORS.FAILURE,
-      xhr: request
-    }, segment);
-  }
-  if (request.response.byteLength === 32) {
-    decryptKeyFile(request.response, function(response) {
-      if (response.byteLength !== 16) {
-        return finishProcessingFn({
-          status: request.status,
-          message: 'Invalid HLS key at URL: ' + request.uri,
-          code: REQUEST_ERRORS.FAILURE,
-          xhr: request
-        }, segment);
-      }
 
-      const decode = String.fromCharCode.apply(null, new Uint8Array(response));
-      const deContent = btoa(decode);
-      console.log("deContent: ", deContent);
+  return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
 
-      const decode16 = String.fromCharCode.apply(null, new Uint16Array(response));
-      console.log('decode16', decode16);
-
-      const buf = new ArrayBuffer(decode16.length * 2); // 2 bytes for each char
-      const bufView = new Uint16Array(buf);
-      for (let i = 0, strLen = decode16.length; i < strLen; i++) {
-        bufView[i] = decode16.charCodeAt(i);
-      }
-      console.log("buf ", buf);
-
-      // response = buf;
-
-      const view = new DataView(buf);
-      const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
-
-      for (let i = 0; i < objects.length; i++) {
-        objects[i].bytes = bytes;
-      }
-
-      return finishProcessingFn(null, segment);
-    });
-  } else {
-
-    const response = request.response;
-
-    const decode = String.fromCharCode.apply(null, new Uint8Array(response));
-    const deContent = btoa(decode);
-    console.log("deContent: ", deContent);
-
-    const decode16 = String.fromCharCode.apply(null, new Uint16Array(response));
-    console.log('decode16', decode16);
-
-    const buf = new ArrayBuffer(decode16.length * 2); // 2 bytes for each char
-    const bufView = new Uint16Array(buf);
-    for (let i = 0, strLen = decode16.length; i < strLen; i++) {
-      bufView[i] = decode16.charCodeAt(i);
-    }
-    console.log("buf ", buf);
-
-    // response = buf;
-
-    const view = new DataView(buf);
-    const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
-
-    for (let i = 0; i < objects.length; i++) {
-      objects[i].bytes = bytes;
-    }
-
-    return finishProcessingFn(null, segment);
-  }
 };
 const parseInitSegment = (segment, callback) => {
   const type = detectContainerForBytes(segment.map.bytes); // TODO: We should also handle ts init segments here, but we
