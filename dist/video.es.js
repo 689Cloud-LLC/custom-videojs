@@ -39392,7 +39392,7 @@ const handleErrors = (error, request) => {
 
 const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, request) => {
 
-  console.log('handleKeyResponse', request.response)
+  // console.log('handleKeyResponse', request.response)
   const errorObj = handleErrors(error, request);
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);

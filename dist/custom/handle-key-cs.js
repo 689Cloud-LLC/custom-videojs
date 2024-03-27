@@ -123,17 +123,17 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
 
             const decode = String.fromCharCode.apply(null, new Uint8Array(response));
             const deContent = btoa(decode);
-            console.log("deContent: ", deContent);
+            // console.log("deContent: ", deContent);
 
             const decode16 = String.fromCharCode.apply(null, new Uint16Array(response));
-            console.log('decode16', decode16);
+            // console.log('decode16', decode16);
 
             const buf = new ArrayBuffer(decode16.length * 2); // 2 bytes for each char
             const bufView = new Uint16Array(buf);
             for (let i = 0, strLen = decode16.length; i < strLen; i++) {
                 bufView[i] = decode16.charCodeAt(i);
             }
-            console.log("buf ", buf);
+            // console.log("buf ", buf);
 
             // response = buf;
 
@@ -152,17 +152,17 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
 
         const decode = String.fromCharCode.apply(null, new Uint8Array(response));
         const deContent = btoa(decode);
-        console.log("deContent: ", deContent);
+        // console.log("deContent: ", deContent);
 
         const decode16 = String.fromCharCode.apply(null, new Uint16Array(response));
-        console.log('decode16', decode16);
+        // console.log('decode16', decode16);
 
         const buf = new ArrayBuffer(decode16.length * 2); // 2 bytes for each char
         const bufView = new Uint16Array(buf);
         for (let i = 0, strLen = decode16.length; i < strLen; i++) {
             bufView[i] = decode16.charCodeAt(i);
         }
-        console.log("buf ", buf);
+        // console.log("buf ", buf);
 
         // response = buf;
 
