@@ -5,7 +5,7 @@ const decryptKey = {
 
 const getDecryptKey = (fileId, callback) =>  {
     const xhrobj = new XMLHttpRequest();
-    xhrobj.open('GET','https://dev-api.689cloud.com/streaming/api/v1/files/encrypted-key/' + fileId);
+    xhrobj.open('GET','https://streaming-api.689cloud.com/api/v1/files/encrypted-key/' + fileId);
     xhrobj.send();
     xhrobj.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
