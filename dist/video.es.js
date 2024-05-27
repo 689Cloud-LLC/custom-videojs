@@ -13282,11 +13282,17 @@ class FullscreenToggle extends Button {
    * @listens click
    */
   handleClick(event) {
-    if (!this.player_.isFullscreen()) {
-      this.player_.requestFullscreen();
-    } else {
-      this.player_.exitFullscreen();
+    if (!document.fullscreenElement) {
+      // @ts-ignore
+      document.getElementById('vid-cont').requestFullscreen();
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
     }
+    // if (!this.player_.isFullscreen()) {
+    //   this.player_.requestFullscreen();
+    // } else {
+    //   this.player_.exitFullscreen();
+    // }
   }
 }
 
