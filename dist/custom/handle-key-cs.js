@@ -10,10 +10,12 @@ const getDecryptKey = (fileId, callback) =>  {
     xhrobj.setRequestHeader("X-App-Id", "23bd53ebbebe4d9885fa076afd67ffcc");
     xhrobj.send();
     xhrobj.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === "success") {
+        console.log("this.readyState", this.readyState);
+        console.log("this.status", this.status);
+        if (this.readyState === 4 && this.status === 200) {
             const jsonResponse = JSON.parse(xhrobj.responseText);
-            console.log(jsonResponse);
-            if(jsonResponse.status === 200) {
+            console.log("jsonResponse", jsonResponse);
+            if(jsonResponse.status === "success") {
                 callback(jsonResponse.data);
             } else {
                 callback("");
