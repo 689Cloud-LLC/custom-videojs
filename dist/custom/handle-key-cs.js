@@ -5,7 +5,6 @@ const decryptKey = {
 
 const getDecryptKey = (fileId, callback) =>  {
     const xhrobj = new XMLHttpRequest();
-    //xhrobj.open('GET','https://secdocs-api.689cloud.com/api/file/video/encrypted-key/' + fileId);
     xhrobj.open('GET','https://secdocs-onpremise-api.689cloud.com/api/file/video/encrypted-key/' + fileId);
     xhrobj.send();
     xhrobj.onreadystatechange = function () {
