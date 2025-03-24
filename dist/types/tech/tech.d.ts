@@ -1,8 +1,11 @@
 export default Tech;
 /**
- * ~SourceObject
+ * An Object containing a structure like: `{src: 'url', type: 'mimetype'}` or string
+ * that just contains the src url alone.
+ * * `var SourceObject = {src: 'http://ex.com/video.mp4', type: 'video/mp4'};`
+ *  `var SourceString = 'http://example.com/some-video.mp4';`
  */
-export type Tech = any | string;
+export type SourceObject = any | string;
 /**
  * This is the base class for media playback technology controllers, such as
  * {@link HTML5}
@@ -16,11 +19,11 @@ declare class Tech extends Component {
      * The base tech does not support any type, but source handlers might
      * overwrite this.
      *
-     * @param {string} type
+     * @param {string} _type
      *        The media type to check
      * @return {string} Returns the native video element's response
      */
-    static canPlayType(): string;
+    static canPlayType(_type: string): string;
     /**
      * Check if the tech can support the given source
      *
@@ -58,10 +61,10 @@ declare class Tech extends Component {
     * @param {Object} [options]
     *        The key/value store of player options.
     *
-    * @param {Component~ReadyCallback} [ready]
+    * @param {Function} [ready]
     *        Callback function to call when the `HTML5` Tech is ready.
     */
-    constructor(options?: any, ready?: () => void);
+    constructor(options?: any, ready?: Function);
     onDurationChange_: (e: any) => void;
     trackProgress_: (e: any) => void;
     trackCurrentTime_: (e: any) => void;
@@ -99,32 +102,32 @@ declare class Tech extends Component {
      *
      * > This function is called by {@link Tech#manualProgressOn}
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `ready` event that caused this to run.
      *
      * @listens Tech#ready
      * @fires Tech#progress
      */
-    trackProgress(event: any): void;
+    trackProgress(event: Event): void;
     progressInterval: number;
     /**
      * Update our internal duration on a `durationchange` event by calling
      * {@link Tech#duration}.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `durationchange` event that caused this to run.
      *
      * @listens Tech#durationchange
      */
-    onDurationChange(event: any): void;
+    onDurationChange(event: Event): void;
     duration_: any;
     /**
      * Get and create a `TimeRange` object for buffering.
      *
-     * @return {TimeRange}
+     * @return { import('../utils/time').TimeRange }
      *         The time range object that was created.
      */
-    buffered(): TimeRange;
+    buffered(): import('../utils/time').TimeRange;
     /**
      * Get the percentage of the current video that is currently buffered.
      *
@@ -232,11 +235,11 @@ declare class Tech extends Component {
      * > NOTE: This implementation is incomplete. It does not track the played `TimeRange`.
      *         It only checks whether the source has played at all or not.
      *
-     * @return {TimeRange}
+     * @return { import('../utils/time').TimeRange }
      *         - A single time range if this video has played
      *         - An empty set of ranges if not.
      */
-    played(): TimeRange;
+    played(): import('../utils/time').TimeRange;
     /**
      * Start playback
      *
@@ -249,10 +252,13 @@ declare class Tech extends Component {
      * Set whether we are scrubbing or not
      *
      * @abstract
+     * @param {boolean} _isScrubbing
+     *                  - true for we are currently scrubbing
+     *                  - false for we are no longer scrubbing
      *
      * @see {Html5#setScrubbing}
      */
-    setScrubbing(): void;
+    setScrubbing(_isScrubbing: boolean): void;
     /**
      * Get whether we are scrubbing or not
      *
@@ -265,9 +271,11 @@ declare class Tech extends Component {
      * Causes a manual time update to occur if {@link Tech#manualTimeUpdatesOn} was
      * previously called.
      *
+     * @param {number} _seconds
+     *        Set the current time of the media to this.
      * @fires Tech#timeupdate
      */
-    setCurrentTime(): void;
+    setCurrentTime(_seconds: number): void;
     /**
      * Turn on listeners for {@link VideoTrackList}, {@link {AudioTrackList}, and
      * {@link TextTrackList} events.
@@ -437,7 +445,7 @@ declare class Tech extends Component {
      *
      * @abstract
      */
-    overrideNativeAudioTracks(): void;
+    overrideNativeAudioTracks(override: boolean): void;
     /**
      * Attempt to force override of native video tracks.
      *
@@ -446,8 +454,24 @@ declare class Tech extends Component {
      *
      * @abstract
      */
-    overrideNativeVideoTracks(): void;
-    canPlayType(): string;
+    overrideNativeVideoTracks(override: boolean): void;
+    /**
+     * Check if the tech can support the given mime-type.
+     *
+     * The base tech does not support any type, but source handlers might
+     * overwrite this.
+     *
+     * @param  {string} _type
+     *         The mimetype to check for support
+     *
+     * @return {string}
+     *         'probably', 'maybe', or empty string
+     *
+     * @see [Spec]{@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/canPlayType}
+     *
+     * @abstract
+     */
+    canPlayType(_type: string): string;
     /**
      * List of associated text tracks
      *
@@ -479,10 +503,10 @@ declare class Tech extends Component {
     /**
      * Boolean indicating whether the `Tech` supports muting volume.
      *
-     * @type {bolean}
+     * @type {boolean}
      * @default
      */
-    featuresMuteControl: bolean;
+    featuresMuteControl: boolean;
     /**
      * Boolean indicating whether the `Tech` supports fullscreen resize control.
      * Resizing plugins using request fullscreen reloads the plugin

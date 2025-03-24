@@ -20,10 +20,10 @@ export function fixEvent(event: any): any;
  * @param {string|string[]} type
  *        Type of event to bind to.
  *
- * @param {EventTarget~EventListener} fn
+ * @param {Function} fn
  *        Event listener.
  */
-export function on(elem: Element | any, type: string | string[], fn: any): void;
+export function on(elem: Element | any, type: string | string[], fn: Function): void;
 /**
  * Removes event listeners from an element
  *
@@ -33,11 +33,11 @@ export function on(elem: Element | any, type: string | string[], fn: any): void;
  * @param {string|string[]} [type]
  *        Type of listener to remove. Don't include to remove all events from element.
  *
- * @param {EventTarget~EventListener} [fn]
+ * @param {Function} [fn]
  *        Specific listener to remove. Don't include to remove listeners for an event
  *        type.
  */
-export function off(elem: Element | any, type?: string | string[], fn: any): void;
+export function off(elem: Element | any, type?: string | string[], fn?: Function): void;
 /**
  * Trigger an event for an element
  *

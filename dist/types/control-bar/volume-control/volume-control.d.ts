@@ -8,13 +8,13 @@ declare class VolumeControl extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options={}]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     throttledHandleMouseMove: Function;
     handleMouseUpHandler_: (e: any) => void;
     /**
@@ -27,33 +27,33 @@ declare class VolumeControl extends Component {
     /**
      * Handle `mousedown` or `touchstart` events on the `VolumeControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mousedown` or `touchstart` event that triggered this function
      *
      * @listens mousedown
      * @listens touchstart
      */
-    handleMouseDown(event: any): void;
+    handleMouseDown(event: Event): void;
     /**
      * Handle `mouseup` or `touchend` events on the `VolumeControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mouseup` or `touchend` event that triggered this function.
      *
      * @listens touchend
      * @listens mouseup
      */
-    handleMouseUp(event: any): void;
+    handleMouseUp(event: Event): void;
     /**
      * Handle `mousedown` or `touchstart` events on the `VolumeControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mousedown` or `touchstart` event that triggered this function
      *
      * @listens mousedown
      * @listens touchstart
      */
-    handleMouseMove(event: any): void;
+    handleMouseMove(event: Event): void;
 }
 import Component from "../../component.js";
 //# sourceMappingURL=volume-control.d.ts.map

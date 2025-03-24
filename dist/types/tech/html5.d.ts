@@ -6,16 +6,6 @@ export default Html5;
  * @extends Tech
  */
 declare class Html5 extends Tech {
-    /**
-    * Create an instance of this Tech.
-    *
-    * @param {Object} [options]
-    *        The key/value store of player options.
-    *
-    * @param {Component~ReadyCallback} [ready]
-    *        Callback function to call when the `HTML5` Tech is ready.
-    */
-    constructor(options?: any, ready: any);
     isScrubbing_: boolean;
     /**
      * Modify the media element so that we can detect when
@@ -41,20 +31,6 @@ declare class Html5 extends Tech {
      * @private
      */
     private overrideNative_;
-    /**
-     * Attempt to force override of native audio tracks.
-     *
-     * @param {boolean} override - If set to true native audio will be overridden,
-     * otherwise native audio will potentially be used.
-     */
-    overrideNativeAudioTracks(override: boolean): void;
-    /**
-     * Attempt to force override of native video tracks.
-     *
-     * @param {boolean} override - If set to true native video will be overridden,
-     * otherwise native video will potentially be used.
-     */
-    overrideNativeVideoTracks(override: boolean): void;
     /**
      * Proxy native track list events for the given type to our track
      * lists if the browser we are playing in supports that type of track list.
@@ -92,16 +68,6 @@ declare class Html5 extends Tech {
      */
     handleLateInit_(el: any): undefined;
     /**
-     * Set whether we are scrubbing or not.
-     * This is used to decide whether we should use `fastSeek` or not.
-     * `fastSeek` is used to provide trick play on Safari browsers.
-     *
-     * @param {boolean} isScrubbing
-     *                  - true for we are currently scrubbing
-     *                  - false for we are no longer scrubbing
-     */
-    setScrubbing(isScrubbing: boolean): void;
-    /**
      * Get whether we are scrubbing or not.
      *
      * @return {boolean} isScrubbing
@@ -109,13 +75,6 @@ declare class Html5 extends Tech {
      *                  - false for we are no longer scrubbing
      */
     scrubbing(): boolean;
-    /**
-     * Set current time for the `HTML5` tech.
-     *
-     * @param {number} seconds
-     *        Set the current time of the media to this.
-     */
-    setCurrentTime(seconds: number): void;
     /**
      * Get the current duration of the HTML5 media element.
      *
@@ -295,11 +254,11 @@ declare namespace Html5 {
      * Some devices, e.g. iOS, don't allow changing volume
      * but permits muting/unmuting.
      *
-     * @return {bolean}
+     * @return {boolean}
      *      - True if volume can be muted
      *      - False otherwise
      */
-    function canMuteVolume(): bolean;
+    function canMuteVolume(): boolean;
     /**
      * Check if the playback rate can be changed in this browser/device.
      *

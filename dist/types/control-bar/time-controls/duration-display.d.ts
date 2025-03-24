@@ -8,17 +8,17 @@ declare class DurationDisplay extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     /**
      * Update duration time display.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `durationchange`, `timeupdate`, or `loadedmetadata` event that caused
      *        this function to be called.
      *
@@ -26,7 +26,7 @@ declare class DurationDisplay extends Component {
      * @listens Player#timeupdate
      * @listens Player#loadedmetadata
      */
-    updateContent(event: any): void;
+    updateContent(event?: Event): void;
     /**
      * The text that is added to the `DurationDisplay` for screen reader users.
      *

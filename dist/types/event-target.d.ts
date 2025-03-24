@@ -2,11 +2,11 @@ export default EventTarget;
 /**
  * A Custom DOM event.
  */
-export type Event = EventTarget;
+export type Event = CustomEvent;
 /**
- * ~EventListener
+ * All event listeners should follow the following format.
  */
-export type EventTarget = () => any;
+export type EventListener = () => any;
 /**
  * `EventTarget` is a class that can have the same API as the DOM `EventTarget`. It
  * adds shorthand functions that wrap around lengthy functions. For example:
@@ -23,10 +23,10 @@ declare class EventTarget {
      * @param {string|string[]} type
      *        An event name or an array of event names.
      *
-     * @param {EventTarget~EventListener} fn
+     * @param {Function} fn
      *        The function to call with `EventTarget`s
      */
-    on(type: string | string[], fn: any): void;
+    on(type: string | string[], fn: Function): void;
     addEventListener: any;
     /**
      * Removes an `event listener` for a specific event from an instance of `EventTarget`.
@@ -36,10 +36,10 @@ declare class EventTarget {
      * @param {string|string[]} type
      *        An event name or an array of event names.
      *
-     * @param {EventTarget~EventListener} fn
+     * @param {Function} fn
      *        The function to remove.
      */
-    off(type: string | string[], fn: any): void;
+    off(type: string | string[], fn: Function): void;
     /**
      * This function will add an `event listener` that gets triggered only once. After the
      * first trigger it will get removed. This is like adding an `event listener`
@@ -48,11 +48,23 @@ declare class EventTarget {
      * @param {string|string[]} type
      *        An event name or an array of event names.
      *
-     * @param {EventTarget~EventListener} fn
+     * @param {Function} fn
      *        The function to be called once for each event name.
      */
-    one(type: string | string[], fn: any): void;
-    any(type: any, fn: any): void;
+    one(type: string | string[], fn: Function): void;
+    /**
+     * This function will add an `event listener` that gets triggered only once and is
+     * removed from all events. This is like adding an array of `event listener`s
+     * with {@link EventTarget#on} that calls {@link EventTarget#off} on all events the
+     * first time it is triggered.
+     *
+     * @param {string|string[]} type
+     *        An event name or an array of event names.
+     *
+     * @param {Function} fn
+     *        The function to be called once for each event name.
+     */
+    any(type: string | string[], fn: Function): void;
     /**
      * This function causes an event to happen. This will then cause any `event listeners`
      * that are waiting for that event, to get called. If there are no `event listeners`
@@ -74,16 +86,16 @@ declare class EventTarget {
     /**
      * A Custom DOM event.
      *
-     * @typedef {EventTarget} Event
+     * @typedef {CustomEvent} Event
      * @see [Properties]{@link https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent}
      */
     /**
      * All event listeners should follow the following format.
      *
-     * @callback EventTarget~EventListener
+     * @callback EventListener
      * @this {EventTarget}
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        the event that triggered this function
      *
      * @param {Object} [hash]
@@ -96,9 +108,9 @@ declare class EventTarget {
      *         will have extra functionality. See that function for more information.
      *
      * @property EventTarget.prototype.allowedEvents_
-     * @private
+     * @protected
      */
-    private allowedEvents_;
+    protected allowedEvents_: {};
     /**
      * An alias of {@link EventTarget#off}. Allows `EventTarget` to mimic
      * the standard DOM API.
@@ -106,7 +118,7 @@ declare class EventTarget {
      * @function
      * @see {@link EventTarget#off}
      */
-    removeEventListener: (type: string | string[], fn: any) => void;
+    removeEventListener: (type: string | string[], fn: Function) => void;
     /**
      * An alias of {@link EventTarget#trigger}. Allows `EventTarget` to mimic
      * the standard DOM API.

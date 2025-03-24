@@ -16,7 +16,7 @@ declare class SeekBar extends Slider {
      * This function updates the play progress bar and accessibility
      * attributes to whatever is passed in.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `timeupdate` or `ended` event that caused this to run.
      *
      * @listens Player#timeupdate
@@ -24,7 +24,7 @@ declare class SeekBar extends Slider {
      * @return {number}
      *          The current percent at a number from 0-1
      */
-    update(event: any): number;
+    update(event?: Event): number;
     updateInterval: number;
     enableIntervalHandler_: (e: any) => void;
     disableIntervalHandler_: (e: any) => void;
@@ -70,22 +70,13 @@ declare class SeekBar extends Slider {
     /**
      * Handle mouse move on seek bar
      *
-     * @param {EventTarget~Event} event
+     * @param {MouseEvent} event
      *        The `mousemove` event that caused this to run.
      * @param {boolean} mouseDown this is a flag that should be set to true if `handleMouseMove` is called directly. It allows us to skip things that should not happen if coming from mouse down but should happen on regular mouse move handler. Defaults to false
      *
      * @listens mousemove
      */
-    handleMouseMove(event: any, mouseDown?: boolean): void;
-    /**
-     * Handle mouse up on seek bar
-     *
-     * @param {EventTarget~Event} event
-     *        The `mouseup` event that caused this to run.
-     *
-     * @listens mouseup
-     */
-    handleMouseUp(event: any): void;
+    handleMouseMove(event: MouseEvent, mouseDown?: boolean): void;
     /**
      * Move more quickly fast forward for keyboard-only users
      */
@@ -98,11 +89,11 @@ declare class SeekBar extends Slider {
      * Toggles the playback state of the player
      * This gets called when enter or space is used on the seekbar
      *
-     * @param {EventTarget~Event} event
+     * @param {KeyboardEvent} event
      *        The `keydown` event that caused this function to be called
      *
      */
-    handleAction(event: any): void;
+    handleAction(event: KeyboardEvent): void;
     dispose(): void;
 }
 import Slider from "../../slider/slider.js";

@@ -8,13 +8,13 @@ declare class PosterImage extends ClickableComponent {
     /**
      * Create an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should attach to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('./player').default, options?: any);
     update_: (e: any) => void;
     /**
      * Create the `PosterImage`s DOM element.
@@ -40,17 +40,19 @@ declare class PosterImage extends ClickableComponent {
      *
      * @listens Player#posterchange
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `Player#posterchange` event that triggered this function.
      */
-    update(event: any): void;
+    update(event?: Event): void;
     /**
-     * Set the source of the `PosterImage` depending on the display method.
+     * Set the source of the `PosterImage` depending on the display method. (Re)creates
+     * the inner picture and img elementss when needed.
      *
-     * @param {string} url
-     *        The URL to the source for the `PosterImage`.
+     * @param {string} [url]
+     *        The URL to the source for the `PosterImage`. If not specified or falsy,
+     *        any source and ant inner picture/img are removed.
      */
-    setSrc(url: string): void;
+    setSrc(url?: string): void;
     /**
      * An {@link EventTarget~EventListener} for clicks on the `PosterImage`. See
      * {@link ClickableComponent#handleClick} for instances where this will be triggered.
@@ -59,10 +61,10 @@ declare class PosterImage extends ClickableComponent {
      * @listens click
      * @listens keydown
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      +        The `click`, `tap` or `keydown` event that caused this function to be called.
      */
-    handleClick(event: any): void;
+    handleClick(event: Event): void;
     /**
      * Get or set the `PosterImage`'s crossorigin option. For the HTML5 player, this
      * sets the `crossOrigin` property on the `<img>` tag to control the CORS

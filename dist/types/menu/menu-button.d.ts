@@ -8,13 +8,13 @@ declare class MenuButton extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options={}]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../player').default, options?: any);
     menuButton_: Button;
     enabled_: boolean;
     handleMenuKeyUp_: (e: any) => void;
@@ -61,6 +61,14 @@ declare class MenuButton extends Component {
      */
     createEl(): Element;
     /**
+     * Overwrites the `setIcon` method from `Component`.
+     * In this case, we want the icon to be appended to the menuButton.
+     *
+     * @param {string} name
+     *         The icon name to be added.
+     */
+    setIcon(name: string): void;
+    /**
      * Allow sub components to stack CSS class names for the wrapper element
      *
      * @return {string}
@@ -90,52 +98,62 @@ declare class MenuButton extends Component {
      * Handle a click on a `MenuButton`.
      * See {@link ClickableComponent#handleClick} for instances where this is called.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `keydown`, `tap`, or `click` event that caused this function to be
      *        called.
      *
      * @listens tap
      * @listens click
      */
-    handleClick(event: any): void;
+    handleClick(event: Event): void;
     /**
      * Handle `mouseleave` for `MenuButton`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `mouseleave` event that caused this function to be called.
      *
      * @listens mouseleave
      */
-    handleMouseLeave(event: any): void;
+    handleMouseLeave(event: Event): void;
+    /**
+     * Handle tab, escape, down arrow, and up arrow keys for `MenuButton`. See
+     * {@link ClickableComponent#handleKeyDown} for instances where this is called.
+     *
+     * @param {Event} event
+     *        The `keydown` event that caused this function to be called.
+     *
+     * @listens keydown
+     */
+    handleKeyDown(event: Event): void;
     /**
      * Handle a `keyup` event on a `MenuButton`. The listener for this is added in
      * the constructor.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        Key press event
      *
      * @listens keyup
      */
-    handleMenuKeyUp(event: any): void;
+    handleMenuKeyUp(event: Event): void;
     /**
      * This method name now delegates to `handleSubmenuKeyDown`. This means
      * anyone calling `handleSubmenuKeyPress` will not see their method calls
      * stop working.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The event that caused this function to be called.
      */
-    handleSubmenuKeyPress(event: any): void;
+    handleSubmenuKeyPress(event: Event): void;
     /**
      * Handle a `keydown` event on a sub-menu. The listener for this is added in
      * the constructor.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        Key press event
      *
      * @listens keydown
      */
-    handleSubmenuKeyDown(event: any): void;
+    handleSubmenuKeyDown(event: Event): void;
     /**
      * Put the current `MenuButton` into a pressed state.
      */

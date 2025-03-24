@@ -5,7 +5,6 @@ export default SubsCapsButton;
  * @extends TextTrackButton
  */
 declare class SubsCapsButton extends TextTrackButton {
-    constructor(player: any, options?: {});
     label_: string;
     /**
      * Builds the default DOM `className`.

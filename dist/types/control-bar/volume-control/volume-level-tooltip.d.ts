@@ -8,13 +8,13 @@ declare class VolumeLevelTooltip extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The {@link Player} that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     /**
      * Updates the position of the tooltip relative to the `VolumeBar` and
      * its content text.

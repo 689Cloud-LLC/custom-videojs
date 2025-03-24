@@ -10,16 +10,16 @@ declare class ChaptersButton extends TextTrackButton {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      *
-     * @param {Component~ReadyCallback} [ready]
+     * @param {Function} [ready]
      *        The function to call when this function is ready.
      */
-    constructor(player: Player, options?: any, ready: any);
+    constructor(player: import('../../player').default, options?: any, ready?: Function);
     selectCurrentItem_: () => void;
     /**
      * Builds the default DOM `className`.
@@ -32,14 +32,14 @@ declare class ChaptersButton extends TextTrackButton {
     /**
      * Update the menu based on the current state of its items.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        An event that triggered this function to run.
      *
      * @listens TextTrackList#addtrack
      * @listens TextTrackList#removetrack
      * @listens TextTrackList#change
      */
-    update(event: any): void;
+    update(event?: Event): void;
     /**
      * Set the currently selected track for the chapters button.
      *
@@ -68,17 +68,17 @@ declare class ChaptersButton extends TextTrackButton {
     /**
      * Create menu from chapter track
      *
-     * @return {Menu}
+     * @return { import('../../menu/menu').default }
      *         New menu for the chapter buttons
      */
-    createMenu(): Menu;
+    createMenu(): import('../../menu/menu').default;
     /**
      * Create a menu item for each text track
      *
-     * @return {TextTrackMenuItem[]}
+     * @return  { import('./text-track-menu-item').default[] }
      *         Array of menu items
      */
-    createItems(): TextTrackMenuItem[];
+    createItems(): import('./text-track-menu-item').default[];
     /**
      * `kind` of TextTrack to look for to associate it with this menu.
      *

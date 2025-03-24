@@ -21,16 +21,16 @@ declare class TextTrackDisplay extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      *
-     * @param {Component~ReadyCallback} [ready]
+     * @param {Function} [ready]
      *        The function to call when `TextTrackDisplay` is ready.
      */
-    constructor(player: Player, options?: any, ready: any);
+    constructor(player: import('../player').default, options?: any, ready?: Function);
     /**
     * Preselect a track following this precedence:
     * - matches the previously selected {@link TextTrack}'s language and kind
@@ -69,6 +69,11 @@ declare class TextTrackDisplay extends Component {
      * @listens Player#fullscreenchange
      */
     updateDisplay(): void;
+    /**
+     * Updates the displayed TextTrack to be sure it overlays the video when a either
+     * a {@link Player#texttrackchange} or a {@link Player#fullscreenchange} is fired.
+     */
+    updateDisplayOverlay(): void;
     /**
      * Style {@Link TextTrack} activeCues according to {@Link TextTrackSettings}.
      *

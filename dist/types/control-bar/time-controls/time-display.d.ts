@@ -8,13 +8,13 @@ declare class TimeDisplay extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     /**
      * Create the `Component`'s DOM element
      *
@@ -25,6 +25,13 @@ declare class TimeDisplay extends Component {
     contentEl_: Element;
     dispose(): void;
     textNode_: any;
+    /**
+     * Updates the displayed time according to the `updateContent` function which is defined in the child class.
+     *
+     * @param {Event} [event]
+     *          The `timeupdate`, `ended` or `seeking` (if enableSmoothSeeking is true) event that caused this function to be called.
+     */
+    update(event?: Event): void;
     /**
      * Updates the time display text node with a new time
      *
@@ -38,12 +45,12 @@ declare class TimeDisplay extends Component {
      * To be filled out in the child class, should update the displayed time
      * in accordance with the fact that the current time has changed.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `timeupdate`  event that caused this to run.
      *
      * @listens Player#timeupdate
      */
-    updateContent(event: any): void;
+    updateContent(event?: Event): void;
     /**
      * The text that is added to the `TimeDisplay` for screen reader users.
      *

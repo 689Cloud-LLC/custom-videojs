@@ -9,23 +9,23 @@ declare class ProgressControl extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     /**
      * When the mouse moves over the `ProgressControl`, the pointer position
      * gets passed down to the `MouseTimeDisplay` component.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `mousemove` event that caused this function to run.
      *
      * @listen mousemove
      */
-    handleMouseMove(event: any): void;
+    handleMouseMove(event: Event): void;
     throttledHandleMouseSeek: Function;
     handleMouseUpHandler_: (e: any) => void;
     handleMouseDownHandler_: (e: any) => void;
@@ -40,7 +40,7 @@ declare class ProgressControl extends Component {
      * A throttled version of the {@link ProgressControl#handleMouseSeek} listener.
      *
      * @method ProgressControl#throttledHandleMouseSeek
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `mousemove` event that caused this function to run.
      *
      * @listen mousemove
@@ -49,13 +49,13 @@ declare class ProgressControl extends Component {
     /**
      * Handle `mousemove` or `touchmove` events on the `ProgressControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mousedown` or `touchstart` event that triggered this function
      *
      * @listens mousemove
      * @listens touchmove
      */
-    handleMouseSeek(event: any): void;
+    handleMouseSeek(event: Event): void;
     /**
      * Are controls are currently enabled for this progress control.
      *
@@ -79,23 +79,23 @@ declare class ProgressControl extends Component {
     /**
      * Handle `mousedown` or `touchstart` events on the `ProgressControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mousedown` or `touchstart` event that triggered this function
      *
      * @listens mousedown
      * @listens touchstart
      */
-    handleMouseDown(event: any): void;
+    handleMouseDown(event: Event): void;
     /**
      * Handle `mouseup` or `touchend` events on the `ProgressControl`.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        `mouseup` or `touchend` event that triggered this function.
      *
      * @listens touchend
      * @listens mouseup
      */
-    handleMouseUp(event: any): void;
+    handleMouseUp(event: Event): void;
 }
 import Component from "../../component.js";
 //# sourceMappingURL=progress-control.d.ts.map

@@ -53,7 +53,7 @@ export let IS_CHROMIUM: boolean;
  * This will also be `true` for Chrome on iOS, which will have different support
  * as it is actually Safari under the hood.
  *
- * Depreacted, as the behaviour to not match Edge was to prevent Legacy Edge's UA matching.
+ * Deprecated, as the behaviour to not match Edge was to prevent Legacy Edge's UA matching.
  * IS_CHROMIUM should be used instead.
  * "Chromium but not Edge" could be explicitly tested with IS_CHROMIUM && !IS_EDGE
  *
@@ -72,7 +72,7 @@ export let CHROMIUM_VERSION: number | null;
 /**
  * The detected Google Chrome version - or `null`.
  * This has always been the _Chromium_ version, i.e. would return on Chromium Edge.
- * Depreacted, use CHROMIUM_VERSION instead.
+ * Deprecated, use CHROMIUM_VERSION instead.
  *
  * @static
  * @deprecated

@@ -1,111 +1,30 @@
-<a name="8.0.4"></a>
-## [8.0.4](https://github.com/videojs/video.js/compare/v8.0.3...v8.0.4) (2023-02-02)
+<a name="7.21.4"></a>
+## [7.21.4](https://github.com/videojs/video.js/compare/v7.21.3...v7.21.4) (2023-03-15)
 
 ### Bug Fixes
 
-*  use Screen Orientation API where supported ([#8031](https://github.com/videojs/video.js/issues/8031)) ([33b476d](https://github.com/videojs/video.js/commit/33b476d))
-* Ensures iOS can use native fullscreen ([#8071](https://github.com/videojs/video.js/issues/8071)) ([509b3d0](https://github.com/videojs/video.js/commit/509b3d0))
-* Exit PIP if entering fullscreen ([#8082](https://github.com/videojs/video.js/issues/8082)) ([267b5c6](https://github.com/videojs/video.js/commit/267b5c6))
-* Improves types for registerPlugin and getPlugin ([#8058](https://github.com/videojs/video.js/issues/8058)) ([2e96253](https://github.com/videojs/video.js/commit/2e96253))
-* **lang:** Add missing comma in turkish ([#8102](https://github.com/videojs/video.js/issues/8102)) ([7776d18](https://github.com/videojs/video.js/commit/7776d18))
-* **lang:** Remove dupelicate entry in en.json ([#8093](https://github.com/videojs/video.js/issues/8093)) ([68fec76](https://github.com/videojs/video.js/commit/68fec76))
-* remove unnecessary handling of invalid cues ([#7956](https://github.com/videojs/video.js/issues/7956)) ([db882cd](https://github.com/videojs/video.js/commit/db882cd))
-* Set alt attr on poster img ([#8043](https://github.com/videojs/video.js/issues/8043)) ([3accbc7](https://github.com/videojs/video.js/commit/3accbc7))
+* **lang:** updated Japanese translations ([#8194](https://github.com/videojs/video.js/issues/8194)) ([7eed745](https://github.com/videojs/video.js/commit/7eed745))
+* replay button broken for native playback ([#8142](https://github.com/videojs/video.js/issues/8142)) ([#8183](https://github.com/videojs/video.js/issues/8183)) ([bda2b06](https://github.com/videojs/video.js/commit/bda2b06))
 
 ### Chores
 
-* add missing translations ([#8083](https://github.com/videojs/video.js/issues/8083)) ([e21d295](https://github.com/videojs/video.js/commit/e21d295))
-* roll back remark dev dependencies to address failing release automation ([#8021](https://github.com/videojs/video.js/issues/8021)) ([9bda6be](https://github.com/videojs/video.js/commit/9bda6be))
-* Update codecov action ([#8103](https://github.com/videojs/video.js/issues/8103)) ([0cfc485](https://github.com/videojs/video.js/commit/0cfc485))
+* **documentation:** Update release flow in collaborator guide md ([#8166](https://github.com/videojs/video.js/issues/8166)) ([2e939e2](https://github.com/videojs/video.js/commit/2e939e2))
+* use next-7 tag instead of next tag for 7x version during npm publish ([#8164](https://github.com/videojs/video.js/issues/8164)) ([852493d](https://github.com/videojs/video.js/commit/852493d))
 
-<a name="8.0.3"></a>
-## [8.0.3](https://github.com/videojs/video.js/compare/v8.0.2...v8.0.3) (2023-01-05)
-
-### Bug Fixes
-
-* **package:** Upgrade to videojs-contrib-quality-levels 3.0.0 ([#8055](https://github.com/videojs/video.js/issues/8055)) ([40e1d47](https://github.com/videojs/video.js/commit/40e1d47))
+<a name="7.21.3"></a>
+## [7.21.3](https://github.com/videojs/video.js/compare/v7.21.2...v7.21.3) (2023-02-27)
 
 ### Chores
 
-* Update lock thrads dependency ([#8044](https://github.com/videojs/video.js/issues/8044)) ([e59222a](https://github.com/videojs/video.js/commit/e59222a))
+* **package:** update to [@videojs](https://github.com/videojs)/http-streaming 2.16.2 ([#8161](https://github.com/videojs/video.js/issues/8161)) ([2b06194](https://github.com/videojs/video.js/commit/2b06194))
 
-<a name="8.0.2"></a>
-## [8.0.2](https://github.com/videojs/video.js/compare/v8.0.1...v8.0.2) (2022-11-24)
-
-### Bug Fixes
-
-* Add poster size styles ([#8022](https://github.com/videojs/video.js/issues/8022)) ([dff3dd4](https://github.com/videojs/video.js/commit/dff3dd4))
-
-<a name="8.0.1"></a>
-## [8.0.1](https://github.com/videojs/video.js/compare/v8.0.0...v8.0.1) (2022-11-23)
+<a name="7.21.2"></a>
+## [7.21.2](https://github.com/videojs/video.js/compare/v7.21.1...v7.21.2) (2023-01-31)
 
 ### Chores
 
-* gh-release build script no longer needed ([#8020](https://github.com/videojs/video.js/issues/8020)) ([b5d487c](https://github.com/videojs/video.js/commit/b5d487c))
-* **package:** update videojs-contrib-quality-levels to 2.2.1 ([#8019](https://github.com/videojs/video.js/issues/8019)) ([adaeeca](https://github.com/videojs/video.js/commit/adaeeca))
-
-<a name="8.0.0"></a>
-# [8.0.0](https://github.com/videojs/video.js/compare/v7.21.1...v8.0.0) (2022-11-23)
-
-### Features
-
-* add a new title bar component ([#7788](https://github.com/videojs/video.js/issues/7788)) ([5d165dc](https://github.com/videojs/video.js/commit/5d165dc))
-* add support for a list of quality levels ([#7897](https://github.com/videojs/video.js/issues/7897)) ([54195f0](https://github.com/videojs/video.js/commit/54195f0))
-* addClass and removeClass method supports adding/removing multiple classes ([#7798](https://github.com/videojs/video.js/issues/7798)) ([9b3d941](https://github.com/videojs/video.js/commit/9b3d941))
-* assume native promises, remove promise option and workarounds ([#7715](https://github.com/videojs/video.js/issues/7715)) ([dd1b478](https://github.com/videojs/video.js/commit/dd1b478))
-* Change addRemoteTextTrack's manualCleanup option default value to false ([#7588](https://github.com/videojs/video.js/issues/7588)) ([3faa866](https://github.com/videojs/video.js/commit/3faa866))
-* Enable sourceset by default ([#7879](https://github.com/videojs/video.js/issues/7879)) ([b0101a6](https://github.com/videojs/video.js/commit/b0101a6))
-* export more helpers in videojs object ([#7717](https://github.com/videojs/video.js/issues/7717)) ([9d832ec](https://github.com/videojs/video.js/commit/9d832ec))
-* generate Typescript definitions ([#7954](https://github.com/videojs/video.js/issues/7954)) ([0545df5](https://github.com/videojs/video.js/commit/0545df5))
-* **lang:** use less ambiguous text for the fullscreen button when in fullscreen mode ([#7856](https://github.com/videojs/video.js/issues/7856)) ([a5e7222](https://github.com/videojs/video.js/commit/a5e7222))
-* make retryOnError be the default ([#7868](https://github.com/videojs/video.js/issues/7868)) ([d4559b1](https://github.com/videojs/video.js/commit/d4559b1))
-* playback rate button now opens the menu rather than changing the playback rate ([#7779](https://github.com/videojs/video.js/issues/7779)) ([a0fd148](https://github.com/videojs/video.js/commit/a0fd148))
-* remove closest fallback ([#7853](https://github.com/videojs/video.js/issues/7853)) ([63a2d02](https://github.com/videojs/video.js/commit/63a2d02))
-* Remove references and logic related to Flash and SWF ([#7852](https://github.com/videojs/video.js/issues/7852)) ([706983c](https://github.com/videojs/video.js/commit/706983c))
-* remove the firstplay event ([#7707](https://github.com/videojs/video.js/issues/7707)) ([c190b21](https://github.com/videojs/video.js/commit/c190b21))
-* update exposed utility functions and deprecate several top-level methods of the videojs global ([#7761](https://github.com/videojs/video.js/issues/7761)) ([28029d9](https://github.com/videojs/video.js/commit/28029d9))
-* Use picture el for poster ([#7865](https://github.com/videojs/video.js/issues/7865)) ([f2aa0d7](https://github.com/videojs/video.js/commit/f2aa0d7))
-* Use userAgentData in favour of userAgent ([#7979](https://github.com/videojs/video.js/issues/7979)) ([2d96c9d](https://github.com/videojs/video.js/commit/2d96c9d))
-
-### Bug Fixes
-
-* **control-bar:** make vertical alignment of slider handles more consistent ([#7990](https://github.com/videojs/video.js/issues/7990)) ([b7080f7](https://github.com/videojs/video.js/commit/b7080f7)), closes [#7989](https://github.com/videojs/video.js/issues/7989)
-* **jsdoc:** controlText_ should have a protected access modifier. ([#7972](https://github.com/videojs/video.js/issues/7972)) ([dec7075](https://github.com/videojs/video.js/commit/dec7075))
-* update icons import path for sass ([#7867](https://github.com/videojs/video.js/issues/7867)) ([bd54b41](https://github.com/videojs/video.js/commit/bd54b41)), closes [#7208](https://github.com/videojs/video.js/issues/7208) [#7863](https://github.com/videojs/video.js/issues/7863)
-
-### Chores
-
-* make direct deps be exact but indirect have ^ ([#8014](https://github.com/videojs/video.js/issues/8014)) ([db4201a](https://github.com/videojs/video.js/commit/db4201a))
-* **package:** update to [@videojs](https://github.com/videojs)/http-streaming 3.0.0 ([#8012](https://github.com/videojs/video.js/issues/8012)) ([bf1faff](https://github.com/videojs/video.js/commit/bf1faff))
-* re-generate package-lock.json to fix merge issues with main ([#8015](https://github.com/videojs/video.js/issues/8015)) ([e1a7ac3](https://github.com/videojs/video.js/commit/e1a7ac3))
-* update karma-config to 8 to drop ie11 and older browsers ([#7547](https://github.com/videojs/video.js/issues/7547)) ([4771130](https://github.com/videojs/video.js/commit/4771130))
-* Update preset env, drop IE11 and older browser support ([#7708](https://github.com/videojs/video.js/issues/7708)) ([1281d68](https://github.com/videojs/video.js/commit/1281d68))
-
-### Code Refactoring
-
-* remove extend() and tests ([#7950](https://github.com/videojs/video.js/issues/7950)) ([1299daf](https://github.com/videojs/video.js/commit/1299daf))
-* remove ie-specific code ([#7701](https://github.com/videojs/video.js/issues/7701)) ([bd8aebb](https://github.com/videojs/video.js/commit/bd8aebb))
-* remove internal Map, Set, and WeakMap shams, assume window.performance and requestAnimationFrame support ([#7775](https://github.com/videojs/video.js/issues/7775)) ([cc84ff4](https://github.com/videojs/video.js/commit/cc84ff4))
-* Remove logic and style that accommodates non-flex fallbacks ([#7820](https://github.com/videojs/video.js/issues/7820)) ([e4945cb](https://github.com/videojs/video.js/commit/e4945cb))
-* rename fn.bind to fn.bind_ to strongly indicate it should not be used externally ([#7940](https://github.com/videojs/video.js/issues/7940)) ([b8ee885](https://github.com/videojs/video.js/commit/b8ee885))
-
-### Reverts
-
-* revert [#7067](https://github.com/videojs/video.js/issues/7067) so we throw an error for invalid event types ([#7719](https://github.com/videojs/video.js/issues/7719)) ([f99ace0](https://github.com/videojs/video.js/commit/f99ace0))
-
-
-### BREAKING CHANGES
-
-* **control-bar:** This changes how slider handles are styled, so custom skins that are targeting them may need to change.
-* This removes the videojs.extend() method, please use ES6 classes instead.
-* This changes the DOM structure used for the video poster.
-* remove retryOnError option, turn it on by default
-* update icons path in sass to remove node_modules
-* This changes the behavior of the playback rate button.
-* This will cause Video.js to fail in many cases in all versions of Internet Explorer.
-* Removes support for Promise class option and assumes native Promise is available. Will break in older browsers or devices.
-* Instead of logging an error message, invalid events will now trigger an `Error` which will terminate the call stack.
-* Removes the firstplay event. Use one('play') instead.
+* Add missing translations ([#8099](https://github.com/videojs/video.js/issues/8099)) ([2fe3aba](https://github.com/videojs/video.js/commit/2fe3aba)), closes [#8083](https://github.com/videojs/video.js/issues/8083) [#8091](https://github.com/videojs/video.js/issues/8091)
+* **package:** update to [@videojs](https://github.com/videojs)/http-streaming 2.16.0 ([#8098](https://github.com/videojs/video.js/issues/8098)) ([cb77739](https://github.com/videojs/video.js/commit/cb77739))
 
 <a name="7.21.1"></a>
 ## [7.21.1](https://github.com/videojs/video.js/compare/v7.21.0...v7.21.1) (2022-11-21)

@@ -8,13 +8,13 @@ declare class LoadProgressBar extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../../player').default, options?: any);
     partEls_: any[];
     /**
      * Create the `Component`'s DOM element
@@ -28,12 +28,12 @@ declare class LoadProgressBar extends Component {
     /**
      * Update progress bar
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `progress` event that caused this function to run.
      *
      * @listens Player#progress
      */
-    update(event: any): void;
+    update(event?: Event): void;
     percent_: any;
 }
 import Component from "../../component.js";

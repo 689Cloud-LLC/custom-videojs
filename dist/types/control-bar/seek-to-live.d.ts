@@ -8,13 +8,13 @@ declare class SeekToLive extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: any, options?: any);
     updateLiveEdgeStatusHandler_: (e: any) => void;
     /**
      * Create the `Component`'s DOM element

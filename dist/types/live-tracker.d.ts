@@ -7,7 +7,7 @@ declare class LiveTracker extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
@@ -21,9 +21,9 @@ declare class LiveTracker extends Component {
      *        Number of seconds behind live that we have to be
      *        before we will be considered non-live. Note that this will only
      *        be used when playing at the live edge. This allows large seekable end
-     *        changes to not effect wether we are live or not.
+     *        changes to not effect whether we are live or not.
      */
-    constructor(player: Player, options?: {
+    constructor(player: import('./player').default, options?: {
         trackingThreshold?: number;
         liveTolerance?: number;
     });
@@ -119,7 +119,7 @@ declare class LiveTracker extends Component {
      * is tracking live playback or not
      *
      * @return {boolean}
-     *         Wether liveTracker is tracking
+     *         Whether liveTracker is tracking
      */
     isLive(): boolean;
     /**
@@ -127,7 +127,7 @@ declare class LiveTracker extends Component {
      * on each seekableendchange
      *
      * @return {boolean}
-     *         Wether playback is at the live edge
+     *         Whether playback is at the live edge
      */
     atLiveEdge(): boolean;
     /**
@@ -138,7 +138,7 @@ declare class LiveTracker extends Component {
      */
     liveCurrentTime(): number;
     /**
-     * The number of seconds that have occured after seekable end
+     * The number of seconds that have occurred after seekable end
      * changed. This will be reset to 0 once seekable end changes.
      *
      * @return {number}
@@ -154,7 +154,7 @@ declare class LiveTracker extends Component {
      */
     behindLiveEdge(): boolean;
     /**
-     * Wether live tracker is currently tracking or not.
+     * Whether live tracker is currently tracking or not.
      */
     isTracking(): boolean;
     /**

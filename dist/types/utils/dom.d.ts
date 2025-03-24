@@ -8,13 +8,13 @@ export function isReal(): boolean;
 /**
  * Determines, via duck typing, whether or not a value is a DOM element.
  *
- * @param  {Mixed} value
+ * @param  {*} value
  *         The value to check.
  *
  * @return {boolean}
  *         Will be `true` if the value is a DOM element, `false` otherwise.
  */
-export function isEl(value: Mixed): boolean;
+export function isEl(value: any): boolean;
 /**
  * Determines if the current DOM is embedded in an iframe.
  *
@@ -35,17 +35,17 @@ export function isInFrame(): boolean;
  * @param  {Object} [attributes={}]
  *         Element attributes to be applied.
  *
- * @param {module:dom~ContentDescriptor} content
+ * @param {ContentDescriptor} [content]
  *        A content descriptor object.
  *
  * @return {Element}
  *         The element that was created.
  */
-export function createEl(tagName?: string, properties?: any, attributes?: any, content: any): Element;
+export function createEl(tagName?: string, properties?: any, attributes?: any, content?: ContentDescriptor): Element;
 /**
  * Injects text into an element, replacing any existing contents entirely.
  *
- * @param  {Element} el
+ * @param  {HTMLElement} el
  *         The element to add text content into
  *
  * @param  {string} text
@@ -54,7 +54,7 @@ export function createEl(tagName?: string, properties?: any, attributes?: any, c
  * @return {Element}
  *         The element with added text content.
  */
-export function textContent(el: Element, text: string): Element;
+export function textContent(el: HTMLElement, text: string): Element;
 /**
  * Insert an element as the first child node of another
  *
@@ -271,24 +271,24 @@ export function findPosition(el: Element): any;
  * @param  {Element} el
  *         Element on which to get the pointer position on.
  *
- * @param  {EventTarget~Event} event
+ * @param  {Event} event
  *         Event object.
  *
  * @return {module:dom~Coordinates}
  *         A coordinates object corresponding to the mouse position.
  *
  */
-export function getPointerPosition(el: Element, event: any): any;
+export function getPointerPosition(el: Element, event: Event): any;
 /**
  * Determines, via duck typing, whether or not a value is a text node.
  *
- * @param  {Mixed} value
+ * @param  {*} value
  *         Check if this value is a text node.
  *
  * @return {boolean}
  *         Will be `true` if the value is a text node, `false` otherwise.
  */
-export function isTextNode(value: Mixed): boolean;
+export function isTextNode(value: any): boolean;
 /**
  * Empties the contents of an element.
  *
@@ -307,11 +307,11 @@ export function emptyEl(el: Element): Element;
  * -----------|-------------
  * `string`   | The value will be normalized into a text node.
  * `Element`  | The value will be accepted as-is.
- * `TextNode` | The value will be accepted as-is.
+ * `Text`     | A TextNode. The value will be accepted as-is.
  * `Array`    | A one-dimensional array of strings, elements, text nodes, or functions. These functions should return a string, element, or text node (any other return value, like an array, will be ignored).
  * `Function` | A function, which is expected to return a string, element, text node, or array - any of the other possible values described above. This means that a content descriptor could be a function that returns an array of functions, but those second-level functions must return strings, elements, or text nodes.
  *
- * @typedef {string|Element|TextNode|Array|Function} module:dom~ContentDescriptor
+ * @typedef {string|Element|Text|Array|Function} ContentDescriptor
  */
 /**
  * Normalizes content for eventual insertion into the DOM.
@@ -323,27 +323,27 @@ export function emptyEl(el: Element): Element;
  * The content for an element can be passed in multiple types and
  * combinations, whose behavior is as follows:
  *
- * @param {module:dom~ContentDescriptor} content
+ * @param {ContentDescriptor} content
  *        A content descriptor value.
  *
  * @return {Array}
  *         All of the content that was passed in, normalized to an array of
  *         elements or text nodes.
  */
-export function normalizeContent(content: any): any[];
+export function normalizeContent(content: ContentDescriptor): any[];
 /**
  * Normalizes and appends content to an element.
  *
  * @param  {Element} el
  *         Element to append normalized content to.
  *
- * @param {module:dom~ContentDescriptor} content
+ * @param {ContentDescriptor} content
  *        A content descriptor value.
  *
  * @return {Element}
  *         The element with appended normalized content.
  */
-export function appendContent(el: Element, content: any): Element;
+export function appendContent(el: Element, content: ContentDescriptor): Element;
 /**
  * Normalizes and inserts content into an element; this is identical to
  * `appendContent()`, except it empties the element first.
@@ -351,23 +351,23 @@ export function appendContent(el: Element, content: any): Element;
  * @param {Element} el
  *        Element to insert normalized content into.
  *
- * @param {module:dom~ContentDescriptor} content
+ * @param {ContentDescriptor} content
  *        A content descriptor value.
  *
  * @return {Element}
  *         The element with inserted normalized content.
  */
-export function insertContent(el: Element, content: any): Element;
+export function insertContent(el: Element, content: ContentDescriptor): Element;
 /**
  * Check if an event was a single left click.
  *
- * @param  {EventTarget~Event} event
+ * @param  {MouseEvent} event
  *         Event object.
  *
  * @return {boolean}
  *         Will be `true` if a single left click, `false` otherwise.
  */
-export function isSingleLeftClick(event: any): boolean;
+export function isSingleLeftClick(event: MouseEvent): boolean;
 /**
  * A safe getComputedStyle.
  *
@@ -384,6 +384,14 @@ export function isSingleLeftClick(event: any): boolean;
  * @see      https://bugzilla.mozilla.org/show_bug.cgi?id=548397
  */
 export function computedStyle(el: Element, prop: string): any;
+/**
+ * Copy document style sheets to another window.
+ *
+ * @param    {Window} win
+ *           The window element you want to copy the document style sheets to.
+ *
+ */
+export function copyStyleSheetsToWindow(win: Window): void;
 /**
  * Finds a single DOM element matching `selector` within the optional
  * `context` of another DOM element (defaulting to `document`).
@@ -424,4 +432,17 @@ export const $$: Function;
  * :dom~PredicateCallback
  */
 export type module = (element: Element, classToToggle: string) => boolean | undefined;
+/**
+ * This is a mixed value that describes content to be injected into the DOM
+ * via some method. It can be of the following types:
+ *
+ * Type       | Description
+ * -----------|-------------
+ * `string`   | The value will be normalized into a text node.
+ * `Element`  | The value will be accepted as-is.
+ * `Text`     | A TextNode. The value will be accepted as-is.
+ * `Array`    | A one-dimensional array of strings, elements, text nodes, or functions. These functions should return a string, element, or text node (any other return value, like an array, will be ignored).
+ * `Function` | A function, which is expected to return a string, element, text node, or array - any of the other possible values described above. This means that a content descriptor could be a function that returns an array of functions, but those second-level functions must return strings, elements, or text nodes.
+ */
+export type ContentDescriptor = string | Element | Text | any[] | Function;
 //# sourceMappingURL=dom.d.ts.map

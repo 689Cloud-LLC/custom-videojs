@@ -8,37 +8,37 @@ declare class MuteToggle extends Button {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: any, options?: any);
     /**
      * This gets called when an `MuteToggle` is "clicked". See
      * {@link ClickableComponent} for more detailed information on what a click can be.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `keydown`, `tap`, or `click` event that caused this function to be
      *        called.
      *
      * @listens tap
      * @listens click
      */
-    handleClick(event: any): void;
+    handleClick(event?: Event): void;
     /**
      * Update the `MuteToggle` button based on the state of `volume` and `muted`
      * on the player.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The {@link Player#loadstart} event if this function was called
      *        through an event.
      *
      * @listens Player#loadstart
      * @listens Player#volumechange
      */
-    update(event: any): void;
+    update(event?: Event): void;
     /**
      * Update the appearance of the `MuteToggle` icon.
      *

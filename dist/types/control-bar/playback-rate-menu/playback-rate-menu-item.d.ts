@@ -8,14 +8,26 @@ declare class PlaybackRateMenuItem extends MenuItem {
     label: any;
     rate: number;
     /**
+     * This gets called when an `PlaybackRateMenuItem` is "clicked". See
+     * {@link ClickableComponent} for more detailed information on what a click can be.
+     *
+     * @param {Event} [event]
+     *        The `keydown`, `tap`, or `click` event that caused this function to be
+     *        called.
+     *
+     * @listens tap
+     * @listens click
+     */
+    handleClick(event?: Event): void;
+    /**
      * Update the PlaybackRateMenuItem when the playbackrate changes.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `ratechange` event that caused this function to run.
      *
      * @listens Player#ratechange
      */
-    update(event: any): void;
+    update(event?: Event): void;
     /**
      * The text that should display over the `PlaybackRateMenuItem`s controls. Added for localization.
      *

@@ -12,13 +12,13 @@ declare class ModalDialog extends Component {
     /**
      * Create an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      *
-     * @param {Mixed} [options.content=undefined]
+     * @param { import('./utils/dom').ContentDescriptor} [options.content=undefined]
      *        Provide customized content for this modal.
      *
      * @param {string} [options.description]
@@ -45,8 +45,8 @@ declare class ModalDialog extends Component {
      *        through the UI in the normal ways. Programmatic closing is
      *        still possible.
      */
-    constructor(player: Player, options?: {
-        content?: Mixed;
+    constructor(player: import('./player').default, options?: {
+        content?: import('./utils/dom').ContentDescriptor;
         description?: string;
         fillAlways?: boolean;
         label?: string;
@@ -93,7 +93,7 @@ declare class ModalDialog extends Component {
      */
     open(): void;
     wasPlaying_: boolean;
-    hadControls_: any;
+    hadControls_: boolean;
     /**
      * If the `ModalDialog` is currently open or closed.
      *
@@ -135,10 +135,10 @@ declare class ModalDialog extends Component {
      * @fires ModalDialog#beforemodalfill
      * @fires ModalDialog#modalfill
      *
-     * @param {Mixed} [content]
+     * @param { import('./utils/dom').ContentDescriptor} [content]
      *        The same rules apply to this as apply to the `content` option.
      */
-    fillWith(content?: Mixed): void;
+    fillWith(content?: import('./utils/dom').ContentDescriptor): void;
     /**
      * Empties the content element. This happens anytime the modal is filled.
      *
@@ -153,16 +153,16 @@ declare class ModalDialog extends Component {
      * This does not update the DOM or fill the modal, but it is called during
      * that process.
      *
-     * @param  {Mixed} [value]
+     * @param  { import('./utils/dom').ContentDescriptor} [value]
      *         If defined, sets the internal content value to be used on the
      *         next call(s) to `fill`. This value is normalized before being
      *         inserted. To "clear" the internal content value, pass `null`.
      *
-     * @return {Mixed}
+     * @return { import('./utils/dom').ContentDescriptor}
      *         The current content of the modal dialog
      */
-    content(value?: Mixed): Mixed;
-    content_: Mixed;
+    content(value?: import('./utils/dom').ContentDescriptor): import('./utils/dom').ContentDescriptor;
+    content_: Dom.ContentDescriptor;
     /**
      * conditionally focus the modal dialog if focus was previously on the player.
      *
@@ -189,4 +189,5 @@ declare class ModalDialog extends Component {
     private focusableEls_;
 }
 import Component from "./component";
+import * as Dom from "./utils/dom";
 //# sourceMappingURL=modal-dialog.d.ts.map

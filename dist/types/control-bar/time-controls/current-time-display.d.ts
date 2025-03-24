@@ -8,12 +8,12 @@ declare class CurrentTimeDisplay extends Component {
     /**
      * Update current time display
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `timeupdate` event that caused this function to run.
      *
      * @listens Player#timeupdate
      */
-    updateContent(event: any): void;
+    updateContent(event?: Event): void;
     /**
      * The text that is added to the `CurrentTimeDisplay` for screen reader users.
      *

@@ -68,7 +68,7 @@ videojs.addLanguage('lv', {
   "Raised": "Izvirzīts",
   "Depressed": "Samazināts",
   "Uniform": "Vienmērīgs",
-  "Dropshadow": "Ēnots",
+  "Drop shadow": "Ēnots",
   "Font Family": "Šrifts",
   "Proportional Sans-Serif": "Proportional Sans-Serif",
   "Monospace Sans-Serif": "Monospace Sans-Serif",
@@ -85,5 +85,7 @@ videojs.addLanguage('lv', {
   "End of dialog window.": "Parakstu iestatījumu loga beigas",
   "{1} is loading.": "{1} ielādē.",
   "Exit Picture-in-Picture": "Iziet no Attēls attēlā",
-  "Picture-in-Picture": "Attēls attēlā"
+  "Picture-in-Picture": "Attēls attēlā",
+  "Skip forward {1} seconds": "Pārtīt uz priekšu {1} sekundes",
+  "Skip backward {1} seconds": "Pārtīt atpakaļ {1} sekundes"
 });

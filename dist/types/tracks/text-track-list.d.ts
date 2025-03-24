@@ -9,12 +9,12 @@ declare class TextTrackList extends TrackList {
     /**
      * Add a {@link TextTrack} to the `TextTrackList`
      *
-     * @param {TextTrack} track
+     * @param { import('./text-track').default } track
      *        The text track to add to the list.
      *
      * @fires TrackList#addtrack
      */
-    addTrack(track: TextTrack): void;
+    addTrack(track: import('./text-track').default): void;
     queueChange_: () => void;
     triggerSelectedlanguagechange_: () => void;
     removeTrack(rtrack: any): void;

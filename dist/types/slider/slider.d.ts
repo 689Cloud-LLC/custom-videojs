@@ -9,13 +9,13 @@ declare class Slider extends Component {
     /**
    * Create an instance of this class
    *
-   * @param {Player} player
+   * @param { import('../player').default } player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
    *        The key/value store of player options.
    */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../player').default, options?: any);
     handleMouseDown_: (e: any) => void;
     handleMouseUp_: (e: any) => void;
     handleKeyDown_: (e: any) => void;
@@ -58,21 +58,21 @@ declare class Slider extends Component {
     /**
      * Handle `mousedown` or `touchstart` events on the `Slider`.
      *
-     * @param {EventTarget~Event} event
+     * @param {MouseEvent} event
      *        `mousedown` or `touchstart` event that triggered this function
      *
      * @listens mousedown
      * @listens touchstart
      * @fires Slider#slideractive
      */
-    handleMouseDown(event: any): void;
+    handleMouseDown(event: MouseEvent): void;
     /**
      * Handle the `mousemove`, `touchmove`, and `mousedown` events on this `Slider`.
      * The `mousemove` and `touchmove` events will only only trigger this function during
      * `mousedown` and `touchstart`. This is due to {@link Slider#handleMouseDown} and
      * {@link Slider#handleMouseUp}.
      *
-     * @param {EventTarget~Event} event
+     * @param {MouseEvent} event
      *        `mousedown`, `mousemove`, `touchstart`, or `touchmove` event that triggered
      *        this function
      * @param {boolean} mouseDown this is a flag that should be set to true if `handleMouseMove` is called directly. It allows us to skip things that should not happen if coming from mouse down but should happen on regular mouse move handler. Defaults to false.
@@ -80,18 +80,18 @@ declare class Slider extends Component {
      * @listens mousemove
      * @listens touchmove
      */
-    handleMouseMove(event: any): void;
+    handleMouseMove(event: MouseEvent): void;
     /**
      * Handle `mouseup` or `touchend` events on the `Slider`.
      *
-     * @param {EventTarget~Event} event
+     * @param {MouseEvent} event
      *        `mouseup` or `touchend` event that triggered this function.
      *
      * @listens touchend
      * @listens mouseup
      * @fires Slider#sliderinactive
      */
-    handleMouseUp(): void;
+    handleMouseUp(event: MouseEvent): void;
     /**
      * Update the progress bar of the `Slider`.
      *
@@ -112,7 +112,7 @@ declare class Slider extends Component {
     /**
      * Calculate distance for slider
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The event that caused this function to run.
      *
      * @return {number}
@@ -120,7 +120,7 @@ declare class Slider extends Component {
      *         - position.x for vertical `Slider`s
      *         - position.y for horizontal `Slider`s
      */
-    calculateDistance(event: any): number;
+    calculateDistance(event: Event): number;
     /**
      * Listener for click events on slider, used to prevent clicks
      *   from bubbling up to parent elements like button menus.

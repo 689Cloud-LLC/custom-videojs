@@ -8,13 +8,13 @@ declare class TextTrackSettings extends ModalDialog {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *         The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *         The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../player').default, options?: any);
     /**
      * Update display of text track settings
      */
@@ -25,6 +25,12 @@ declare class TextTrackSettings extends ModalDialog {
      *
      * @param {string} key
      *        Configuration key to use during creation.
+     *
+     * @param {string} [legendId]
+     *        Id of associated <legend>.
+     *
+     * @param {string} [type=label]
+     *        Type of labelling element, `label` or `legend`
      *
      * @return {string}
      *         An HTML string.

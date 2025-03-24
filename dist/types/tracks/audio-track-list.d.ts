@@ -6,7 +6,23 @@ export default AudioTrackList;
  * @extends TrackList
  */
 declare class AudioTrackList extends TrackList {
+    /**
+     * Create an instance of this class.
+     *
+     * @param { import('./audio-track').default[] } [tracks=[]]
+     *        A list of `AudioTrack` to instantiate the list with.
+     */
+    constructor(tracks?: import('./audio-track').default[]);
     changing_: boolean;
+    /**
+     * Add an {@link AudioTrack} to the `AudioTrackList`.
+     *
+     * @param { import('./audio-track').default } track
+     *        The AudioTrack to add to the list
+     *
+     * @fires TrackList#addtrack
+     */
+    addTrack(track: import('./audio-track').default): void;
     removeTrack(rtrack: any): void;
 }
 import TrackList from "./track-list";

@@ -12,7 +12,7 @@ declare class HTMLTrackElement extends EventTarget {
      * @param {Object} options={}
      *        Object of option names and values
      *
-     * @param {Tech} options.tech
+     * @param { import('../tech/tech').default } options.tech
      *        A reference to the tech that owns this HTMLTrackElement.
      *
      * @param {TextTrack~Kind} [options.kind='subtitles']
@@ -41,14 +41,17 @@ declare class HTMLTrackElement extends EventTarget {
      *        If this track should default to on or off.
      */
     constructor(options?: {
-        tech: Tech;
+        tech: import('../tech/tech').default;
     });
     kind: any;
     src: any;
     srclang: any;
     label: any;
     default: any;
-    allowedEvents_: {
+    /**
+     * @protected
+     */
+    protected allowedEvents_: {
         load: string;
     };
 }

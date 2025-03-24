@@ -26,7 +26,7 @@ export namespace MimetypesKind {
     const webp: string;
 }
 export function getMimetype(src?: string): string;
-export function findMimetype(player: Player, src: string): string;
+export function findMimetype(player: import('../player').default, src: string): string;
 /**
  * ~Kind
  */

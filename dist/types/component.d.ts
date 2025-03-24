@@ -34,41 +34,41 @@ declare class Component {
      * @param {string} name
      *        The Name of the component to get.
      *
-     * @return {Component}
+     * @return {typeof Component}
      *         The `Component` that got registered under the given name.
      */
-    static getComponent(name: string): Component;
+    static getComponent(name: string): typeof Component;
     /**
      * A callback that is called when a component is ready. Does not have any
      * parameters and any callback value will be ignored.
      *
-     * @callback Component~ReadyCallback
+     * @callback ReadyCallback
      * @this Component
      */
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of component options.
      *
      * @param {Object[]} [options.children]
-     *        An array of children objects to intialize this component with. Children objects have
+     *        An array of children objects to initialize this component with. Children objects have
      *        a name property that will be used if more than one component of the same type needs to be
      *        added.
      *
      * @param  {string} [options.className]
      *         A class or space separated list of classes to add the component
      *
-     * @param {Component~ReadyCallback} [ready]
+     * @param {ReadyCallback} [ready]
      *        Function that gets called when the `Component` is ready.
      */
-    constructor(player: Player, options?: {
+    constructor(player: import('./player').default, options?: {
         children?: any[];
         className?: string;
-    }, ready: any);
+    }, ready?: () => any);
     player_: any;
     isDisposed_: boolean;
     parentComponent_: any;
@@ -77,7 +77,7 @@ declare class Component {
     name_: any;
     el_: any;
     /**
-     * Handles language change for the player in components. Should be overriden by sub-components.
+     * Handles language change for the player in components. Should be overridden by sub-components.
      *
      * @abstract
      */
@@ -90,6 +90,74 @@ declare class Component {
     rafIds_: Set<any>;
     namedRafs_: Map<any, any>;
     clearingTimersOnDispose_: boolean;
+    /**
+     * Adds an `event listener` to an instance of an `EventTarget`. An `event listener` is a
+     * function that will get called when an event with a certain name gets triggered.
+     *
+     * @param {string|string[]} type
+     *        An event name or an array of event names.
+     *
+     * @param {Function} fn
+     *        The function to call with `EventTarget`s
+     */
+    on(type: string | string[], fn: Function): void;
+    /**
+     * Removes an `event listener` for a specific event from an instance of `EventTarget`.
+     * This makes it so that the `event listener` will no longer get called when the
+     * named event happens.
+     *
+     * @param {string|string[]} type
+     *        An event name or an array of event names.
+     *
+     * @param {Function} [fn]
+     *        The function to remove. If not specified, all listeners managed by Video.js will be removed.
+     */
+    off(type: string | string[], fn?: Function): void;
+    /**
+     * This function will add an `event listener` that gets triggered only once. After the
+     * first trigger it will get removed. This is like adding an `event listener`
+     * with {@link EventTarget#on} that calls {@link EventTarget#off} on itself.
+     *
+     * @param {string|string[]} type
+     *        An event name or an array of event names.
+     *
+     * @param {Function} fn
+     *        The function to be called once for each event name.
+     */
+    one(type: string | string[], fn: Function): void;
+    /**
+     * This function will add an `event listener` that gets triggered only once and is
+     * removed from all events. This is like adding an array of `event listener`s
+     * with {@link EventTarget#on} that calls {@link EventTarget#off} on all events the
+     * first time it is triggered.
+     *
+     * @param {string|string[]} type
+     *        An event name or an array of event names.
+     *
+     * @param {Function} fn
+     *        The function to be called once for each event name.
+     */
+    any(type: string | string[], fn: Function): void;
+    /**
+     * This function causes an event to happen. This will then cause any `event listeners`
+     * that are waiting for that event, to get called. If there are no `event listeners`
+     * for an event then nothing will happen.
+     *
+     * If the name of the `Event` that is being triggered is in `EventTarget.allowedEvents_`.
+     * Trigger will also call the `on` + `uppercaseEventName` function.
+     *
+     * Example:
+     * 'click' is in `EventTarget.allowedEvents_`, so, trigger will attempt to call
+     * `onClick` if it exists.
+     *
+     * @param {string|Event|Object} event
+     *        The name of the event, an `Event`, or an object with a key of type set to
+     *        an event name.
+     *
+     * @param {Object} [hash]
+     *        Optionally extra argument to pass through to an event listener
+     */
+    trigger(event: string | Event | any, hash?: any): void;
     /**
      * Dispose of the `Component` and all child components.
      *
@@ -111,10 +179,10 @@ declare class Component {
     /**
      * Return the {@link Player} that the `Component` has attached to.
      *
-     * @return {Player}
+     * @return { import('./player').default }
      *         The player that this `Component` has attached to.
      */
-    player(): Player;
+    player(): import('./player').default;
     /**
      * Deep merge of options objects with new options.
      * > Note: When both `obj` and `options` contain properties whose values are objects.
@@ -255,8 +323,21 @@ declare class Component {
      */
     getDescendant(...names: any[]): Component | undefined;
     /**
-     * Add a child `Component` inside the current `Component`.
+     * Adds an SVG icon element to another element or component.
      *
+     * @param {string} iconName
+     *        The name of icon. A list of all the icon names can be found at 'sandbox/svg-icons.html'
+     *
+     * @param {Element} [el=this.el()]
+     *        Element to set the title on. Defaults to the current Component's element.
+     *
+     * @return {Element}
+     *        The newly created icon element.
+     */
+    setIcon(iconName: string, el?: Element): Element;
+    iconIsSet_: boolean;
+    /**
+     * Add a child `Component` inside the current `Component`.
      *
      * @param {string|Component} child
      *        The name or instance of a child to add.
@@ -267,6 +348,7 @@ declare class Component {
      *
      * @param {number} [index=this.children_.length]
      *        The index to attempt to add a child into.
+     *
      *
      * @return {Component}
      *         The `Component` that gets added as a child. When using a string the
@@ -286,7 +368,7 @@ declare class Component {
      */
     initChildren(): void;
     /**
-     * Builds the default DOM class name. Should be overriden by sub-components.
+     * Builds the default DOM class name. Should be overridden by sub-components.
      *
      * @return {string}
      *         The DOM class name for this object.
@@ -299,13 +381,13 @@ declare class Component {
      * Different from event listeners in that if the ready event has already happened
      * it will trigger the function immediately.
      *
-     * @param {Component~ReadyCallback} fn
+     * @param {ReadyCallback} fn
      *        Function that gets called when the `Component` is ready.
      *
      * @return {Component}
      *         Returns itself; method can be chained.
      */
-    ready(fn: any, sync?: boolean): Component;
+    ready(fn: () => any, sync?: boolean): Component;
     readyQueue_: any;
     /**
      * Trigger all the ready listeners for this `Component`.
@@ -423,7 +505,7 @@ declare class Component {
      *         - The value of the attribute that was asked for.
      *         - Can be an empty string on some browsers if the attribute does not exist
      *           or has no value
-     *         - Most browsers will return null if the attibute does not exist or has
+     *         - Most browsers will return null if the attribute does not exist or has
      *           no value.
      *
      * @see [DOM API]{@link https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute}
@@ -460,11 +542,10 @@ declare class Component {
      * @param {boolean} [skipListeners]
      *        Skip the componentresize event trigger
      *
-     * @return {number|string}
-     *         The width when getting, zero if there is no width. Can be a string
-     *           postpixed with '%' or 'px'.
+     * @return {number|undefined}
+     *         The width when getting, zero if there is no width
      */
-    width(num?: number | string, skipListeners?: boolean): number | string;
+    width(num?: number | string, skipListeners?: boolean): number | undefined;
     /**
      * Get or set the height of the component based upon the CSS styles.
      * See {@link Component#dimension} for more detailed information.
@@ -475,11 +556,10 @@ declare class Component {
      * @param {boolean} [skipListeners]
      *        Skip the componentresize event trigger
      *
-     * @return {number|string}
-     *         The width when getting, zero if there is no width. Can be a string
-     *         postpixed with '%' or 'px'.
+     * @return {number|undefined}
+     *         The height when getting, zero if there is no height
      */
-    height(num?: number | string, skipListeners?: boolean): number | string;
+    height(num?: number | string, skipListeners?: boolean): number | undefined;
     /**
      * Set both the width and height of the `Component` element at the same time.
      *
@@ -515,10 +595,10 @@ declare class Component {
      * @param  {boolean} [skipListeners]
      *         Skip componentresize event trigger
      *
-     * @return {number}
+     * @return {number|undefined}
      *         The dimension when getting or 0 if unset
      */
-    dimension(widthOrHeight: string, num?: number | string, skipListeners?: boolean): number;
+    dimension(widthOrHeight: string, num?: number | string, skipListeners?: boolean): number | undefined;
     /**
      * Get the computed width or the height of the component's element.
      *
@@ -584,26 +664,26 @@ declare class Component {
      * When this Component receives a `keydown` event which it does not process,
      *  it passes the event to the Player for handling.
      *
-     * @param {EventTarget~Event} event
+     * @param {KeyboardEvent} event
      *        The `keydown` event that caused this function to be called.
      */
-    handleKeyDown(event: any): void;
+    handleKeyDown(event: KeyboardEvent): void;
     /**
      * Many components used to have a `handleKeyPress` method, which was poorly
      * named because it listened to a `keydown` event. This method name now
      * delegates to `handleKeyDown`. This means anyone calling `handleKeyPress`
      * will not see their method calls stop working.
      *
-     * @param {EventTarget~Event} event
+     * @param {KeyboardEvent} event
      *        The event that caused this function to be called.
      */
-    handleKeyPress(event: any): void;
+    handleKeyPress(event: KeyboardEvent): void;
     /**
      * Emit a 'tap' events when touch event support gets detected. This gets used to
      * support toggling the controls through a tap on the video. They get enabled
      * because every sub-component would have extra overhead otherwise.
      *
-     * @private
+     * @protected
      * @fires Component#tap
      * @listens Component#touchstart
      * @listens Component#touchmove
@@ -612,7 +692,7 @@ declare class Component {
      * @listens Component#touchend
   
      */
-    private emitTapEvents;
+    protected emitTapEvents(): void;
     /**
      * This function reports user activity whenever touch events happen. This can get
      * turned off by any sub-components that wants touch events to act another way.
@@ -709,7 +789,7 @@ declare class Component {
     setInterval(fn: any, interval: number): number;
     /**
      * Clears an interval that gets created via `window.setInterval` or
-     * {@link Component#setInterval}. If you set an inteval via {@link Component#setInterval}
+     * {@link Component#setInterval}. If you set an interval via {@link Component#setInterval}
      * use this function instead of `window.clearInterval`. If you don't your dispose
      * listener will not get cleaned up until {@link Component#dispose}!
      *

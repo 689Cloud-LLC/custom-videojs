@@ -9,12 +9,10 @@
  * @param {number} end
  *        The end of a single range. Cannot be used with the array form of
  *        the `start` argument.
+ *
+ * @return {TimeRange}
  */
-export function createTimeRanges(start: number | any[][], end: number): {
-    length: number;
-    start: any;
-    end: any;
-};
+export function createTimeRanges(start: number | any[][], end: number): TimeRange;
 /**
  * Replaces the default formatTime implementation with a custom implementation.
  *
@@ -54,7 +52,7 @@ export { createTimeRanges as createTimeRange };
  */
 export type TimeRangeIndex = Function;
 /**
- * An object that contains ranges of time.
+ * An object that contains ranges of time, which mimics {@link TimeRanges }.
  */
 export type TimeRange = {
     /**

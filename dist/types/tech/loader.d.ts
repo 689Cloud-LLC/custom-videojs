@@ -9,16 +9,16 @@ declare class MediaLoader extends Component {
     /**
      * Create an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *        The `Player` that this class should attach to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      *
-     * @param {Component~ReadyCallback} [ready]
+     * @param {Function} [ready]
      *        The function that is run when this component is ready.
      */
-    constructor(player: Player, options?: any, ready: any);
+    constructor(player: import('../player').default, options?: any, ready?: Function);
 }
 import Component from "../component.js";
 //# sourceMappingURL=loader.d.ts.map

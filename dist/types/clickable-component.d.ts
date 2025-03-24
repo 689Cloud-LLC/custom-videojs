@@ -9,7 +9,7 @@ declare class ClickableComponent extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param  {Player} player
+     * @param  { import('./player').default } player
      *         The `Player` that this class should be attached to.
      *
      * @param  {Object} [options]
@@ -25,7 +25,7 @@ declare class ClickableComponent extends Component {
      *         A class or space separated list of classes to add the component
      *
      */
-    constructor(player: Player, options?: {
+    constructor(player: import('./player').default, options?: {
         clickHandler?: Function;
         controlText?: string;
         className?: string;
@@ -75,14 +75,14 @@ declare class ClickableComponent extends Component {
      * Event handler that is called when a `ClickableComponent` receives a
      * `click` or `tap` event.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `tap` or `click` event that caused this function to be called.
      *
      * @listens tap
      * @listens click
      * @abstract
      */
-    handleClick(event: any, ...args: any[]): void;
+    handleClick(event: Event, ...args: any[]): void;
 }
 import Component from "./component";
 //# sourceMappingURL=clickable-component.d.ts.map

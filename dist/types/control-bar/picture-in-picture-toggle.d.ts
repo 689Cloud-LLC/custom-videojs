@@ -8,7 +8,7 @@ declare class PictureInPictureToggle extends Button {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
@@ -17,35 +17,45 @@ declare class PictureInPictureToggle extends Button {
      * @listens Player#enterpictureinpicture
      * @listens Player#leavepictureinpicture
      */
-    constructor(player: Player, options?: any);
+    constructor(player: any, options?: any);
     /**
-     * Enables or disables button based on document.pictureInPictureEnabled property value
-     * or on value returned by player.disablePictureInPicture() method.
+     * Displays or hides the button depending on the audio mode detection.
+     * Exits picture-in-picture if it is enabled when switching to audio mode.
+     */
+    handlePictureInPictureAudioModeChange(): void;
+    /**
+     * Enables or disables button based on availability of a Picture-In-Picture mode.
+     *
+     * Enabled if
+     * - `player.options().enableDocumentPictureInPicture` is true and
+     *   window.documentPictureInPicture is available; or
+     * - `player.disablePictureInPicture()` is false and
+     *   element.requestPictureInPicture is available
      */
     handlePictureInPictureEnabledChange(): void;
     /**
      * Handles enterpictureinpicture and leavepictureinpicture on the player and change control text accordingly.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The {@link Player#enterpictureinpicture} or {@link Player#leavepictureinpicture} event that caused this function to be
      *        called.
      *
      * @listens Player#enterpictureinpicture
      * @listens Player#leavepictureinpicture
      */
-    handlePictureInPictureChange(event: any): void;
+    handlePictureInPictureChange(event?: Event): void;
     /**
      * This gets called when an `PictureInPictureToggle` is "clicked". See
      * {@link ClickableComponent} for more detailed information on what a click can be.
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `keydown`, `tap`, or `click` event that caused this function to be
      *        called.
      *
      * @listens tap
      * @listens click
      */
-    handleClick(event: any): void;
+    handleClick(event?: Event): void;
 }
 import Button from "../button.js";
 //# sourceMappingURL=picture-in-picture-toggle.d.ts.map

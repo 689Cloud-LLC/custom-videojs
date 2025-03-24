@@ -36,21 +36,21 @@ declare class PlaybackRateMenuButton extends MenuButton {
     /**
      * Hide playback rate controls when they're no playback rate options to select
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The event that caused this function to run.
      *
      * @listens Player#loadstart
      */
-    updateVisibility(event: any): void;
+    updateVisibility(event?: Event): void;
     /**
      * Update button label when rate changed
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The event that caused this function to run.
      *
      * @listens Player#ratechange
      */
-    updateLabel(event: any): void;
+    updateLabel(event?: Event): void;
     /**
      * The text that should display over the `PlaybackRateMenuButton`s controls.
      *

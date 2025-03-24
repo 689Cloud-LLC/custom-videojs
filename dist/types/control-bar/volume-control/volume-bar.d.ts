@@ -13,6 +13,24 @@ declare class VolumeBar extends Slider {
      */
     createEl(): Element;
     /**
+     * Handle mouse down on volume bar
+     *
+     * @param {Event} event
+     *        The `mousedown` event that caused this to run.
+     *
+     * @listens mousedown
+     */
+    handleMouseDown(event: Event): void;
+    /**
+     * Handle movement events on the {@link VolumeMenuButton}.
+     *
+     * @param {Event} event
+     *        The event that caused this function to run.
+     *
+     * @listens mousemove
+     */
+    handleMouseMove(event: Event): void;
+    /**
      * If the player is muted unmute it.
      */
     checkMuted(): void;
@@ -34,12 +52,12 @@ declare class VolumeBar extends Slider {
     /**
      * Update ARIA accessibility attributes
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The `volumechange` event that caused this function to run.
      *
      * @listens Player#volumechange
      */
-    updateARIAAttributes(event: any): void;
+    updateARIAAttributes(event?: Event): void;
     /**
      * Returns the current value of the player volume as a percentage
      *

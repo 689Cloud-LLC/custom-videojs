@@ -9,13 +9,13 @@ declare class ErrorDisplay extends ModalDialog {
     /**
      * Creates an instance of this class.
      *
-     * @param  {Player} player
+     * @param  { import('./player').default } player
      *         The `Player` that this class should be attached to.
      *
      * @param  {Object} [options]
      *         The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('./player').default, options?: any);
     /**
      * Gets the localized error message based on the `Player`s error.
      *

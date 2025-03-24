@@ -8,25 +8,25 @@ declare class DescriptionsButton extends TextTrackButton {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      *
-     * @param {Component~ReadyCallback} [ready]
+     * @param {Function} [ready]
      *        The function to call when this component is ready.
      */
-    constructor(player: Player, options?: any, ready: any);
+    constructor(player: import('../../player').default, options?: any, ready?: Function);
     /**
      * Handle text track change
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The event that caused this function to run
      *
      * @listens TextTrackList#change
      */
-    handleTracksChange(event: any): void;
+    handleTracksChange(event: Event): void;
     /**
      * Builds the default DOM `className`.
      *

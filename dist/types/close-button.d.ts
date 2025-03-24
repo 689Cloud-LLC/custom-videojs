@@ -9,19 +9,19 @@ declare class CloseButton extends Button {
     /**
     * Creates an instance of the this class.
     *
-    * @param  {Player} player
+    * @param  { import('./player').default } player
     *         The `Player` that this class should be attached to.
     *
     * @param  {Object} [options]
     *         The key/value store of player options.
     */
-    constructor(player: Player, options?: any);
+    constructor(player: import('./player').default, options?: any);
     /**
      * This gets called when a `CloseButton` gets clicked. See
      * {@link ClickableComponent#handleClick} for more information on when
      * this will be triggered
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `keydown`, `tap`, or `click` event that caused this function to be
      *        called.
      *
@@ -29,7 +29,7 @@ declare class CloseButton extends Button {
      * @listens click
      * @fires CloseButton#close
      */
-    handleClick(event: any): void;
+    handleClick(event: Event): void;
 }
 import Button from "./button";
 //# sourceMappingURL=close-button.d.ts.map

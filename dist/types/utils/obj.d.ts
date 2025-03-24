@@ -19,13 +19,13 @@ export function each(object: any, fn: any): void;
  *         receives the accumulated value and the per-iteration value and key
  *         as arguments.
  *
- * @param {Mixed} [initial = 0]
+ * @param {*} [initial = 0]
  *        Starting value
  *
- * @return {Mixed}
+ * @return {*}
  *         The final accumulated value.
  */
-export function reduce(object: any, fn: Function, initial?: Mixed): Mixed;
+export function reduce(object: any, fn: Function, initial?: any): any;
 /**
  * Returns whether a value is an object of any kind - including DOM nodes,
  * arrays, regular expressions, etc. Not functions, though.
@@ -63,6 +63,13 @@ export function isPlain(value: any): boolean;
  */
 export function merge(...sources: any[]): any;
 /**
+ * Returns an array of values for a given object
+ *
+ * @param  {Object} source - target object
+ * @return {Array<unknown>} - object values
+ */
+export function values(source?: any): Array<unknown>;
+/**
  * Object.defineProperty but "lazy", which means that the value is only set after
  * it is retrieved the first time, rather than being set right away.
  *
@@ -75,5 +82,5 @@ export function defineLazyProperty(obj: any, key: string, getValue: Function, se
 /**
  * :EachCallback
  */
-export type obj = (value: Mixed, key: string) => any;
+export type obj = (value: any, key: string) => any;
 //# sourceMappingURL=obj.d.ts.map

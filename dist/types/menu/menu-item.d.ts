@@ -8,14 +8,14 @@ declare class MenuItem extends ClickableComponent {
     /**
      * Creates an instance of the this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options={}]
      *        The key/value store of player options.
      *
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../player').default, options?: any);
     selectable: any;
     isSelected_: any;
     multiSelectable: any;
@@ -24,14 +24,14 @@ declare class MenuItem extends ClickableComponent {
      * Any click on a `MenuItem` puts it into the selected state.
      * See {@link ClickableComponent#handleClick} for instances where this is called.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `keydown`, `tap`, or `click` event that caused this function to be
      *        called.
      *
      * @listens tap
      * @listens click
      */
-    handleClick(event: any): void;
+    handleClick(event: Event): void;
     /**
      * Set the state for this menu item as selected or not.
      *

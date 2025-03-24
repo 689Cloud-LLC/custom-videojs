@@ -8,13 +8,13 @@ declare class LiveDisplay extends Component {
     /**
      * Creates an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('./player').default } player
      *        The `Player` that this class should be attached to.
      *
      * @param {Object} [options]
      *        The key/value store of player options.
      */
-    constructor(player: Player, options?: any);
+    constructor(player: any, options?: any);
     /**
      * Create the `Component`'s DOM element
      *
@@ -28,12 +28,12 @@ declare class LiveDisplay extends Component {
      * Check the duration to see if the LiveDisplay should be showing or not. Then show/hide
      * it accordingly
      *
-     * @param {EventTarget~Event} [event]
+     * @param {Event} [event]
      *        The {@link Player#durationchange} event that caused this function to run.
      *
      * @listens Player#durationchange
      */
-    updateShowing(event: any): void;
+    updateShowing(event?: Event): void;
 }
 import Component from "../component";
 //# sourceMappingURL=live-display.d.ts.map

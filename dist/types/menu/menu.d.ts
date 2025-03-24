@@ -9,14 +9,14 @@ declare class Menu extends Component {
     /**
      * Create an instance of this class.
      *
-     * @param {Player} player
+     * @param { import('../player').default } player
      *        the player that this component should attach to
      *
      * @param {Object} [options]
      *        Object of option names and values
      *
      */
-    constructor(player: Player, options?: any);
+    constructor(player: import('../player').default, options?: any);
     menuButton_: any;
     focusedChild_: number;
     boundHandleBlur_: (e: any) => void;
@@ -67,21 +67,21 @@ declare class Menu extends Component {
     /**
      * Called when a `MenuItem` loses focus.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `blur` event that caused this function to be called.
      *
      * @listens blur
      */
-    handleBlur(event: any): void;
+    handleBlur(event: Event): void;
     /**
      * Called when a `MenuItem` gets clicked or tapped.
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `click` or `tap` event that caused this function to be called.
      *
      * @listens click,tap
      */
-    handleTapClick(event: any): void;
+    handleTapClick(event: Event): void;
     /**
      * Move to next (lower) menu item for keyboard users.
      */

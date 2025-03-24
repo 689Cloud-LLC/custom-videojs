@@ -10,12 +10,12 @@ declare class TextTrackMenuItem extends MenuItem {
     /**
      * Handle text track list change
      *
-     * @param {EventTarget~Event} event
+     * @param {Event} event
      *        The `change` event that caused this function to be called.
      *
      * @listens TextTrackList#change
      */
-    handleTracksChange(event: any): void;
+    handleTracksChange(event: Event): void;
     handleSelectedLanguageChange(event: any): void;
 }
 import MenuItem from "../../menu/menu-item.js";

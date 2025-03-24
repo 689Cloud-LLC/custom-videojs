@@ -12,7 +12,7 @@ declare class TextTrack extends Track {
      * @param {Object} options={}
      *        Object of option names and values
      *
-     * @param {Tech} options.tech
+     * @param { import('../tech/tech').default } options.tech
      *        A reference to the tech that owns this TextTrack.
      *
      * @param {TextTrack~Kind} [options.kind='subtitles']
@@ -41,7 +41,7 @@ declare class TextTrack extends Track {
      *        If this track should default to on or off.
      */
     constructor(options?: {
-        tech: Tech;
+        tech: import('../tech/tech').default;
     });
     tech_: any;
     cues_: any[];
@@ -69,8 +69,9 @@ declare class TextTrack extends Track {
     removeCue(removeCue: any): void;
     /**
      * cuechange - One or more cues in the track have become active or stopped being active.
+     * @protected
      */
-    allowedEvents_: {
+    protected allowedEvents_: {
         cuechange: string;
     };
 }
