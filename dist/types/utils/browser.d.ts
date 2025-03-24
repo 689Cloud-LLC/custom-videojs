@@ -80,6 +80,13 @@ export let CHROMIUM_VERSION: number | null;
  */
 export let CHROME_VERSION: number | null;
 /**
+ * Whether or not this is a Chromecast receiver application.
+ *
+ * @static
+ * @type {Boolean}
+ */
+export const IS_CHROMECAST_RECEIVER: boolean;
+/**
  * The detected Internet Explorer version - or `null`.
  *
  * @static
@@ -115,6 +122,27 @@ export let IS_IPAD: boolean;
  * @type {Boolean}
  */
 export let IS_IPHONE: boolean;
+/**
+ * Whether or not this is a Tizen device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+export let IS_TIZEN: boolean;
+/**
+ * Whether or not this is a WebOS device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+export let IS_WEBOS: boolean;
+/**
+ * Whether or not this is a Smart TV (Tizen or WebOS) device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+export let IS_SMART_TV: boolean;
 /**
  * Whether or not this device is touch-enabled.
  *

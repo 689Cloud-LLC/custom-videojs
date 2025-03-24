@@ -138,6 +138,29 @@ declare class Html5 extends Tech {
      */
     src(src: any): Tech;
     /**
+     * Add a <source> element to the <video> element.
+     *
+     * @param {string} srcUrl
+     *        The URL of the video source.
+     *
+     * @param {string} [mimeType]
+     *        The MIME type of the video source. Optional but recommended.
+     *
+     * @return {boolean}
+     *         Returns true if the source element was successfully added, false otherwise.
+     */
+    addSourceElement(srcUrl: string, mimeType?: string): boolean;
+    /**
+     * Remove a <source> element from the <video> element by its URL.
+     *
+     * @param {string} srcUrl
+     *        The URL of the source to remove.
+     *
+     * @return {boolean}
+     *         Returns true if the source element was successfully removed, false otherwise.
+     */
+    removeSourceElement(srcUrl: string): boolean;
+    /**
      * Get the current source on the `HTML5` Tech. Falls back to returning the source from
      * the HTML5 media element.
      *
@@ -300,7 +323,7 @@ declare namespace Html5 {
      *        - False otherwise
      */
     function supportsNativeAudioTracks(): boolean;
-    const Events: any[];
+    let Events: any[];
     function disposeMediaElement(el: any): void;
     function resetMediaElement(el: any): void;
     namespace nativeSourceHandler {
@@ -346,5 +369,5 @@ declare namespace Html5 {
         function dispose(): void;
     }
 }
-import Tech from "./tech.js";
+import Tech from './tech.js';
 //# sourceMappingURL=html5.d.ts.map

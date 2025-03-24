@@ -7,6 +7,25 @@ export default SeekBar;
  */
 declare class SeekBar extends Slider {
     /**
+     * Creates an instance of this class.
+     *
+     * @param {Player} player
+     *        The `Player` that this class should be attached to.
+     *
+     * @param {Object} [options]
+     *        The key/value store of player options.
+     * @param {number} [options.stepSeconds=5]
+     *        The number of seconds to increment on keyboard control
+     * @param {number} [options.pageMultiplier=12]
+     *        The multiplier of stepSeconds that PgUp/PgDown move the timeline.
+     */
+    constructor(player: Player, options?: {
+        stepSeconds?: number;
+        pageMultiplier?: number;
+    });
+    shouldDisableSeekWhileScrubbingOnMobile_: boolean;
+    pendingSeekTime_: any;
+    /**
      * Sets the event handlers
      *
      * @private
@@ -96,5 +115,6 @@ declare class SeekBar extends Slider {
     handleAction(event: KeyboardEvent): void;
     dispose(): void;
 }
-import Slider from "../../slider/slider.js";
+import Slider from '../../slider/slider.js';
+import type Player from '../../player';
 //# sourceMappingURL=seek-bar.d.ts.map

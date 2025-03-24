@@ -5,12 +5,11 @@ const decryptKey = {
 
 const getDecryptKey = (fileId, callback) =>  {
     const xhrobj = new XMLHttpRequest();
-    xhrobj.open('GET','https://secdocs-api.689cloud.com/api/file/video/encrypted-key/' + fileId);
+    xhrobj.open('GET','https://secdocs-ueh-api.689cloud.com/api/file/video/encrypted-key/' + fileId);
     xhrobj.send();
     xhrobj.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             const jsonResponse = JSON.parse(xhrobj.responseText);
-            console.log('jsonResponse', jsonResponse);
             if(jsonResponse.status === "success") {
                 callback(jsonResponse.data);
             } else {
@@ -35,8 +34,7 @@ const decryptKeyFile = (request, callback) => {
 
     const parts = request.url.split('/');
     const fileId = parts[parts.length - 2];
-     console.log("fileId", fileId)
-     console.log("decryptKey.fileId", decryptKey.fileId)
+
     if (fileId !== decryptKey.fileId) {
         decryptKey.fileId = fileId;
         console.log(fileId);

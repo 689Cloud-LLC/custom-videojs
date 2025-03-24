@@ -1,6 +1,6 @@
 /**
  * @license
- * Video.js 8.10.0 <http://videojs.com/>
+ * Video.js 8.22.0 <http://videojs.com/>
  * Copyright Brightcove, Inc. <https://www.brightcove.com/>
  * Available under Apache License Version 2.0
  * <https://github.com/videojs/video.js/blob/main/LICENSE>
@@ -11,25 +11,32 @@
  */
 
 import window$1 from 'global/window';
-import document from 'global/document';
-import keycode from 'keycode';
-import safeParseTuple from 'safe-json-parse/tuple';
+import document$1 from 'global/document';
 import XHR from '@videojs/xhr';
 import vtt from 'videojs-vtt.js';
 import _extends from '@babel/runtime/helpers/extends';
 import _resolveUrl from '@videojs/vhs-utils/es/resolve-url.js';
-import { Parser } from 'm3u8-parser';
-import { DEFAULT_VIDEO_CODEC, DEFAULT_AUDIO_CODEC, parseCodecs, muxerSupportsCodec, browserSupportsCodec, translateLegacyCodec, codecsFromDefault, isAudioCodec, getMimeForCodec } from '@videojs/vhs-utils/es/codecs.js';
-import { simpleTypeFromSourceType } from '@videojs/vhs-utils/es/media-types.js';
-import { isArrayBufferView, concatTypedArrays, stringToBytes, toUint8 } from '@videojs/vhs-utils/es/byte-helpers';
-import { generateSidxKey, parseUTCTiming, parse, addSidxSegmentsToPlaylist } from 'mpd-parser';
+import {Parser} from 'm3u8-parser';
+import {
+  DEFAULT_VIDEO_CODEC,
+  DEFAULT_AUDIO_CODEC,
+  parseCodecs,
+  muxerSupportsCodec,
+  browserSupportsCodec,
+  translateLegacyCodec,
+  codecsFromDefault,
+  isAudioCodec,
+  getMimeForCodec
+} from '@videojs/vhs-utils/es/codecs.js';
+import {simpleTypeFromSourceType} from '@videojs/vhs-utils/es/media-types.js';
+import {isArrayBufferView, concatTypedArrays, stringToBytes, toUint8} from '@videojs/vhs-utils/es/byte-helpers';
+import {generateSidxKey, parseUTCTiming, parse, addSidxSegmentsToPlaylist} from 'mpd-parser';
 import parseSidx from 'mux.js/lib/tools/parse-sidx';
-import { getId3Offset } from '@videojs/vhs-utils/es/id3-helpers';
-import { detectContainerForBytes, isLikelyFmp4MediaSegment } from '@videojs/vhs-utils/es/containers';
-import { ONE_SECOND_IN_TS } from 'mux.js/lib/utils/clock';
-import customHandleKeyResponse from './custom/handle-key-cs';
+import {getId3Offset} from '@videojs/vhs-utils/es/id3-helpers';
+import {detectContainerForBytes, isLikelyFmp4MediaSegment} from '@videojs/vhs-utils/es/containers';
+import {ONE_SECOND_IN_TS} from 'mux.js/lib/utils/clock';
 
-var version$6 = "8.10.0";
+var version$6 = "8.22.0";
 
 /**
  * An Object that contains lifecycle hooks as keys which point to an array
@@ -132,14 +139,14 @@ const FullscreenApi = {
 // browser API methods
 const apiMap = [['requestFullscreen', 'exitFullscreen', 'fullscreenElement', 'fullscreenEnabled', 'fullscreenchange', 'fullscreenerror', 'fullscreen'],
 // WebKit
-['webkitRequestFullscreen', 'webkitExitFullscreen', 'webkitFullscreenElement', 'webkitFullscreenEnabled', 'webkitfullscreenchange', 'webkitfullscreenerror', '-webkit-full-screen']];
+  ['webkitRequestFullscreen', 'webkitExitFullscreen', 'webkitFullscreenElement', 'webkitFullscreenEnabled', 'webkitfullscreenchange', 'webkitfullscreenerror', '-webkit-full-screen']];
 const specApi = apiMap[0];
 let browserApi;
 
 // determine the supported set of functions
 for (let i = 0; i < apiMap.length; i++) {
   // check for exitFullscreen function
-  if (apiMap[i][1] in document) {
+  if (apiMap[i][1] in document$1) {
     browserApi = apiMap[i];
     break;
   }
@@ -222,6 +229,7 @@ const LogByTypeFactory = (name, log, styles) => (type, level, args) => {
   }
   fn[Array.isArray(args) ? 'apply' : 'call'](window$1.console, args);
 };
+
 function createLogger$1(name, delimiter = ':', styles = '') {
   // This is the private tracking variable for logging level.
   let level = 'info';
@@ -250,9 +258,9 @@ function createLogger$1(name, delimiter = ':', styles = '') {
    * @param    {...*} args
    *           One or more messages or objects that should be logged.
    */
-  const log = function (...args) {
+  function log(...args) {
     logByType('log', level, args);
-  };
+  }
 
   // This is the logByType helper that the logging methods below use
   logByType = LogByTypeFactory(name, log, styles);
@@ -260,7 +268,7 @@ function createLogger$1(name, delimiter = ':', styles = '') {
   /**
    * Create a new subLogger which chains the old name to the new name.
    *
-   * For example, doing `videojs.log.createLogger('player')` and then using that logger will log the following:
+   * For example, doing `mylogger = videojs.log.createLogger('player')` and then using that logger will log the following:
    * ```js
    *  mylogger('foo');
    *  // > VIDEOJS: player: foo
@@ -735,6 +743,14 @@ let CHROMIUM_VERSION = null;
 let CHROME_VERSION = null;
 
 /**
+ * Whether or not this is a Chromecast receiver application.
+ *
+ * @static
+ * @type {Boolean}
+ */
+const IS_CHROMECAST_RECEIVER = Boolean(window$1.cast && window$1.cast.framework && window$1.cast.framework.CastReceiverContext);
+
+/**
  * The detected Internet Explorer version - or `null`.
  *
  * @static
@@ -777,6 +793,30 @@ let IS_IPAD = false;
 // to identify iPhones, we need to exclude iPads.
 // http://artsy.github.io/blog/2012/10/18/the-perils-of-ios-user-agent-sniffing/
 let IS_IPHONE = false;
+
+/**
+ * Whether or not this is a Tizen device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+let IS_TIZEN = false;
+
+/**
+ * Whether or not this is a WebOS device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+let IS_WEBOS = false;
+
+/**
+ * Whether or not this is a Smart TV (Tizen or WebOS) device.
+ *
+ * @static
+ * @type {Boolean}
+ */
+let IS_SMART_TV = false;
 
 /**
  * Whether or not this device is touch-enabled.
@@ -850,7 +890,10 @@ if (!IS_CHROMIUM) {
     }
     return version;
   }();
-  IS_SAFARI = /Safari/i.test(USER_AGENT) && !IS_CHROME && !IS_ANDROID && !IS_EDGE;
+  IS_TIZEN = /Tizen/i.test(USER_AGENT);
+  IS_WEBOS = /Web0S/i.test(USER_AGENT);
+  IS_SMART_TV = IS_TIZEN || IS_WEBOS;
+  IS_SAFARI = /Safari/i.test(USER_AGENT) && !IS_CHROME && !IS_ANDROID && !IS_EDGE && !IS_SMART_TV;
   IS_WINDOWS = /Windows/i.test(USER_AGENT);
   IS_IPAD = /iPad/i.test(USER_AGENT) || IS_SAFARI && TOUCH_ENABLED && !/iPhone/i.test(USER_AGENT);
   IS_IPHONE = /iPhone/i.test(USER_AGENT) && !IS_IPAD;
@@ -876,21 +919,61 @@ const IS_ANY_SAFARI = (IS_SAFARI || IS_IOS) && !IS_CHROME;
 
 var browser = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  get IS_IPOD () { return IS_IPOD; },
-  get IOS_VERSION () { return IOS_VERSION; },
-  get IS_ANDROID () { return IS_ANDROID; },
-  get ANDROID_VERSION () { return ANDROID_VERSION; },
-  get IS_FIREFOX () { return IS_FIREFOX; },
-  get IS_EDGE () { return IS_EDGE; },
-  get IS_CHROMIUM () { return IS_CHROMIUM; },
-  get IS_CHROME () { return IS_CHROME; },
-  get CHROMIUM_VERSION () { return CHROMIUM_VERSION; },
-  get CHROME_VERSION () { return CHROME_VERSION; },
-  get IE_VERSION () { return IE_VERSION; },
-  get IS_SAFARI () { return IS_SAFARI; },
-  get IS_WINDOWS () { return IS_WINDOWS; },
-  get IS_IPAD () { return IS_IPAD; },
-  get IS_IPHONE () { return IS_IPHONE; },
+  get IS_IPOD() {
+    return IS_IPOD;
+  },
+  get IOS_VERSION() {
+    return IOS_VERSION;
+  },
+  get IS_ANDROID() {
+    return IS_ANDROID;
+  },
+  get ANDROID_VERSION() {
+    return ANDROID_VERSION;
+  },
+  get IS_FIREFOX() {
+    return IS_FIREFOX;
+  },
+  get IS_EDGE() {
+    return IS_EDGE;
+  },
+  get IS_CHROMIUM() {
+    return IS_CHROMIUM;
+  },
+  get IS_CHROME() {
+    return IS_CHROME;
+  },
+  get CHROMIUM_VERSION() {
+    return CHROMIUM_VERSION;
+  },
+  get CHROME_VERSION() {
+    return CHROME_VERSION;
+  },
+  IS_CHROMECAST_RECEIVER: IS_CHROMECAST_RECEIVER,
+  get IE_VERSION() {
+    return IE_VERSION;
+  },
+  get IS_SAFARI() {
+    return IS_SAFARI;
+  },
+  get IS_WINDOWS() {
+    return IS_WINDOWS;
+  },
+  get IS_IPAD() {
+    return IS_IPAD;
+  },
+  get IS_IPHONE() {
+    return IS_IPHONE;
+  },
+  get IS_TIZEN() {
+    return IS_TIZEN;
+  },
+  get IS_WEBOS() {
+    return IS_WEBOS;
+  },
+  get IS_SMART_TV() {
+    return IS_SMART_TV;
+  },
   TOUCH_ENABLED: TOUCH_ENABLED,
   IS_IOS: IS_IOS,
   IS_ANY_SAFARI: IS_ANY_SAFARI
@@ -947,7 +1030,7 @@ function throwIfWhitespace(str) {
  */
 function isReal() {
   // Both document and window will never be undefined thanks to `global`.
-  return document === window$1.document;
+  return document$1 === window$1.document;
 }
 
 /**
@@ -993,12 +1076,12 @@ function isInFrame() {
 function createQuerier(method) {
   return function (selector, context) {
     if (!isNonBlankString(selector)) {
-      return document[method](null);
+      return document$1[method](null);
     }
     if (isNonBlankString(context)) {
-      context = document.querySelector(context);
+      context = document$1.querySelector(context);
     }
-    const ctx = isEl(context) ? context : document;
+    const ctx = isEl(context) ? context : document$1;
     return ctx[method] && ctx[method](selector);
   };
 }
@@ -1022,7 +1105,7 @@ function createQuerier(method) {
  *         The element that was created.
  */
 function createEl(tagName = 'div', properties = {}, attributes = {}, content) {
-  const el = document.createElement(tagName);
+  const el = document$1.createElement(tagName);
   Object.getOwnPropertyNames(properties).forEach(function (propName) {
     const val = properties[propName];
 
@@ -1143,7 +1226,7 @@ function removeClass(element, ...classesToRemove) {
 /**
  * The callback definition for toggleClass.
  *
- * @callback module:dom~PredicateCallback
+ * @callback PredicateCallback
  * @param    {Element} element
  *           The DOM element of the Component.
  *
@@ -1152,8 +1235,9 @@ function removeClass(element, ...classesToRemove) {
  *
  * @return   {boolean|undefined}
  *           If `true` is returned, the `classToToggle` will be added to the
- *           `element`. If `false`, the `classToToggle` will be removed from
- *           the `element`. If `undefined`, the callback will be ignored.
+ *           `element`, but not removed. If `false`, the `classToToggle` will be removed from
+ *           the `element`, but not added. If `undefined`, the callback will be ignored.
+ *
  */
 
 /**
@@ -1166,7 +1250,7 @@ function removeClass(element, ...classesToRemove) {
  * @param  {string} classToToggle
  *         The class that should be toggled.
  *
- * @param  {boolean|module:dom~PredicateCallback} [predicate]
+ * @param  {boolean|PredicateCallback} [predicate]
  *         See the return value for {@link module:dom~PredicateCallback}
  *
  * @return {Element}
@@ -1293,8 +1377,8 @@ function removeAttribute(el, attribute) {
  * Attempt to block the ability to select text.
  */
 function blockTextSelection() {
-  document.body.focus();
-  document.onselectstart = function () {
+  document$1.body.focus();
+  document$1.onselectstart = function () {
     return false;
   };
 }
@@ -1303,7 +1387,7 @@ function blockTextSelection() {
  * Turn off text selection blocking.
  */
 function unblockTextSelection() {
-  document.onselectstart = function () {
+  document$1.onselectstart = function () {
     return true;
   };
 }
@@ -1384,7 +1468,7 @@ function findPosition(el) {
   const height = el.offsetHeight;
   let left = 0;
   let top = 0;
-  while (el.offsetParent && el !== document[FullscreenApi.fullscreenElement]) {
+  while (el.offsetParent && el !== document$1[FullscreenApi.fullscreenElement]) {
     left += el.offsetLeft;
     top += el.offsetTop;
     el = el.offsetParent;
@@ -1442,7 +1526,13 @@ function getPointerPosition(el, event) {
         translated.x += values[12];
         translated.y += values[13];
       }
-      item = item.parentNode;
+      if (item.assignedSlot && item.assignedSlot.parentElement && window$1.WebKitCSSMatrix) {
+        const transformValue = window$1.getComputedStyle(item.assignedSlot.parentElement).transform;
+        const matrix = new window$1.WebKitCSSMatrix(transformValue);
+        translated.x += matrix.m41;
+        translated.y += matrix.m42;
+      }
+      item = item.parentNode || item.host;
     }
   }
   const position = {};
@@ -1545,7 +1635,7 @@ function normalizeContent(content) {
       return value;
     }
     if (typeof value === 'string' && /\S/.test(value)) {
-      return document.createTextNode(value);
+      return document$1.createTextNode(value);
     }
   }).filter(value => value);
 }
@@ -1623,6 +1713,11 @@ function isSingleLeftClick(event) {
   // `mouseup` event on a single left click has
   // `button` and `buttons` equal to 0
   if (event.type === 'mouseup' && event.button === 0 && event.buttons === 0) {
+    return true;
+  }
+
+  // MacOS Sonoma trackpad when "tap to click enabled"
+  if (event.type === 'mousedown' && event.button === 0 && event.buttons === 0) {
     return true;
   }
   if (event.button !== 0 || event.buttons !== 1) {
@@ -1713,14 +1808,14 @@ function computedStyle(el, prop) {
  *
  */
 function copyStyleSheetsToWindow(win) {
-  [...document.styleSheets].forEach(styleSheet => {
+  [...document$1.styleSheets].forEach(styleSheet => {
     try {
       const cssRules = [...styleSheet.cssRules].map(rule => rule.cssText).join('');
-      const style = document.createElement('style');
+      const style = document$1.createElement('style');
       style.textContent = cssRules;
       win.document.head.appendChild(style);
     } catch (e) {
-      const link = document.createElement('link');
+      const link = document$1.createElement('link');
       link.rel = 'stylesheet';
       link.type = styleSheet.type;
       // For older Safari this has to be the string; on other browsers setting the MediaList works
@@ -1781,9 +1876,9 @@ const autoSetup = function () {
   if (videojs$1.options.autoSetup === false) {
     return;
   }
-  const vids = Array.prototype.slice.call(document.getElementsByTagName('video'));
-  const audios = Array.prototype.slice.call(document.getElementsByTagName('audio'));
-  const divs = Array.prototype.slice.call(document.getElementsByTagName('video-js'));
+  const vids = Array.prototype.slice.call(document$1.getElementsByTagName('video'));
+  const audios = Array.prototype.slice.call(document$1.getElementsByTagName('audio'));
+  const divs = Array.prototype.slice.call(document$1.getElementsByTagName('video-js'));
   const mediaEls = vids.concat(audios, divs);
 
   // Check if any media elements exist
@@ -1848,8 +1943,9 @@ function setWindowLoaded() {
   _windowLoaded = true;
   window$1.removeEventListener('load', setWindowLoaded);
 }
+
 if (isReal()) {
-  if (document.readyState === 'complete') {
+  if (document$1.readyState === 'complete') {
     setWindowLoaded();
   } else {
     /**
@@ -1879,7 +1975,7 @@ if (isReal()) {
  *         The element that was created.
  */
 const createStyleElement = function (className) {
-  const style = document.createElement('style');
+  const style = document$1.createElement('style');
   style.className = className;
   return style;
 };
@@ -2035,9 +2131,11 @@ function fixEvent(event) {
   if (event.fixed_) {
     return event;
   }
+
   function returnTrue() {
     return true;
   }
+
   function returnFalse() {
     return false;
   }
@@ -2054,13 +2152,15 @@ function fixEvent(event) {
     // IE8 Doesn't like when you mess with native event properties
     // Firefox returns false for event.hasOwnProperty('type') and other props
     //  which makes copying more difficult.
-    // TODO: Probably best to create a whitelist of event props
+
+    // TODO: Probably best to create an allowlist of event props
+    const deprecatedProps = ['layerX', 'layerY', 'keyLocation', 'path', 'webkitMovementX', 'webkitMovementY', 'mozPressure', 'mozInputSource'];
     for (const key in old) {
       // Safari 6.0.3 warns you if you try to copy deprecated layerX/Y
       // Chrome warns you if you try to copy deprecated keyboardEvent.keyLocation
       // and webkitMovementX/Y
       // Lighthouse complains if Event.path is copied
-      if (key !== 'layerX' && key !== 'layerY' && key !== 'keyLocation' && key !== 'webkitMovementX' && key !== 'webkitMovementY' && key !== 'path') {
+      if (!deprecatedProps.includes(key)) {
         // Chrome 32+ warns if you try to copy deprecated returnValue, but
         // we still want to if preventDefault isn't supported (IE8).
         if (!(key === 'returnValue' && old.preventDefault)) {
@@ -2071,7 +2171,7 @@ function fixEvent(event) {
 
     // The event occurred on this element
     if (!event.target) {
-      event.target = event.srcElement || document;
+      event.target = event.srcElement || document$1;
     }
 
     // Handle which other element the event is related to
@@ -2113,8 +2213,8 @@ function fixEvent(event) {
 
     // Handle mouse position
     if (event.clientX !== null && event.clientX !== undefined) {
-      const doc = document.documentElement;
-      const body = document.body;
+      const doc = document$1.documentElement;
+      const body = document$1.body;
       event.pageX = event.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
       event.pageY = event.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc && doc.clientTop || body && body.clientTop || 0);
     }
@@ -2132,7 +2232,6 @@ function fixEvent(event) {
       /* eslint-enable */
     }
   }
-
   event.fixed_ = true;
   // Returns fixed-up instance
   return event;
@@ -2537,7 +2636,7 @@ const throttle = function (fn, wait) {
  * @return   {Function}
  *           A debounced function.
  */
-const debounce = function (func, wait, immediate, context = window$1) {
+const debounce$1 = function (func, wait, immediate, context = window$1) {
   let timeout;
   const cancel = () => {
     context.clearTimeout(timeout);
@@ -2572,7 +2671,7 @@ var Fn = /*#__PURE__*/Object.freeze({
   UPDATE_REFRESH_INTERVAL: UPDATE_REFRESH_INTERVAL,
   bind_: bind_,
   throttle: throttle,
-  debounce: debounce
+  debounce: debounce$1
 });
 
 /**
@@ -2603,10 +2702,12 @@ class EventTarget$2 {
     // Remove the addEventListener alias before calling Events.on
     // so we don't get into an infinite type loop
     const ael = this.addEventListener;
-    this.addEventListener = () => {};
+    this.addEventListener = () => {
+    };
     on(this, type, fn);
     this.addEventListener = ael;
   }
+
   /**
    * Removes an `event listener` for a specific event from an instance of `EventTarget`.
    * This makes it so that the `event listener` will no longer get called when the
@@ -2621,6 +2722,7 @@ class EventTarget$2 {
   off(type, fn) {
     off(this, type, fn);
   }
+
   /**
    * This function will add an `event listener` that gets triggered only once. After the
    * first trigger it will get removed. This is like adding an `event listener`
@@ -2636,10 +2738,12 @@ class EventTarget$2 {
     // Remove the addEventListener aliasing Events.on
     // so we don't get into an infinite type loop
     const ael = this.addEventListener;
-    this.addEventListener = () => {};
+    this.addEventListener = () => {
+    };
     one(this, type, fn);
     this.addEventListener = ael;
   }
+
   /**
    * This function will add an `event listener` that gets triggered only once and is
    * removed from all events. This is like adding an array of `event listener`s
@@ -2656,10 +2760,12 @@ class EventTarget$2 {
     // Remove the addEventListener aliasing Events.on
     // so we don't get into an infinite type loop
     const ael = this.addEventListener;
-    this.addEventListener = () => {};
+    this.addEventListener = () => {
+    };
     any(this, type, fn);
     this.addEventListener = ael;
   }
+
   /**
    * This function causes an event to happen. This will then cause any `event listeners`
    * that are waiting for that event, to get called. If there are no `event listeners`
@@ -2695,6 +2801,7 @@ class EventTarget$2 {
     }
     trigger(this, event);
   }
+
   queueTrigger(event) {
     // only set up EVENT_MAP if it'll be used
     if (!EVENT_MAP) {
@@ -2843,7 +2950,7 @@ const addEventedCallback = (target, callback) => {
 const isValidEventType = type =>
 // The regex here verifies that the `type` contains at least one non-
 // whitespace character.
-typeof type === 'string' && /\S/.test(type) || Array.isArray(type) && !!type.length;
+  typeof type === 'string' && /\S/.test(type) || Array.isArray(type) && !!type.length;
 
 /**
  * Validates a value to determine if it is a valid event target. Throws if not.
@@ -2878,7 +2985,7 @@ const validateTarget = (target, obj, fnName) => {
  *         The type to test.
  *
  * @param  {Object} obj
-*         The evented object we are validating for
+ *         The evented object we are validating for
  *
  * @param  {string} fnName
  *         The name of the evented mixin function that called this.
@@ -2946,7 +3053,12 @@ const normalizeListenArgs = (self, args, fnName) => {
     }
     [type, listener] = args;
   } else {
-    [target, type, listener] = args;
+    // This was `[target, type, listener] = args;` but this block needs more than
+    // one statement to produce minified output compatible with Chrome 53.
+    // See https://github.com/videojs/video.js/pull/8810
+    target = args[0];
+    type = args[1];
+    listener = args[2];
   }
   validateTarget(target, self, fnName);
   validateEventType(type, self, fnName);
@@ -3446,6 +3558,16 @@ var Str = /*#__PURE__*/Object.freeze({
  * @file component.js
  */
 
+/** @import Player from './player' */
+
+/**
+ * A callback to be called if and when the component is ready.
+ * `this` will be the Component instance.
+ *
+ * @callback ReadyCallback
+ * @returns  {void}
+ */
+
 /**
  * Base class for all UI Components.
  * Components are UI objects which represent both a javascript object and an element
@@ -3456,17 +3578,9 @@ var Str = /*#__PURE__*/Object.freeze({
  */
 class Component$1 {
   /**
-   * A callback that is called when a component is ready. Does not have any
-   * parameters and any callback value will be ignored.
-   *
-   * @callback ReadyCallback
-   * @this Component
-   */
-
-  /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -3573,7 +3687,6 @@ class Component$1 {
    * @param {Function} fn
    *        The function to call with `EventTarget`s
    */
-  on(type, fn) {}
 
   /**
    * Removes an `event listener` for a specific event from an instance of `EventTarget`.
@@ -3586,7 +3699,6 @@ class Component$1 {
    * @param {Function} [fn]
    *        The function to remove. If not specified, all listeners managed by Video.js will be removed.
    */
-  off(type, fn) {}
 
   /**
    * This function will add an `event listener` that gets triggered only once. After the
@@ -3599,7 +3711,6 @@ class Component$1 {
    * @param {Function} fn
    *        The function to be called once for each event name.
    */
-  one(type, fn) {}
 
   /**
    * This function will add an `event listener` that gets triggered only once and is
@@ -3613,7 +3724,6 @@ class Component$1 {
    * @param {Function} fn
    *        The function to be called once for each event name.
    */
-  any(type, fn) {}
 
   /**
    * This function causes an event to happen. This will then cause any `event listeners`
@@ -3634,7 +3744,6 @@ class Component$1 {
    * @param {Object} [hash]
    *        Optionally extra argument to pass through to an event listener
    */
-  trigger(event, hash) {}
 
   /**
    * Dispose of the `Component` and all child components.
@@ -3712,7 +3821,7 @@ class Component$1 {
   /**
    * Return the {@link Player} that the `Component` has attached to.
    *
-   * @return { import('./player').default }
+   * @return {Player}
    *         The player that this `Component` has attached to.
    */
   player() {
@@ -3835,7 +3944,8 @@ class Component$1 {
    *
    * @abstract
    */
-  handleLanguagechange() {}
+  handleLanguagechange() {
+  }
 
   /**
    * Return the `Component`s DOM element. This is where children get inserted.
@@ -3965,9 +4075,9 @@ class Component$1 {
     }, {
       'aria-hidden': 'true'
     });
-    const svgEl = document.createElementNS(xmlnsURL, 'svg');
+    const svgEl = document$1.createElementNS(xmlnsURL, 'svg');
     svgEl.setAttributeNS(null, 'viewBox', '0 0 512 512');
-    const useEl = document.createElementNS(xmlnsURL, 'use');
+    const useEl = document$1.createElementNS(xmlnsURL, 'use');
     svgEl.appendChild(useEl);
     useEl.setAttributeNS(null, 'href', `#vjs-icon-${iconName}`);
     iconContainer.appendChild(svgEl);
@@ -4159,16 +4269,16 @@ class Component$1 {
         workingChildren = Object.keys(children);
       }
       workingChildren
-      // children that are in this.options_ but also in workingChildren  would
-      // give us extra children we do not want. So, we want to filter them out.
-      .concat(Object.keys(this.options_).filter(function (child) {
-        return !workingChildren.some(function (wchild) {
-          if (typeof wchild === 'string') {
-            return child === wchild;
-          }
-          return child === wchild.name;
-        });
-      })).map(child => {
+        // children that are in this.options_ but also in workingChildren  would
+        // give us extra children we do not want. So, we want to filter them out.
+        .concat(Object.keys(this.options_).filter(function (child) {
+          return !workingChildren.some(function (wchild) {
+            if (typeof wchild === 'string') {
+              return child === wchild;
+            }
+            return child === wchild.name;
+          });
+        })).map(child => {
         let name;
         let opts;
         if (typeof child === 'string') {
@@ -4213,9 +4323,6 @@ class Component$1 {
    *
    * @param {ReadyCallback} fn
    *        Function that gets called when the `Component` is ready.
-   *
-   * @return {Component}
-   *         Returns itself; method can be chained.
    */
   ready(fn, sync = false) {
     if (!fn) {
@@ -4349,10 +4456,10 @@ class Component$1 {
    * - `classToToggle` gets removed when {@link Component#hasClass} would return true.
    *
    * @param  {string} classToToggle
-   *         The class to add or remove based on (@link Component#hasClass}
+   *         The class to add or remove. Passed to DOMTokenList's toggle()
    *
-   * @param  {boolean|Dom~predicate} [predicate]
-   *         An {@link Dom~predicate} function or a boolean
+   * @param  {boolean|Dom.PredicateCallback} [predicate]
+   *         A boolean or function that returns a boolean. Passed to DOMTokenList's toggle().
    */
   toggleClass(classToToggle, predicate) {
     toggleClass(this.el_, classToToggle, predicate);
@@ -4652,6 +4759,48 @@ class Component$1 {
   }
 
   /**
+   * Retrieves the position and size information of the component's element.
+   *
+   * @return {Object} An object with `boundingClientRect` and `center` properties.
+   *         - `boundingClientRect`: An object with properties `x`, `y`, `width`,
+   *           `height`, `top`, `right`, `bottom`, and `left`, representing
+   *           the bounding rectangle of the element.
+   *         - `center`: An object with properties `x` and `y`, representing
+   *           the center point of the element. `width` and `height` are set to 0.
+   */
+  getPositions() {
+    const rect = this.el_.getBoundingClientRect();
+
+    // Creating objects that mirror DOMRectReadOnly for boundingClientRect and center
+    const boundingClientRect = {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      left: rect.left
+    };
+
+    // Calculating the center position
+    const center = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      width: 0,
+      height: 0,
+      top: rect.top + rect.height / 2,
+      right: rect.left + rect.width / 2,
+      bottom: rect.top + rect.height / 2,
+      left: rect.left + rect.width / 2
+    };
+    return {
+      boundingClientRect,
+      center
+    };
+  }
+
+  /**
    * Set the focus to this component
    */
   focus() {
@@ -4675,8 +4824,8 @@ class Component$1 {
   handleKeyDown(event) {
     if (this.player_) {
       // We only stop propagation here because we want unhandled events to fall
-      // back to the browser. Exclude Tab for focus trapping.
-      if (!keycode.isEventKey(event, 'Tab')) {
+      // back to the browser. Exclude Tab for focus trapping, exclude also when spatialNavigation is enabled.
+      if (event.key !== 'Tab' && !(this.player_.options_.playerOptions.spatialNavigation && this.player_.options_.playerOptions.spatialNavigation.enabled)) {
         event.stopPropagation();
       }
       this.player_.handleKeyDown(event);
@@ -4708,7 +4857,7 @@ class Component$1 {
    * @listens Component#touchleave
    * @listens Component#touchcancel
    * @listens Component#touchend
-    */
+   */
   emitTapEvents() {
     // Track the start time so we can determine how long the touch lasted
     let touchStart = 0;
@@ -5017,7 +5166,7 @@ class Component$1 {
    */
   requestNamedAnimationFrame(name, fn) {
     if (this.namedRafs_.has(name)) {
-      return;
+      this.cancelNamedAnimationFrame(name);
     }
     this.clearTimersOnDispose_();
     fn = bind_(this, fn);
@@ -5096,6 +5245,150 @@ class Component$1 {
   }
 
   /**
+   * Decide whether an element is actually disabled or not.
+   *
+   * @function isActuallyDisabled
+   * @param element {Node}
+   * @return {boolean}
+   *
+   * @see {@link https://html.spec.whatwg.org/multipage/semantics-other.html#concept-element-disabled}
+   */
+  getIsDisabled() {
+    return Boolean(this.el_.disabled);
+  }
+
+  /**
+   * Decide whether the element is expressly inert or not.
+   *
+   * @see {@link https://html.spec.whatwg.org/multipage/interaction.html#expressly-inert}
+   * @function isExpresslyInert
+   * @param element {Node}
+   * @return {boolean}
+   */
+  getIsExpresslyInert() {
+    return this.el_.inert && !this.el_.ownerDocument.documentElement.inert;
+  }
+
+  /**
+   * Determine whether or not this component can be considered as focusable component.
+   *
+   * @param {HTMLElement} el - The HTML element representing the component.
+   * @return {boolean}
+   *         If the component can be focused, will be `true`. Otherwise, `false`.
+   */
+  getIsFocusable(el) {
+    const element = el || this.el_;
+    return element.tabIndex >= 0 && !(this.getIsDisabled() || this.getIsExpresslyInert());
+  }
+
+  /**
+   * Determine whether or not this component is currently visible/enabled/etc...
+   *
+   * @param {HTMLElement} el - The HTML element representing the component.
+   * @return {boolean}
+   *         If the component can is currently visible & enabled, will be `true`. Otherwise, `false`.
+   */
+  getIsAvailableToBeFocused(el) {
+    /**
+     * Decide the style property of this element is specified whether it's visible or not.
+     *
+     * @function isVisibleStyleProperty
+     * @param element {CSSStyleDeclaration}
+     * @return {boolean}
+     */
+    function isVisibleStyleProperty(element) {
+      const elementStyle = window$1.getComputedStyle(element, null);
+      const thisVisibility = elementStyle.getPropertyValue('visibility');
+      const thisDisplay = elementStyle.getPropertyValue('display');
+      const invisibleStyle = ['hidden', 'collapse'];
+      return thisDisplay !== 'none' && !invisibleStyle.includes(thisVisibility);
+    }
+
+    /**
+     * Decide whether the element is being rendered or not.
+     * 1. If an element has the style as "visibility: hidden | collapse" or "display: none", it is not being rendered.
+     * 2. If an element has the style as "opacity: 0", it is not being rendered.(that is, invisible).
+     * 3. If width and height of an element are explicitly set to 0, it is not being rendered.
+     * 4. If a parent element is hidden, an element itself is not being rendered.
+     * (CSS visibility property and display property are inherited.)
+     *
+     * @see {@link https://html.spec.whatwg.org/multipage/rendering.html#being-rendered}
+     * @function isBeingRendered
+     * @param element {Node}
+     * @return {boolean}
+     */
+    function isBeingRendered(element) {
+      if (!isVisibleStyleProperty(element.parentElement)) {
+        return false;
+      }
+      if (!isVisibleStyleProperty(element) || element.style.opacity === '0' || window$1.getComputedStyle(element).height === '0px' || window$1.getComputedStyle(element).width === '0px') {
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * Determine if the element is visible for the user or not.
+     * 1. If an element sum of its offsetWidth, offsetHeight, height and width is less than 1 is not visible.
+     * 2. If elementCenter.x is less than is not visible.
+     * 3. If elementCenter.x is more than the document's width is not visible.
+     * 4. If elementCenter.y is less than 0 is not visible.
+     * 5. If elementCenter.y is the document's height is not visible.
+     *
+     * @function isVisible
+     * @param element {Node}
+     * @return {boolean}
+     */
+    function isVisible(element) {
+      if (element.offsetWidth + element.offsetHeight + element.getBoundingClientRect().height + element.getBoundingClientRect().width === 0) {
+        return false;
+      }
+
+      // Define elementCenter object with props of x and y
+      // x: Left position relative to the viewport plus element's width (no margin) divided between 2.
+      // y: Top position relative to the viewport plus element's height (no margin) divided between 2.
+      const elementCenter = {
+        x: element.getBoundingClientRect().left + element.offsetWidth / 2,
+        y: element.getBoundingClientRect().top + element.offsetHeight / 2
+      };
+      if (elementCenter.x < 0) {
+        return false;
+      }
+      if (elementCenter.x > (document$1.documentElement.clientWidth || window$1.innerWidth)) {
+        return false;
+      }
+      if (elementCenter.y < 0) {
+        return false;
+      }
+      if (elementCenter.y > (document$1.documentElement.clientHeight || window$1.innerHeight)) {
+        return false;
+      }
+      let pointContainer = document$1.elementFromPoint(elementCenter.x, elementCenter.y);
+      while (pointContainer) {
+        if (pointContainer === element) {
+          return true;
+        }
+        if (pointContainer.parentNode) {
+          pointContainer = pointContainer.parentNode;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    // If no DOM element was passed as argument use this component's element.
+    if (!el) {
+      el = this.el();
+    }
+
+    // If element is visible, is being rendered & either does not have a parent element or its tabIndex is not negative.
+    if (isVisible(el) && isBeingRendered(el) && (!el.parentElement || el.tabIndex >= 0)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Register a `Component` with `videojs` given the name and the component.
    *
    * > NOTE: {@link Tech}s should not be registered as a `Component`. {@link Tech}s
@@ -5143,10 +5436,14 @@ class Component$1 {
 
       // If we have players that were disposed, then their name will still be
       // in Players.players. So, we must loop through and verify that the value
-      // for each item is not null. This allows registration of the Player component
+      // for each item is null. This allows registration of the Player component
       // after all players have been disposed or before any were created.
-      if (players && playerNames.length > 0 && playerNames.map(pname => players[pname]).every(Boolean)) {
-        throw new Error('Can not register Player component after player has been created.');
+      if (players && playerNames.length > 0) {
+        for (let i = 0; i < playerNames.length; i++) {
+          if (players[playerNames[i]] !== null) {
+            throw new Error('Can not register Player component after player has been created.');
+          }
+        }
       }
     }
     Component$1.components_[name] = ComponentToRegister;
@@ -5170,6 +5467,7 @@ class Component$1 {
     return Component$1.components_[name];
   }
 }
+
 Component$1.registerComponent('Component', Component$1);
 
 /**
@@ -5417,10 +5715,12 @@ var Time = /*#__PURE__*/Object.freeze({
  * @module buffer
  */
 
+/** @import { TimeRange } from './time' */
+
 /**
  * Compute the percentage of the media that has been buffered.
  *
- * @param { import('./time').TimeRange } buffered
+ * @param {TimeRange} buffered
  *        The current `TimeRanges` object representing buffered time ranges
  *
  * @param {number} duration
@@ -5524,6 +5824,21 @@ MediaError.prototype.message = '';
 MediaError.prototype.status = null;
 
 /**
+ * An object containing an error type, as well as other information regarding the error.
+ *
+ * @typedef {{errorType: string, [key: string]: any}} ErrorMetadata
+ */
+
+/**
+ * An optional object to give more detail about the error. This can be used to give
+ * a higher level of specificity to an error versus the more generic MediaError codes.
+ * `metadata` expects an `errorType` string that should align with the values from videojs.Error.
+ *
+ * @type {ErrorMetadata}
+ */
+MediaError.prototype.metadata = null;
+
+/**
  * Errors indexed by the W3C standard. The order **CANNOT CHANGE**! See the
  * specification listed under {@link MediaError} for more information.
  *
@@ -5552,13 +5867,113 @@ MediaError.defaultMessages = {
   5: 'The media is encrypted and we do not have the keys to decrypt it.'
 };
 
-// Add types as properties on MediaError
-// e.g. MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
-for (let errNum = 0; errNum < MediaError.errorTypes.length; errNum++) {
-  MediaError[MediaError.errorTypes[errNum]] = errNum;
-  // values should be accessible on both the class and instance
-  MediaError.prototype[MediaError.errorTypes[errNum]] = errNum;
-}
+/**
+ * W3C error code for any custom error.
+ *
+ * @member MediaError#MEDIA_ERR_CUSTOM
+ * @constant {number}
+ * @default 0
+ */
+MediaError.MEDIA_ERR_CUSTOM = 0;
+
+/**
+ * W3C error code for any custom error.
+ *
+ * @member MediaError.MEDIA_ERR_CUSTOM
+ * @constant {number}
+ * @default 0
+ */
+MediaError.prototype.MEDIA_ERR_CUSTOM = 0;
+
+/**
+ * W3C error code for media error aborted.
+ *
+ * @member MediaError#MEDIA_ERR_ABORTED
+ * @constant {number}
+ * @default 1
+ */
+MediaError.MEDIA_ERR_ABORTED = 1;
+
+/**
+ * W3C error code for media error aborted.
+ *
+ * @member MediaError.MEDIA_ERR_ABORTED
+ * @constant {number}
+ * @default 1
+ */
+MediaError.prototype.MEDIA_ERR_ABORTED = 1;
+
+/**
+ * W3C error code for any network error.
+ *
+ * @member MediaError#MEDIA_ERR_NETWORK
+ * @constant {number}
+ * @default 2
+ */
+MediaError.MEDIA_ERR_NETWORK = 2;
+
+/**
+ * W3C error code for any network error.
+ *
+ * @member MediaError.MEDIA_ERR_NETWORK
+ * @constant {number}
+ * @default 2
+ */
+MediaError.prototype.MEDIA_ERR_NETWORK = 2;
+
+/**
+ * W3C error code for any decoding error.
+ *
+ * @member MediaError#MEDIA_ERR_DECODE
+ * @constant {number}
+ * @default 3
+ */
+MediaError.MEDIA_ERR_DECODE = 3;
+
+/**
+ * W3C error code for any decoding error.
+ *
+ * @member MediaError.MEDIA_ERR_DECODE
+ * @constant {number}
+ * @default 3
+ */
+MediaError.prototype.MEDIA_ERR_DECODE = 3;
+
+/**
+ * W3C error code for any time that a source is not supported.
+ *
+ * @member MediaError#MEDIA_ERR_SRC_NOT_SUPPORTED
+ * @constant {number}
+ * @default 4
+ */
+MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
+
+/**
+ * W3C error code for any time that a source is not supported.
+ *
+ * @member MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+ * @constant {number}
+ * @default 4
+ */
+MediaError.prototype.MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
+
+/**
+ * W3C error code for any time that a source is encrypted.
+ *
+ * @member MediaError#MEDIA_ERR_ENCRYPTED
+ * @constant {number}
+ * @default 5
+ */
+MediaError.MEDIA_ERR_ENCRYPTED = 5;
+
+/**
+ * W3C error code for any time that a source is encrypted.
+ *
+ * @member MediaError.MEDIA_ERR_ENCRYPTED
+ * @constant {number}
+ * @default 5
+ */
+MediaError.prototype.MEDIA_ERR_ENCRYPTED = 5;
 
 /**
  * Returns whether an object is `Promise`-like (i.e. has a `then` method).
@@ -5584,7 +5999,8 @@ function isPromise(value) {
  */
 function silencePromise(value) {
   if (isPromise(value)) {
-    value.then(null, e => {});
+    value.then(null, e => {
+    });
   }
 }
 
@@ -5594,6 +6010,8 @@ function silencePromise(value) {
  *
  * @module text-track-list-converter
  */
+
+/** @import Tech from '../tech/tech' */
 
 /**
  * Examine a single {@link TextTrack} and return a JSON-compatible javascript object that
@@ -5630,7 +6048,7 @@ const trackToJson_ = function (track) {
  * state of all {@link TextTrack}s currently configured. The return array is compatible with
  * {@link text-track-list-converter:jsonToTextTracks}.
  *
- * @param { import('../tech/tech').default } tech
+ * @param {Tech} tech
  *        The tech object to query
  *
  * @return {Array}
@@ -5681,6 +6099,10 @@ var textTrackConverter = {
 /**
  * @file modal-dialog.js
  */
+
+/** @import Player from './player' */
+/** @import { ContentDescriptor } from './utils/dom' */
+
 const MODAL_CLASS_NAME = 'vjs-modal-dialog';
 
 /**
@@ -5694,15 +6116,15 @@ const MODAL_CLASS_NAME = 'vjs-modal-dialog';
  */
 class ModalDialog extends Component$1 {
   /**
-   * Create an instance of this class.
+   * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
    *        The key/value store of player options.
    *
-   * @param { import('./utils/dom').ContentDescriptor} [options.content=undefined]
+   * @param {ContentDescriptor} [options.content=undefined]
    *        Provide customized content for this modal.
    *
    * @param {string} [options.description]
@@ -5768,9 +6190,11 @@ class ModalDialog extends Component$1 {
       'aria-describedby': `${this.id()}_description`,
       'aria-hidden': 'true',
       'aria-label': this.label(),
-      'role': 'dialog'
+      'role': 'dialog',
+      'aria-live': 'polite'
     });
   }
+
   dispose() {
     this.contentEl_ = null;
     this.descEl_ = null;
@@ -5822,48 +6246,52 @@ class ModalDialog extends Component$1 {
    * @fires ModalDialog#modalopen
    */
   open() {
-    if (!this.opened_) {
-      const player = this.player();
-
-      /**
-        * Fired just before a `ModalDialog` is opened.
-        *
-        * @event ModalDialog#beforemodalopen
-        * @type {Event}
-        */
-      this.trigger('beforemodalopen');
-      this.opened_ = true;
-
-      // Fill content if the modal has never opened before and
-      // never been filled.
-      if (this.options_.fillAlways || !this.hasBeenOpened_ && !this.hasBeenFilled_) {
+    if (this.opened_) {
+      if (this.options_.fillAlways) {
         this.fill();
       }
-
-      // If the player was playing, pause it and take note of its previously
-      // playing state.
-      this.wasPlaying_ = !player.paused();
-      if (this.options_.pauseOnOpen && this.wasPlaying_) {
-        player.pause();
-      }
-      this.on('keydown', this.handleKeyDown_);
-
-      // Hide controls and note if they were enabled.
-      this.hadControls_ = player.controls();
-      player.controls(false);
-      this.show();
-      this.conditionalFocus_();
-      this.el().setAttribute('aria-hidden', 'false');
-
-      /**
-        * Fired just after a `ModalDialog` is opened.
-        *
-        * @event ModalDialog#modalopen
-        * @type {Event}
-        */
-      this.trigger('modalopen');
-      this.hasBeenOpened_ = true;
+      return;
     }
+    const player = this.player();
+
+    /**
+     * Fired just before a `ModalDialog` is opened.
+     *
+     * @event ModalDialog#beforemodalopen
+     * @type {Event}
+     */
+    this.trigger('beforemodalopen');
+    this.opened_ = true;
+
+    // Fill content if the modal has never opened before and
+    // never been filled.
+    if (this.options_.fillAlways || !this.hasBeenOpened_ && !this.hasBeenFilled_) {
+      this.fill();
+    }
+
+    // If the player was playing, pause it and take note of its previously
+    // playing state.
+    this.wasPlaying_ = !player.paused();
+    if (this.options_.pauseOnOpen && this.wasPlaying_) {
+      player.pause();
+    }
+    this.on('keydown', this.handleKeyDown_);
+
+    // Hide controls and note if they were enabled.
+    this.hadControls_ = player.controls();
+    player.controls(false);
+    this.show();
+    this.conditionalFocus_();
+    this.el().setAttribute('aria-hidden', 'false');
+
+    /**
+     * Fired just after a `ModalDialog` is opened.
+     *
+     * @event ModalDialog#modalopen
+     * @type {Event}
+     */
+    this.trigger('modalopen');
+    this.hasBeenOpened_ = true;
   }
 
   /**
@@ -5896,11 +6324,11 @@ class ModalDialog extends Component$1 {
     const player = this.player();
 
     /**
-      * Fired just before a `ModalDialog` is closed.
-      *
-      * @event ModalDialog#beforemodalclose
-      * @type {Event}
-      */
+     * Fired just before a `ModalDialog` is closed.
+     *
+     * @event ModalDialog#beforemodalclose
+     * @type {Event}
+     */
     this.trigger('beforemodalclose');
     this.opened_ = false;
     if (this.wasPlaying_ && this.options_.pauseOnOpen) {
@@ -5914,12 +6342,17 @@ class ModalDialog extends Component$1 {
     this.el().setAttribute('aria-hidden', 'true');
 
     /**
-      * Fired just after a `ModalDialog` is closed.
-      *
-      * @event ModalDialog#modalclose
-      * @type {Event}
-      */
-    this.trigger('modalclose');
+     * Fired just after a `ModalDialog` is closed.
+     *
+     * @event ModalDialog#modalclose
+     * @type {Event}
+     *
+     * @property {boolean} [bubbles=true]
+     */
+    this.trigger({
+      type: 'modalclose',
+      bubbles: true
+    });
     this.conditionalBlur_();
     if (this.options_.temporary) {
       this.dispose();
@@ -5978,7 +6411,7 @@ class ModalDialog extends Component$1 {
    * @fires ModalDialog#beforemodalfill
    * @fires ModalDialog#modalfill
    *
-   * @param { import('./utils/dom').ContentDescriptor} [content]
+   * @param {ContentDescriptor} [content]
    *        The same rules apply to this as apply to the `content` option.
    */
   fillWith(content) {
@@ -5987,11 +6420,11 @@ class ModalDialog extends Component$1 {
     const nextSiblingEl = contentEl.nextSibling;
 
     /**
-      * Fired just before a `ModalDialog` is filled with content.
-      *
-      * @event ModalDialog#beforemodalfill
-      * @type {Event}
-      */
+     * Fired just before a `ModalDialog` is filled with content.
+     *
+     * @event ModalDialog#beforemodalfill
+     * @type {Event}
+     */
     this.trigger('beforemodalfill');
     this.hasBeenFilled_ = true;
 
@@ -6020,6 +6453,14 @@ class ModalDialog extends Component$1 {
     if (closeButton) {
       parentEl.appendChild(closeButton.el_);
     }
+
+    /**
+     * Fired after `ModalDialog` is re-filled with content & close button is appended.
+     *
+     * @event ModalDialog#aftermodalfill
+     * @type {Event}
+     */
+    this.trigger('aftermodalfill');
   }
 
   /**
@@ -6030,20 +6471,20 @@ class ModalDialog extends Component$1 {
    */
   empty() {
     /**
-    * Fired just before a `ModalDialog` is emptied.
-    *
-    * @event ModalDialog#beforemodalempty
-    * @type {Event}
-    */
+     * Fired just before a `ModalDialog` is emptied.
+     *
+     * @event ModalDialog#beforemodalempty
+     * @type {Event}
+     */
     this.trigger('beforemodalempty');
     emptyEl(this.contentEl());
 
     /**
-    * Fired just after a `ModalDialog` is emptied.
-    *
-    * @event ModalDialog#modalempty
-    * @type {Event}
-    */
+     * Fired just after a `ModalDialog` is emptied.
+     *
+     * @event ModalDialog#modalempty
+     * @type {Event}
+     */
     this.trigger('modalempty');
   }
 
@@ -6054,12 +6495,12 @@ class ModalDialog extends Component$1 {
    * This does not update the DOM or fill the modal, but it is called during
    * that process.
    *
-   * @param  { import('./utils/dom').ContentDescriptor} [value]
+   * @param  {ContentDescriptor} [value]
    *         If defined, sets the internal content value to be used on the
    *         next call(s) to `fill`. This value is normalized before being
    *         inserted. To "clear" the internal content value, pass `null`.
    *
-   * @return { import('./utils/dom').ContentDescriptor}
+   * @return {ContentDescriptor}
    *         The current content of the modal dialog
    */
   content(value) {
@@ -6075,7 +6516,7 @@ class ModalDialog extends Component$1 {
    * @private
    */
   conditionalFocus_() {
-    const activeEl = document.activeElement;
+    const activeEl = document$1.activeElement;
     const playerEl = this.player_.el_;
     this.previouslyActiveEl_ = null;
     if (playerEl.contains(activeEl) || playerEl === activeEl) {
@@ -6102,16 +6543,28 @@ class ModalDialog extends Component$1 {
    * @listens keydown
    */
   handleKeyDown(event) {
+    /**
+     * Fired a custom keyDown event that bubbles.
+     *
+     * @event ModalDialog#modalKeydown
+     * @type {Event}
+     */
+    this.trigger({
+      type: 'modalKeydown',
+      originalEvent: event,
+      target: this,
+      bubbles: true
+    });
     // Do not allow keydowns to reach out of the modal dialog.
     event.stopPropagation();
-    if (keycode.isEventKey(event, 'Escape') && this.closeable()) {
+    if (event.key === 'Escape' && this.closeable()) {
       event.preventDefault();
       this.close();
       return;
     }
 
     // exit early if it isn't a tab key
-    if (!keycode.isEventKey(event, 'Tab')) {
+    if (event.key !== 'Tab') {
       return;
     }
     const focusableEls = this.focusableEls_();
@@ -6123,7 +6576,7 @@ class ModalDialog extends Component$1 {
         break;
       }
     }
-    if (document.activeElement === this.el_) {
+    if (document$1.activeElement === this.el_) {
       focusIndex = 0;
     }
     if (event.shiftKey && focusIndex === 0) {
@@ -6164,6 +6617,8 @@ Component$1.registerComponent('ModalDialog', ModalDialog);
  * @file track-list.js
  */
 
+/** @import Track from './track' */
+
 /**
  * Common functionaliy between {@link TextTrackList}, {@link AudioTrackList}, and
  * {@link VideoTrackList}
@@ -6174,7 +6629,7 @@ class TrackList extends EventTarget$2 {
   /**
    * Create an instance of this class
    *
-   * @param { import('./track').default[] } tracks
+   * @param { Track[] } tracks
    *        A list of tracks to initialize the list with.
    *
    * @abstract
@@ -6202,7 +6657,7 @@ class TrackList extends EventTarget$2 {
   /**
    * Add a {@link Track} to the `TrackList`
    *
-   * @param { import('./track').default } track
+   * @param {Track} track
    *        The audio, video, or text track to add to the list.
    *
    * @fires TrackList#addtrack
@@ -6258,7 +6713,7 @@ class TrackList extends EventTarget$2 {
   /**
    * Remove a {@link Track} from the `TrackList`
    *
-   * @param { import('./track').default } rtrack
+   * @param {Track} rtrack
    *        The audio, video, or text track to remove from the list.
    *
    * @fires TrackList#removetrack
@@ -6299,7 +6754,7 @@ class TrackList extends EventTarget$2 {
    *
    * @param {string} id - the id of the track to get
    * @method getTrackById
-   * @return { import('./track').default }
+   * @return {Track}
    * @private
    */
   getTrackById(id) {
@@ -6344,6 +6799,8 @@ for (const event in TrackList.prototype.allowedEvents_) {
  * @file audio-track-list.js
  */
 
+/** @import AudioTrack from './audio-track' */
+
 /**
  * Anywhere we call this function we diverge from the spec
  * as we only support one enabled audiotrack at a time
@@ -6351,7 +6808,7 @@ for (const event in TrackList.prototype.allowedEvents_) {
  * @param {AudioTrackList} list
  *        list to work on
  *
- * @param { import('./audio-track').default } track
+ * @param {AudioTrack} track
  *        The track to skip
  *
  * @private
@@ -6376,7 +6833,7 @@ class AudioTrackList extends TrackList {
   /**
    * Create an instance of this class.
    *
-   * @param { import('./audio-track').default[] } [tracks=[]]
+   * @param {AudioTrack[]} [tracks=[]]
    *        A list of `AudioTrack` to instantiate the list with.
    */
   constructor(tracks = []) {
@@ -6395,7 +6852,7 @@ class AudioTrackList extends TrackList {
   /**
    * Add an {@link AudioTrack} to the `AudioTrackList`.
    *
-   * @param { import('./audio-track').default } track
+   * @param {AudioTrack} track
    *        The AudioTrack to add to the list
    *
    * @fires TrackList#addtrack
@@ -6428,6 +6885,7 @@ class AudioTrackList extends TrackList {
      */
     track.addEventListener('enabledchange', track.enabledChange_);
   }
+
   removeTrack(rtrack) {
     super.removeTrack(rtrack);
     if (rtrack.removeEventListener && rtrack.enabledChange_) {
@@ -6441,13 +6899,15 @@ class AudioTrackList extends TrackList {
  * @file video-track-list.js
  */
 
+/** @import VideoTrack from './video-track' */
+
 /**
  * Un-select all other {@link VideoTrack}s that are selected.
  *
  * @param {VideoTrackList} list
  *        list to work on
  *
- * @param { import('./video-track').default } track
+ * @param {VideoTrack} track
  *        The track to skip
  *
  * @private
@@ -6500,14 +6960,15 @@ class VideoTrackList extends TrackList {
         }
         return -1;
       },
-      set() {}
+      set() {
+      }
     });
   }
 
   /**
    * Add a {@link VideoTrack} to the `VideoTrackList`.
    *
-   * @param { import('./video-track').default } track
+   * @param {VideoTrack} track
    *        The VideoTrack to add to the list
    *
    * @fires TrackList#addtrack
@@ -6537,6 +6998,7 @@ class VideoTrackList extends TrackList {
      */
     track.addEventListener('selectedchange', track.selectedChange_);
   }
+
   removeTrack(rtrack) {
     super.removeTrack(rtrack);
     if (rtrack.removeEventListener && rtrack.selectedChange_) {
@@ -6550,6 +7012,8 @@ class VideoTrackList extends TrackList {
  * @file text-track-list.js
  */
 
+/** @import TextTrack from './text-track' */
+
 /**
  * The current list of {@link TextTrack} for a media file.
  *
@@ -6560,7 +7024,7 @@ class TextTrackList extends TrackList {
   /**
    * Add a {@link TextTrack} to the `TextTrackList`
    *
-   * @param { import('./text-track').default } track
+   * @param {TextTrack} track
    *        The text track to add to the list.
    *
    * @fires TrackList#addtrack
@@ -6584,6 +7048,7 @@ class TextTrackList extends TrackList {
       track.addEventListener('modechange', this.triggerSelectedlanguagechange_);
     }
   }
+
   removeTrack(rtrack) {
     super.removeTrack(rtrack);
 
@@ -6948,7 +7413,8 @@ class Track extends EventTarget$2 {
         get() {
           return trackProps[key];
         },
-        set() {}
+        set() {
+        }
       });
     }
 
@@ -6989,74 +7455,17 @@ class Track extends EventTarget$2 {
  */
 
 /**
- * @typedef {Object} url:URLObject
- *
- * @property {string} protocol
- *           The protocol of the url that was parsed.
- *
- * @property {string} hostname
- *           The hostname of the url that was parsed.
- *
- * @property {string} port
- *           The port of the url that was parsed.
- *
- * @property {string} pathname
- *           The pathname of the url that was parsed.
- *
- * @property {string} search
- *           The search query of the url that was parsed.
- *
- * @property {string} hash
- *           The hash of the url that was parsed.
- *
- * @property {string} host
- *           The host of the url that was parsed.
- */
-
-/**
  * Resolve and parse the elements of a URL.
  *
  * @function
- * @param    {String} url
+ * @param    {string} url
  *           The url to parse
  *
- * @return   {url:URLObject}
+ * @return   {URL}
  *           An object of url details
  */
 const parseUrl = function (url) {
-  // This entire method can be replace with URL once we are able to drop IE11
-
-  const props = ['protocol', 'hostname', 'port', 'pathname', 'search', 'hash', 'host'];
-
-  // add the url to an anchor and let the browser parse the URL
-  const a = document.createElement('a');
-  a.href = url;
-
-  // Copy the specific URL properties to a new object
-  // This is also needed for IE because the anchor loses its
-  // properties when it's removed from the dom
-  const details = {};
-  for (let i = 0; i < props.length; i++) {
-    details[props[i]] = a[props[i]];
-  }
-
-  // IE adds the port to the host property unlike everyone else. If
-  // a port identifier is added for standard ports, strip it.
-  if (details.protocol === 'http:') {
-    details.host = details.host.replace(/:80$/, '');
-  }
-  if (details.protocol === 'https:') {
-    details.host = details.host.replace(/:443$/, '');
-  }
-  if (!details.protocol) {
-    details.protocol = window$1.location.protocol;
-  }
-
-  /* istanbul ignore if */
-  if (!details.host) {
-    details.host = window$1.location.host;
-  }
-  return details;
+  return new URL(url, document$1.baseURI);
 };
 
 /**
@@ -7068,18 +7477,9 @@ const parseUrl = function (url) {
  *
  * @return   {string}
  *           Absolute URL
- *
- * @see      http://stackoverflow.com/questions/470832/getting-an-absolute-url-from-a-relative-one-ie6-issue
  */
 const getAbsoluteURL = function (url) {
-  // Check if absolute URL
-  if (!url.match(/^https?:\/\//)) {
-    // Add the url to an anchor and let the browser parse it to convert to an absolute url
-    const a = document.createElement('a');
-    a.href = url;
-    url = a.href;
-  }
-  return url;
+  return new URL(url, document$1.baseURI).href;
 };
 
 /**
@@ -7112,28 +7512,14 @@ const getFileExtension = function (path) {
  * @param    {string} url
  *           The url to check.
  *
- * @param    {Object} [winLoc]
+ * @param    {URL} [winLoc]
  *           the domain to check the url against, defaults to window.location
- *
- * @param    {string} [winLoc.protocol]
- *           The window location protocol defaults to window.location.protocol
- *
- * @param    {string} [winLoc.host]
- *           The window location host defaults to window.location.host
  *
  * @return   {boolean}
  *           Whether it is a cross domain request or not.
  */
 const isCrossOrigin = function (url, winLoc = window$1.location) {
-  const urlInfo = parseUrl(url);
-
-  // IE8 protocol relative urls will return ':' for protocol
-  const srcProtocol = urlInfo.protocol === ':' ? winLoc.protocol : urlInfo.protocol;
-
-  // Check if url is for another domain/origin
-  // IE8 doesn't know location.origin, so we won't rely on it here
-  const crossOrigin = srcProtocol + urlInfo.host !== winLoc.protocol + winLoc.host;
-  return crossOrigin;
+  return parseUrl(url).origin !== winLoc.origin;
 };
 
 var Url = /*#__PURE__*/Object.freeze({
@@ -7147,6 +7533,8 @@ var Url = /*#__PURE__*/Object.freeze({
 /**
  * @file text-track.js
  */
+
+/** @import Tech from '../tech/tech' */
 
 /**
  * Takes a webvtt file contents and parses it into cues
@@ -7249,7 +7637,7 @@ class TextTrack extends Track {
    * @param {Object} options={}
    *        Object of option names and values
    *
-   * @param { import('../tech/tech').default } options.tech
+   * @param {Tech} options.tech
    *        A reference to the tech that owns this TextTrack.
    *
    * @param {TextTrack~Kind} [options.kind='subtitles']
@@ -7343,7 +7731,8 @@ class TextTrack extends Track {
         get() {
           return default_;
         },
-        set() {}
+        set() {
+        }
       },
       /**
        * @memberof TextTrack
@@ -7399,7 +7788,8 @@ class TextTrack extends Track {
           }
           return cues;
         },
-        set() {}
+        set() {
+        }
       },
       /**
        * @memberof TextTrack
@@ -7440,7 +7830,8 @@ class TextTrack extends Track {
           return activeCues;
         },
         // /!\ Keep this setter empty (see the timeupdate handler above)
-        set() {}
+        set() {
+        }
       }
     });
     if (settings.src) {
@@ -7457,12 +7848,14 @@ class TextTrack extends Track {
       this.loaded_ = true;
     }
   }
+
   startTracking() {
     // More precise cues based on requestVideoFrameCallback with a requestAnimationFram fallback
     this.rvf_ = this.tech_.requestVideoFrameCallback(this.timeupdateHandler);
     // Also listen to timeupdate in case rVFC/rAF stops (window in background, audio in video el)
     this.tech_.on('timeupdate', this.timeupdateHandler);
   }
+
   stopTracking() {
     if (this.rvf_) {
       this.tech_.cancelVideoFrameCallback(this.rvf_);
@@ -7524,6 +7917,7 @@ class TextTrack extends Track {
 
 /**
  * cuechange - One or more cues in the track have become active or stopped being active.
+ *
  * @protected
  */
 TextTrack.prototype.allowedEvents_ = {
@@ -7693,6 +8087,8 @@ class VideoTrack extends Track {
  * @file html-track-element.js
  */
 
+/** @import Tech from '../tech/tech' */
+
 /**
  * A single track represented in the DOM.
  *
@@ -7706,7 +8102,7 @@ class HTMLTrackElement extends EventTarget$2 {
    * @param {Object} options={}
    *        Object of option names and values
    *
-   * @param { import('../tech/tech').default } options.tech
+   * @param {Tech} options.tech
    *        A reference to the tech that owns this HTMLTrackElement.
    *
    * @param {TextTrack~Kind} [options.kind='subtitles']
@@ -7874,11 +8270,13 @@ ALL.names = [].concat(REMOTE.names).concat(NORMAL.names);
  * @file tech.js
  */
 
+/** @import { TimeRange } from '../utils/time' */
+
 /**
  * An Object containing a structure like: `{src: 'url', type: 'mimetype'}` or string
  * that just contains the src url alone.
  * * `var SourceObject = {src: 'http://ex.com/video.mp4', type: 'video/mp4'};`
-   * `var SourceString = 'http://example.com/some-video.mp4';`
+ * `var SourceString = 'http://example.com/some-video.mp4';`
  *
  * @typedef {Object|string} SourceObject
  *
@@ -7935,15 +8333,16 @@ function createTrackHelper(self, kind, label, language, options = {}) {
  */
 class Tech extends Component$1 {
   /**
-  * Create an instance of this Tech.
-  *
-  * @param {Object} [options]
-  *        The key/value store of player options.
-  *
-  * @param {Function} [ready]
-  *        Callback function to call when the `HTML5` Tech is ready.
-  */
-  constructor(options = {}, ready = function () {}) {
+   * Create an instance of this Tech.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {Function} [ready]
+   *        Callback function to call when the `HTML5` Tech is ready.
+   */
+  constructor(options = {}, ready = function () {
+  }) {
     // we don't want the tech to report user activity automatically.
     // This is done manually in addControlsListeners
     options.reportTouchActivity = false;
@@ -8111,7 +8510,7 @@ class Tech extends Component$1 {
   /**
    * Get and create a `TimeRange` object for buffering.
    *
-   * @return { import('../utils/time').TimeRange }
+   * @return {TimeRange}
    *         The time range object that was created.
    */
   buffered() {
@@ -8272,7 +8671,8 @@ class Tech extends Component$1 {
    *
    * @abstract
    */
-  reset() {}
+  reset() {
+  }
 
   /**
    * Get the value of `crossOrigin` from the tech.
@@ -8281,7 +8681,8 @@ class Tech extends Component$1 {
    *
    * @see {Html5#crossOrigin}
    */
-  crossOrigin() {}
+  crossOrigin() {
+  }
 
   /**
    * Set the value of `crossOrigin` on the tech.
@@ -8291,7 +8692,8 @@ class Tech extends Component$1 {
    * @param {string} crossOrigin the crossOrigin value
    * @see {Html5#setCrossOrigin}
    */
-  setCrossOrigin() {}
+  setCrossOrigin() {
+  }
 
   /**
    * Get or set an error on the Tech.
@@ -8316,7 +8718,7 @@ class Tech extends Component$1 {
    * > NOTE: This implementation is incomplete. It does not track the played `TimeRange`.
    *         It only checks whether the source has played at all or not.
    *
-   * @return { import('../utils/time').TimeRange }
+   * @return {TimeRange}
    *         - A single time range if this video has played
    *         - An empty set of ranges if not.
    */
@@ -8334,7 +8736,8 @@ class Tech extends Component$1 {
    *
    * @see {Html5#play}
    */
-  play() {}
+  play() {
+  }
 
   /**
    * Set whether we are scrubbing or not
@@ -8346,7 +8749,8 @@ class Tech extends Component$1 {
    *
    * @see {Html5#setScrubbing}
    */
-  setScrubbing(_isScrubbing) {}
+  setScrubbing(_isScrubbing) {
+  }
 
   /**
    * Get whether we are scrubbing or not
@@ -8355,7 +8759,8 @@ class Tech extends Component$1 {
    *
    * @see {Html5#scrubbing}
    */
-  scrubbing() {}
+  scrubbing() {
+  }
 
   /**
    * Causes a manual time update to occur if {@link Tech#manualTimeUpdatesOn} was
@@ -8394,25 +8799,25 @@ class Tech extends Component$1 {
    */
   initTrackListeners() {
     /**
-      * Triggered when tracks are added or removed on the Tech {@link AudioTrackList}
-      *
-      * @event Tech#audiotrackchange
-      * @type {Event}
-      */
+     * Triggered when tracks are added or removed on the Tech {@link AudioTrackList}
+     *
+     * @event Tech#audiotrackchange
+     * @type {Event}
+     */
 
     /**
-      * Triggered when tracks are added or removed on the Tech {@link VideoTrackList}
-      *
-      * @event Tech#videotrackchange
-      * @type {Event}
-      */
+     * Triggered when tracks are added or removed on the Tech {@link VideoTrackList}
+     *
+     * @event Tech#videotrackchange
+     * @type {Event}
+     */
 
     /**
-      * Triggered when tracks are added or removed on the Tech {@link TextTrackList}
-      *
-      * @event Tech#texttrackchange
-      * @type {Event}
-      */
+     * Triggered when tracks are added or removed on the Tech {@link TextTrackList}
+     *
+     * @event Tech#texttrackchange
+     * @type {Event}
+     */
     NORMAL.names.forEach(name => {
       const props = NORMAL[name];
       const trackListChanges = () => {
@@ -8442,7 +8847,7 @@ class Tech extends Component$1 {
     // Initially, Tech.el_ is a child of a dummy-div wait until the Component system
     // signals that the Tech is ready at which point Tech.el_ is part of the DOM
     // before inserting the WebVTT script
-    if (document.body.contains(this.el())) {
+    if (document$1.body.contains(this.el())) {
       // load via require if available and vtt.js script location was not passed in
       // as an option. novtt builds will turn the above require call into an empty object
       // which will cause this if check to always fail.
@@ -8453,7 +8858,7 @@ class Tech extends Component$1 {
 
       // load vtt.js via the script location option or the cdn of no location was
       // passed in
-      const script = document.createElement('script');
+      const script = document$1.createElement('script');
       script.src = this.options_['vtt.js'] || 'https://vjs.zencdn.net/vttjs/0.14.1/vtt.min.js';
       script.onload = () => {
         /**
@@ -8672,7 +9077,8 @@ class Tech extends Component$1 {
    *
    * @abstract
    */
-  setDisablePictureInPicture() {}
+  setDisablePictureInPicture() {
+  }
 
   /**
    * A fallback implementation of requestVideoFrameCallback using requestAnimationFrame
@@ -8714,21 +9120,24 @@ class Tech extends Component$1 {
    *
    * @abstract
    */
-  setPoster() {}
+  setPoster() {
+  }
 
   /**
    * A method to check for the presence of the 'playsinline' <video> attribute.
    *
    * @abstract
    */
-  playsinline() {}
+  playsinline() {
+  }
 
   /**
    * A method to set or unset the 'playsinline' <video> attribute.
    *
    * @abstract
    */
-  setPlaysinline() {}
+  setPlaysinline() {
+  }
 
   /**
    * Attempt to force override of native audio tracks.
@@ -8738,7 +9147,8 @@ class Tech extends Component$1 {
    *
    * @abstract
    */
-  overrideNativeAudioTracks(override) {}
+  overrideNativeAudioTracks(override) {
+  }
 
   /**
    * Attempt to force override of native video tracks.
@@ -8748,7 +9158,8 @@ class Tech extends Component$1 {
    *
    * @abstract
    */
-  overrideNativeVideoTracks(override) {}
+  overrideNativeVideoTracks(override) {
+  }
 
   /**
    * Check if the tech can support the given mime-type.
@@ -9226,6 +9637,10 @@ Tech.defaultTechOrder_ = [];
  * @file middleware.js
  * @module middleware
  */
+
+/** @import Player from '../player' */
+/** @import Tech from '../tech/tech' */
+
 const middlewares = {};
 const middlewareInstances = {};
 const TERMINATOR = {};
@@ -9248,7 +9663,7 @@ const TERMINATOR = {};
  * passed in as an argument.
  *
  * @callback MiddlewareFactory
- * @param { import('../player').default } player
+ * @param {Player} player
  *        A Video.js player.
  */
 
@@ -9273,7 +9688,7 @@ function use(type, middleware) {
  * matching middlewares and calling `setSource` on each, passing along the
  * previous returned value each time.
  *
- * @param  { import('../player').default } player
+ * @param  {Player} player
  *         A {@link Player} instance.
  *
  * @param  {Tech~SourceObject} src
@@ -9292,7 +9707,7 @@ function setSource(player, src, next) {
  * @param {Object[]} middleware
  *        An array of middleware instances.
  *
- * @param { import('../tech/tech').default } tech
+ * @param {Tech} tech
  *        A Video.js tech.
  */
 function setTech(middleware, tech) {
@@ -9306,7 +9721,7 @@ function setTech(middleware, tech) {
  * @param  {Object[]} middleware
  *         An array of middleware instances.
  *
- * @param  { import('../tech/tech').default } tech
+ * @param  {Tech} tech
  *         The current tech.
  *
  * @param  {string} method
@@ -9326,7 +9741,7 @@ function get(middleware, tech, method) {
  * @param  {Object[]} middleware
  *         An array of middleware instances.
  *
- * @param  { import('../tech/tech').default } tech
+ * @param  {Tech} tech
  *         The current tech.
  *
  * @param  {string} method
@@ -9352,7 +9767,7 @@ function set(middleware, tech, method, arg) {
  * @param  {Object[]} middleware
  *         An array of middleware instances.
  *
- * @param  { import('../tech/tech').default } tech
+ * @param  {Tech} tech
  *         The current tech.
  *
  * @param  {string} method
@@ -9413,6 +9828,7 @@ const allowedMediators = {
   play: 1,
   pause: 1
 };
+
 function middlewareIterator(method) {
   return (value, mw) => {
     // if the previous middleware terminated, pass along the termination
@@ -9425,6 +9841,7 @@ function middlewareIterator(method) {
     return value;
   };
 }
+
 function executeRight(mws, method, value, terminated) {
   for (let i = mws.length - 1; i >= 0; i--) {
     const mw = mws[i];
@@ -9437,11 +9854,13 @@ function executeRight(mws, method, value, terminated) {
 /**
  * Clear the middleware cache for a player.
  *
- * @param  { import('../player').default } player
+ * @param  {Player} player
  *         A {@link Player} instance.
  */
 function clearCacheForPlayer(player) {
-  middlewareInstances[player.id()] = null;
+  if (middlewareInstances.hasOwnProperty(player.id())) {
+    delete middlewareInstances[player.id()];
+  }
 }
 
 /**
@@ -9472,6 +9891,7 @@ function getOrCreateFactory(player, mwFactory) {
   }
   return mw;
 }
+
 function setSourceHelper(src = {}, middleware = [], next, player, acc = [], lastRun = false) {
   const [mwFactory, ...mwrest] = middleware;
 
@@ -9511,6 +9931,8 @@ function setSourceHelper(src = {}, middleware = [], next, player, acc = [], last
     setSourceHelper(src, middlewares['*'], next, player, acc, true);
   }
 }
+
+/** @import Player from '../player' */
 
 /**
  * Mimetypes
@@ -9562,7 +9984,7 @@ const getMimetype = function (src = '') {
  * Find the mime type of a given source string if possible. Uses the player
  * source cache.
  *
- * @param { import('../player').default } player
+ * @param {Player} player
  *        The player object
  *
  * @param {string} src
@@ -9663,11 +10085,665 @@ function fixSource(src) {
   return src;
 }
 
-var icons = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n  <defs>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-play\">\n      <path d=\"M16 10v28l22-14z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-pause\">\n      <path d=\"M12 38h8V10h-8v28zm16-28v28h8V10h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-audio\">\n      <path d=\"M24 2C14.06 2 6 10.06 6 20v14c0 3.31 2.69 6 6 6h6V24h-8v-4c0-7.73 6.27-14 14-14s14 6.27 14 14v4h-8v16h6c3.31 0 6-2.69 6-6V20c0-9.94-8.06-18-18-18z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-captions\">\n      <path d=\"M38 8H10c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zM22 22h-3v-1h-4v6h4v-1h3v2a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2zm14 0h-3v-1h-4v6h4v-1h3v2a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-subtitles\">\n      <path d=\"M40 8H8c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h32c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zM8 24h8v4H8v-4zm20 12H8v-4h20v4zm12 0h-8v-4h8v4zm0-8H20v-4h20v4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-fullscreen-enter\">\n      <path d=\"M14 28h-4v10h10v-4h-6v-6zm-4-8h4v-6h6v-4H10v10zm24 14h-6v4h10V28h-4v6zm-6-24v4h6v6h4V10H28z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-fullscreen-exit\">\n      <path d=\"M10 32h6v6h4V28H10v4zm6-16h-6v4h10V10h-4v6zm12 22h4v-6h6v-4H28v10zm4-22v-6h-4v10h10v-4h-6z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-play-circle\">\n      <path d=\"M20 33l12-9-12-9v18zm4-29C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-mute\">\n      <path d=\"M33 24c0-3.53-2.04-6.58-5-8.05v4.42l4.91 4.91c.06-.42.09-.85.09-1.28zm5 0c0 1.88-.41 3.65-1.08 5.28l3.03 3.03C41.25 29.82 42 27 42 24c0-8.56-5.99-15.72-14-17.54v4.13c5.78 1.72 10 7.07 10 13.41zM8.55 6L6 8.55 15.45 18H6v12h8l10 10V26.55l8.51 8.51c-1.34 1.03-2.85 1.86-4.51 2.36v4.13a17.94 17.94 0 0 0 7.37-3.62L39.45 42 42 39.45l-18-18L8.55 6zM24 8l-4.18 4.18L24 16.36V8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-low\">\n      <path d=\"M14 18v12h8l10 10V8L22 18h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-medium\">\n      <path d=\"M37 24c0-3.53-2.04-6.58-5-8.05v16.11c2.96-1.48 5-4.53 5-8.06zm-27-6v12h8l10 10V8L18 18h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-high\">\n      <path d=\"M6 18v12h8l10 10V8L14 18H6zm27 6c0-3.53-2.04-6.58-5-8.05v16.11c2.96-1.48 5-4.53 5-8.06zM28 6.46v4.13c5.78 1.72 10 7.07 10 13.41s-4.22 11.69-10 13.41v4.13c8.01-1.82 14-8.97 14-17.54S36.01 8.28 28 6.46z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-spinner\">\n      <path d=\"M18.8 21l9.53-16.51C26.94 4.18 25.49 4 24 4c-4.8 0-9.19 1.69-12.64 4.51l7.33 12.69.11-.2zm24.28-3c-1.84-5.85-6.3-10.52-11.99-12.68L23.77 18h19.31zm.52 2H28.62l.58 1 9.53 16.5C41.99 33.94 44 29.21 44 24c0-1.37-.14-2.71-.4-4zm-26.53 4l-7.8-13.5C6.01 14.06 4 18.79 4 24c0 1.37.14 2.71.4 4h14.98l-2.31-4zM4.92 30c1.84 5.85 6.3 10.52 11.99 12.68L24.23 30H4.92zm22.54 0l-7.8 13.51c1.4.31 2.85.49 4.34.49 4.8 0 9.19-1.69 12.64-4.51L29.31 26.8 27.46 30z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 24 24\" id=\"vjs-icon-hd\">\n      <path d=\"M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9.5v-2h-2v2H6V9h1.5v2.5h2V9H11v6zm2-6h4c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1h-4V9zm1.5 4.5h2v-3h-2v3z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-chapters\">\n      <path d=\"M6 26h4v-4H6v4zm0 8h4v-4H6v4zm0-16h4v-4H6v4zm8 8h28v-4H14v4zm0 8h28v-4H14v4zm0-20v4h28v-4H14z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 40 40\" id=\"vjs-icon-downloading\">\n      <path d=\"M18.208 36.875q-3.208-.292-5.979-1.729-2.771-1.438-4.812-3.729-2.042-2.292-3.188-5.229-1.146-2.938-1.146-6.23 0-6.583 4.334-11.416 4.333-4.834 10.833-5.5v3.166q-5.167.75-8.583 4.646Q6.25 14.75 6.25 19.958q0 5.209 3.396 9.104 3.396 3.896 8.562 4.646zM20 28.417L11.542 20l2.083-2.083 4.917 4.916v-11.25h2.916v11.25l4.875-4.916L28.417 20zm1.792 8.458v-3.167q1.833-.25 3.541-.958 1.709-.708 3.167-1.875l2.333 2.292q-1.958 1.583-4.25 2.541-2.291.959-4.791 1.167zm6.791-27.792q-1.541-1.125-3.25-1.854-1.708-.729-3.541-1.021V3.042q2.5.25 4.77 1.208 2.271.958 4.271 2.5zm4.584 21.584l-2.25-2.25q1.166-1.5 1.854-3.209.687-1.708.937-3.541h3.209q-.292 2.5-1.229 4.791-.938 2.292-2.521 4.209zm.541-12.417q-.291-1.833-.958-3.562-.667-1.73-1.833-3.188l2.375-2.208q1.541 1.916 2.458 4.208.917 2.292 1.167 4.75z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download\">\n      <path d=\"M10.8 40.55q-1.35 0-2.375-1T7.4 37.15v-7.7h3.4v7.7h26.35v-7.7h3.4v7.7q0 1.4-1 2.4t-2.4 1zM24 32.1L13.9 22.05l2.45-2.45 5.95 5.95V7.15h3.4v18.4l5.95-5.95 2.45 2.45z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download-done\">\n      <path d=\"M9.8 40.5v-3.45h28.4v3.45zm9.2-9.05L7.4 19.85l2.45-2.35L19 26.65l19.2-19.2 2.4 2.4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download-off\">\n      <path d=\"M4.9 4.75L43.25 43.1 41 45.3l-4.75-4.75q-.05.05-.075.025-.025-.025-.075-.025H10.8q-1.35 0-2.375-1T7.4 37.15v-7.7h3.4v7.7h22.05l-7-7-1.85 1.8L13.9 21.9l1.85-1.85L2.7 7zm26.75 14.7l2.45 2.45-3.75 3.8-2.45-2.5zM25.7 7.15V21.1l-3.4-3.45V7.15z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-share\">\n      <path d=\"M36 32.17c-1.52 0-2.89.59-3.93 1.54L17.82 25.4c.11-.45.18-.92.18-1.4s-.07-.95-.18-1.4l14.1-8.23c1.07 1 2.5 1.62 4.08 1.62 3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6c0 .48.07.95.18 1.4l-14.1 8.23c-1.07-1-2.5-1.62-4.08-1.62-3.31 0-6 2.69-6 6s2.69 6 6 6c1.58 0 3.01-.62 4.08-1.62l14.25 8.31c-.1.42-.16.86-.16 1.31A5.83 5.83 0 1 0 36 32.17z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cog\">\n      <path d=\"M38.86 25.95c.08-.64.14-1.29.14-1.95s-.06-1.31-.14-1.95l4.23-3.31c.38-.3.49-.84.24-1.28l-4-6.93c-.25-.43-.77-.61-1.22-.43l-4.98 2.01c-1.03-.79-2.16-1.46-3.38-1.97L29 4.84c-.09-.47-.5-.84-1-.84h-8c-.5 0-.91.37-.99.84l-.75 5.3a14.8 14.8 0 0 0-3.38 1.97L9.9 10.1a1 1 0 0 0-1.22.43l-4 6.93c-.25.43-.14.97.24 1.28l4.22 3.31C9.06 22.69 9 23.34 9 24s.06 1.31.14 1.95l-4.22 3.31c-.38.3-.49.84-.24 1.28l4 6.93c.25.43.77.61 1.22.43l4.98-2.01c1.03.79 2.16 1.46 3.38 1.97l.75 5.3c.08.47.49.84.99.84h8c.5 0 .91-.37.99-.84l.75-5.3a14.8 14.8 0 0 0 3.38-1.97l4.98 2.01a1 1 0 0 0 1.22-.43l4-6.93c.25-.43.14-.97-.24-1.28l-4.22-3.31zM24 31c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-square\">\n      <path d=\"M36 8H12c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h24c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zm0 28H12V12h24v24z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle\">\n      <circle cx=\"24\" cy=\"24\" r=\"20\"></circle>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle-outline\">\n      <path d=\"M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle-inner-circle\">\n      <path d=\"M24 4C12.97 4 4 12.97 4 24s8.97 20 20 20 20-8.97 20-20S35.03 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16zm6-16c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6 6 2.69 6 6z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cancel\">\n      <path d=\"M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm10 27.17L31.17 34 24 26.83 16.83 34 14 31.17 21.17 24 14 16.83 16.83 14 24 21.17 31.17 14 34 16.83 26.83 24 34 31.17z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-replay\">\n      <path d=\"M24 10V2L14 12l10 10v-8c6.63 0 12 5.37 12 12s-5.37 12-12 12-12-5.37-12-12H8c0 8.84 7.16 16 16 16s16-7.16 16-16-7.16-16-16-16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-repeat\">\n      <path d=\"M14 14h20v6l8-8-8-8v6H10v12h4v-8zm20 20H14v-6l-8 8 8 8v-6h24V26h-4v8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-5\">\n      <path d=\"M17.689 98l-8.697 8.696 8.697 8.697 2.486-2.485-4.32-4.319h1.302c4.93 0 9.071 1.722 12.424 5.165 3.352 3.443 5.029 7.638 5.029 12.584h3.55c0-2.958-.553-5.73-1.658-8.313-1.104-2.583-2.622-4.841-4.555-6.774-1.932-1.932-4.19-3.45-6.773-4.555-2.584-1.104-5.355-1.657-8.313-1.657H15.5l4.615-4.615zm-8.08 21.659v13.861h11.357v5.008H9.609V143h12.7c.834 0 1.55-.298 2.146-.894.596-.597.895-1.31.895-2.145v-7.781c0-.835-.299-1.55-.895-2.147a2.929 2.929 0 0 0-2.147-.894h-8.227v-5.096H25.35v-4.384z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-10\">\n      <path d=\"M42.315 125.63c0-4.997-1.694-9.235-5.08-12.713-3.388-3.479-7.571-5.218-12.552-5.218h-1.315l4.363 4.363-2.51 2.51-8.787-8.786L25.221 97l2.45 2.45-4.662 4.663h1.375c2.988 0 5.788.557 8.397 1.673 2.61 1.116 4.892 2.65 6.844 4.602 1.953 1.953 3.487 4.234 4.602 6.844 1.116 2.61 1.674 5.41 1.674 8.398zM8.183 142v-19.657H3.176V117.8h9.643V142zm13.63 0c-1.156 0-2.127-.393-2.912-1.178-.778-.778-1.168-1.746-1.168-2.902v-16.04c0-1.156.393-2.127 1.178-2.912.779-.779 1.746-1.168 2.902-1.168h7.696c1.156 0 2.126.392 2.911 1.177.779.78 1.168 1.747 1.168 2.903v16.04c0 1.156-.392 2.127-1.177 2.912-.779.779-1.746 1.168-2.902 1.168zm.556-4.636h6.583v-15.02H22.37z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-30\">\n      <path d=\"M26.047 97l-8.733 8.732 8.733 8.733 2.496-2.494-4.336-4.338h1.307c4.95 0 9.108 1.73 12.474 5.187 3.367 3.458 5.051 7.668 5.051 12.635h3.565c0-2.97-.556-5.751-1.665-8.346-1.109-2.594-2.633-4.862-4.574-6.802-1.94-1.941-4.208-3.466-6.803-4.575-2.594-1.109-5.375-1.664-8.345-1.664H23.85l4.634-4.634zM2.555 117.531v4.688h10.297v5.25H5.873v4.687h6.979v5.156H2.555V142H13.36c1.061 0 1.95-.395 2.668-1.186.718-.79 1.076-1.772 1.076-2.94v-16.218c0-1.168-.358-2.149-1.076-2.94-.717-.79-1.607-1.185-2.668-1.185zm22.482.14c-1.149 0-2.11.39-2.885 1.165-.78.78-1.172 1.744-1.172 2.893v15.943c0 1.149.388 2.11 1.163 2.885.78.78 1.745 1.172 2.894 1.172h7.649c1.148 0 2.11-.388 2.884-1.163.78-.78 1.17-1.745 1.17-2.894v-15.943c0-1.15-.386-2.111-1.16-2.885-.78-.78-1.746-1.172-2.894-1.172zm.553 4.518h6.545v14.93H25.59z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-5\">\n      <path d=\"M29.508 97l-2.431 2.43 4.625 4.625h-1.364c-2.965 0-5.742.554-8.332 1.66-2.589 1.107-4.851 2.629-6.788 4.566-1.937 1.937-3.458 4.2-4.565 6.788-1.107 2.59-1.66 5.367-1.66 8.331h3.557c0-4.957 1.68-9.16 5.04-12.611 3.36-3.45 7.51-5.177 12.451-5.177h1.304l-4.326 4.33 2.49 2.49 8.715-8.716zm-9.783 21.61v13.89h11.382v5.018H19.725V142h12.727a2.93 2.93 0 0 0 2.15-.896 2.93 2.93 0 0 0 .896-2.15v-7.798c0-.837-.299-1.554-.896-2.152a2.93 2.93 0 0 0-2.15-.896h-8.245V123h11.29v-4.392z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-10\">\n      <path d=\"M23.119 97l-2.386 2.383 4.538 4.538h-1.339c-2.908 0-5.633.543-8.173 1.63-2.54 1.085-4.76 2.577-6.66 4.478-1.9 1.9-3.392 4.12-4.478 6.66-1.085 2.54-1.629 5.264-1.629 8.172h3.49c0-4.863 1.648-8.986 4.944-12.372 3.297-3.385 7.368-5.078 12.216-5.078h1.279l-4.245 4.247 2.443 2.442 8.55-8.55zm-9.52 21.45v4.42h4.871V142h4.513v-23.55zm18.136 0c-1.125 0-2.066.377-2.824 1.135-.764.764-1.148 1.709-1.148 2.834v15.612c0 1.124.38 2.066 1.139 2.824.764.764 1.708 1.145 2.833 1.145h7.489c1.125 0 2.066-.378 2.824-1.136.764-.764 1.145-1.709 1.145-2.833v-15.612c0-1.125-.378-2.067-1.136-2.825-.764-.764-1.708-1.145-2.833-1.145zm.54 4.42h6.408v14.617h-6.407z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-30\">\n      <path d=\"M25.549 97l-2.437 2.434 4.634 4.635H26.38c-2.97 0-5.753.555-8.347 1.664-2.594 1.109-4.861 2.633-6.802 4.574-1.94 1.94-3.465 4.207-4.574 6.802-1.109 2.594-1.664 5.377-1.664 8.347h3.565c0-4.967 1.683-9.178 5.05-12.636 3.366-3.458 7.525-5.187 12.475-5.187h1.307l-4.335 4.338 2.495 2.494 8.732-8.732zm-11.553 20.53v4.689h10.297v5.249h-6.978v4.688h6.978v5.156H13.996V142h10.808c1.06 0 1.948-.395 2.666-1.186.718-.79 1.077-1.771 1.077-2.94v-16.217c0-1.169-.36-2.15-1.077-2.94-.718-.79-1.605-1.186-2.666-1.186zm21.174.168c-1.149 0-2.11.389-2.884 1.163-.78.78-1.172 1.745-1.172 2.894v15.942c0 1.15.388 2.11 1.162 2.885.78.78 1.745 1.17 2.894 1.17h7.649c1.149 0 2.11-.386 2.885-1.16.78-.78 1.17-1.746 1.17-2.895v-15.942c0-1.15-.387-2.11-1.161-2.885-.78-.78-1.745-1.172-2.894-1.172zm.552 4.516h6.542v14.931h-6.542z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 512 512\" id=\"vjs-icon-audio-description\">\n      <g fill-rule=\"evenodd\"><path d=\"M227.29 381.351V162.993c50.38-1.017 89.108-3.028 117.631 17.126 27.374 19.342 48.734 56.965 44.89 105.325-4.067 51.155-41.335 94.139-89.776 98.475-24.085 2.155-71.972 0-71.972 0s-.84-1.352-.773-2.568m48.755-54.804c31.43 1.26 53.208-16.633 56.495-45.386 4.403-38.51-21.188-63.552-58.041-60.796v103.612c-.036 1.466.575 2.22 1.546 2.57\"></path><path d=\"M383.78 381.328c13.336 3.71 17.387-11.06 23.215-21.408 12.722-22.571 22.294-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.51c-.587 3.874 2.226 7.315 3.865 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894\"></path><path d=\"M425.154 381.328c13.336 3.71 17.384-11.061 23.215-21.408 12.721-22.571 22.291-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.511c-.586 3.874 2.226 7.315 3.866 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894\"></path><path d=\"M466.26 381.328c13.337 3.71 17.385-11.061 23.216-21.408 12.722-22.571 22.292-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.51c-.587 3.874 2.225 7.315 3.865 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894M4.477 383.005H72.58l18.573-28.484 64.169-.135s.065 19.413.065 28.62h48.756V160.307h-58.816c-5.653 9.537-140.85 222.697-140.85 222.697zm152.667-145.282v71.158l-40.453-.27 40.453-70.888z\"></path></g>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-next-item\">\n      <path d=\"M12 36l17-12-17-12v24zm20-24v24h4V12h-4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-previous-item\">\n      <path d=\"M12 12h4v24h-4zm7 12l17 12V12z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-shuffle\">\n      <path d=\"M21.17 18.34L10.83 8 8 10.83l10.34 10.34 2.83-2.83zM29 8l4.09 4.09L8 37.17 10.83 40l25.09-25.09L40 19V8H29zm.66 18.83l-2.83 2.83 6.26 6.26L29 40h11V29l-4.09 4.09-6.25-6.26z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cast\">\n      <path d=\"M42 6H6c-2.21 0-4 1.79-4 4v6h4v-6h36v28H28v4h14c2.21 0 4-1.79 4-4V10c0-2.21-1.79-4-4-4zM2 36v6h6c0-3.31-2.69-6-6-6zm0-8v4c5.52 0 10 4.48 10 10h4c0-7.73-6.27-14-14-14zm0-8v4c9.94 0 18 8.06 18 18h4c0-12.15-9.85-22-22-22z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-picture-in-picture-enter\">\n      <path d=\"M38 22H22v11.99h16V22zm8 16V9.96C46 7.76 44.2 6 42 6H6C3.8 6 2 7.76 2 9.96V38c0 2.2 1.8 4 4 4h36c2.2 0 4-1.8 4-4zm-4 .04H6V9.94h36v28.1z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 22 18\" id=\"vjs-icon-picture-in-picture-exit\">\n      <path d=\"M18 4H4v10h14V4zm4 12V1.98C22 .88 21.1 0 20 0H2C.9 0 0 .88 0 1.98V16c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H2V1.97h18v14.05z\"></path>\n      <path fill=\"none\" d=\"M-1-3h24v24H-1z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-facebook\">\n      <path d=\"M1343 12v264h-157q-86 0-116 36t-30 108v189h293l-39 296h-254v759H734V905H479V609h255V391q0-186 104-288.5T1115 0q147 0 228 12z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-linkedin\">\n      <path d=\"M477 625v991H147V625h330zm21-306q1 73-50.5 122T312 490h-2q-82 0-132-49t-50-122q0-74 51.5-122.5T314 148t133 48.5T498 319zm1166 729v568h-329v-530q0-105-40.5-164.5T1168 862q-63 0-105.5 34.5T999 982q-11 30-11 81v553H659q2-399 2-647t-1-296l-1-48h329v144h-2q20-32 41-56t56.5-52 87-43.5T1285 602q171 0 275 113.5t104 332.5z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-twitter\">\n      <path d=\"M1684 408q-67 98-162 167 1 14 1 42 0 130-38 259.5T1369.5 1125 1185 1335.5t-258 146-323 54.5q-271 0-496-145 35 4 78 4 225 0 401-138-105-2-188-64.5T285 1033q33 5 61 5 43 0 85-11-112-23-185.5-111.5T172 710v-4q68 38 146 41-66-44-105-115t-39-154q0-88 44-163 121 149 294.5 238.5T884 653q-8-38-8-74 0-134 94.5-228.5T1199 256q140 0 236 102 109-21 205-78-37 115-142 178 93-10 186-50z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-tumblr\">\n      <path d=\"M1328 1329l80 237q-23 35-111 66t-177 32q-104 2-190.5-26T787 1564t-95-106-55.5-120-16.5-118V676H452V461q72-26 129-69.5t91-90 58-102 34-99T779 12q1-5 4.5-8.5T791 0h244v424h333v252h-334v518q0 30 6.5 56t22.5 52.5 49.5 41.5 81.5 14q78-2 134-29z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-pinterest\">\n      <path d=\"M1664 896q0 209-103 385.5T1281.5 1561 896 1664q-111 0-218-32 59-93 78-164 9-34 54-211 20 39 73 67.5t114 28.5q121 0 216-68.5t147-188.5 52-270q0-114-59.5-214T1180 449t-255-63q-105 0-196 29t-154.5 77-109 110.5-67 129.5T377 866q0 104 40 183t117 111q30 12 38-20 2-7 8-31t8-30q6-23-11-43-51-61-51-151 0-151 104.5-259.5T904 517q151 0 235.5 82t84.5 213q0 170-68.5 289T980 1220q-61 0-98-43.5T859 1072q8-35 26.5-93.5t30-103T927 800q0-50-27-83t-77-33q-62 0-105 57t-43 142q0 73 25 122l-99 418q-17 70-13 177-206-91-333-281T128 896q0-209 103-385.5T510.5 231 896 128t385.5 103T1561 510.5 1664 896z\"></path>\n    </symbol>\n  </defs>\n</svg>";
+var icons = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n  <defs>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-play\">\n      <path d=\"M16 10v28l22-14z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-pause\">\n      <path d=\"M12 38h8V10h-8v28zm16-28v28h8V10h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-audio\">\n      <path d=\"M24 2C14.06 2 6 10.06 6 20v14c0 3.31 2.69 6 6 6h6V24h-8v-4c0-7.73 6.27-14 14-14s14 6.27 14 14v4h-8v16h6c3.31 0 6-2.69 6-6V20c0-9.94-8.06-18-18-18z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-captions\">\n      <path d=\"M38 8H10c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zM22 22h-3v-1h-4v6h4v-1h3v2a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2zm14 0h-3v-1h-4v6h4v-1h3v2a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-subtitles\">\n      <path d=\"M40 8H8c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h32c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zM8 24h8v4H8v-4zm20 12H8v-4h20v4zm12 0h-8v-4h8v4zm0-8H20v-4h20v4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-fullscreen-enter\">\n      <path d=\"M14 28h-4v10h10v-4h-6v-6zm-4-8h4v-6h6v-4H10v10zm24 14h-6v4h10V28h-4v6zm-6-24v4h6v6h4V10H28z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-fullscreen-exit\">\n      <path d=\"M10 32h6v6h4V28H10v4zm6-16h-6v4h10V10h-4v6zm12 22h4v-6h6v-4H28v10zm4-22v-6h-4v10h10v-4h-6z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-play-circle\">\n      <path d=\"M20 33l12-9-12-9v18zm4-29C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-mute\">\n      <path d=\"M33 24c0-3.53-2.04-6.58-5-8.05v4.42l4.91 4.91c.06-.42.09-.85.09-1.28zm5 0c0 1.88-.41 3.65-1.08 5.28l3.03 3.03C41.25 29.82 42 27 42 24c0-8.56-5.99-15.72-14-17.54v4.13c5.78 1.72 10 7.07 10 13.41zM8.55 6L6 8.55 15.45 18H6v12h8l10 10V26.55l8.51 8.51c-1.34 1.03-2.85 1.86-4.51 2.36v4.13a17.94 17.94 0 0 0 7.37-3.62L39.45 42 42 39.45l-18-18L8.55 6zM24 8l-4.18 4.18L24 16.36V8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-low\">\n      <path d=\"M14 18v12h8l10 10V8L22 18h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-medium\">\n      <path d=\"M37 24c0-3.53-2.04-6.58-5-8.05v16.11c2.96-1.48 5-4.53 5-8.06zm-27-6v12h8l10 10V8L18 18h-8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-volume-high\">\n      <path d=\"M6 18v12h8l10 10V8L14 18H6zm27 6c0-3.53-2.04-6.58-5-8.05v16.11c2.96-1.48 5-4.53 5-8.06zM28 6.46v4.13c5.78 1.72 10 7.07 10 13.41s-4.22 11.69-10 13.41v4.13c8.01-1.82 14-8.97 14-17.54S36.01 8.28 28 6.46z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-spinner\">\n      <path d=\"M18.8 21l9.53-16.51C26.94 4.18 25.49 4 24 4c-4.8 0-9.19 1.69-12.64 4.51l7.33 12.69.11-.2zm24.28-3c-1.84-5.85-6.3-10.52-11.99-12.68L23.77 18h19.31zm.52 2H28.62l.58 1 9.53 16.5C41.99 33.94 44 29.21 44 24c0-1.37-.14-2.71-.4-4zm-26.53 4l-7.8-13.5C6.01 14.06 4 18.79 4 24c0 1.37.14 2.71.4 4h14.98l-2.31-4zM4.92 30c1.84 5.85 6.3 10.52 11.99 12.68L24.23 30H4.92zm22.54 0l-7.8 13.51c1.4.31 2.85.49 4.34.49 4.8 0 9.19-1.69 12.64-4.51L29.31 26.8 27.46 30z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 24 24\" id=\"vjs-icon-hd\">\n      <path d=\"M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9.5v-2h-2v2H6V9h1.5v2.5h2V9H11v6zm2-6h4c.55 0 1 .45 1 1v4c0 .55-.45 1-1 1h-4V9zm1.5 4.5h2v-3h-2v3z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-chapters\">\n      <path d=\"M6 26h4v-4H6v4zm0 8h4v-4H6v4zm0-16h4v-4H6v4zm8 8h28v-4H14v4zm0 8h28v-4H14v4zm0-20v4h28v-4H14z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 40 40\" id=\"vjs-icon-downloading\">\n      <path d=\"M18.208 36.875q-3.208-.292-5.979-1.729-2.771-1.438-4.812-3.729-2.042-2.292-3.188-5.229-1.146-2.938-1.146-6.23 0-6.583 4.334-11.416 4.333-4.834 10.833-5.5v3.166q-5.167.75-8.583 4.646Q6.25 14.75 6.25 19.958q0 5.209 3.396 9.104 3.396 3.896 8.562 4.646zM20 28.417L11.542 20l2.083-2.083 4.917 4.916v-11.25h2.916v11.25l4.875-4.916L28.417 20zm1.792 8.458v-3.167q1.833-.25 3.541-.958 1.709-.708 3.167-1.875l2.333 2.292q-1.958 1.583-4.25 2.541-2.291.959-4.791 1.167zm6.791-27.792q-1.541-1.125-3.25-1.854-1.708-.729-3.541-1.021V3.042q2.5.25 4.77 1.208 2.271.958 4.271 2.5zm4.584 21.584l-2.25-2.25q1.166-1.5 1.854-3.209.687-1.708.937-3.541h3.209q-.292 2.5-1.229 4.791-.938 2.292-2.521 4.209zm.541-12.417q-.291-1.833-.958-3.562-.667-1.73-1.833-3.188l2.375-2.208q1.541 1.916 2.458 4.208.917 2.292 1.167 4.75z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download\">\n      <path d=\"M10.8 40.55q-1.35 0-2.375-1T7.4 37.15v-7.7h3.4v7.7h26.35v-7.7h3.4v7.7q0 1.4-1 2.4t-2.4 1zM24 32.1L13.9 22.05l2.45-2.45 5.95 5.95V7.15h3.4v18.4l5.95-5.95 2.45 2.45z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download-done\">\n      <path d=\"M9.8 40.5v-3.45h28.4v3.45zm9.2-9.05L7.4 19.85l2.45-2.35L19 26.65l19.2-19.2 2.4 2.4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-file-download-off\">\n      <path d=\"M4.9 4.75L43.25 43.1 41 45.3l-4.75-4.75q-.05.05-.075.025-.025-.025-.075-.025H10.8q-1.35 0-2.375-1T7.4 37.15v-7.7h3.4v7.7h22.05l-7-7-1.85 1.8L13.9 21.9l1.85-1.85L2.7 7zm26.75 14.7l2.45 2.45-3.75 3.8-2.45-2.5zM25.7 7.15V21.1l-3.4-3.45V7.15z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-share\">\n      <path d=\"M36 32.17c-1.52 0-2.89.59-3.93 1.54L17.82 25.4c.11-.45.18-.92.18-1.4s-.07-.95-.18-1.4l14.1-8.23c1.07 1 2.5 1.62 4.08 1.62 3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6c0 .48.07.95.18 1.4l-14.1 8.23c-1.07-1-2.5-1.62-4.08-1.62-3.31 0-6 2.69-6 6s2.69 6 6 6c1.58 0 3.01-.62 4.08-1.62l14.25 8.31c-.1.42-.16.86-.16 1.31A5.83 5.83 0 1 0 36 32.17z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cog\">\n      <path d=\"M38.86 25.95c.08-.64.14-1.29.14-1.95s-.06-1.31-.14-1.95l4.23-3.31c.38-.3.49-.84.24-1.28l-4-6.93c-.25-.43-.77-.61-1.22-.43l-4.98 2.01c-1.03-.79-2.16-1.46-3.38-1.97L29 4.84c-.09-.47-.5-.84-1-.84h-8c-.5 0-.91.37-.99.84l-.75 5.3a14.8 14.8 0 0 0-3.38 1.97L9.9 10.1a1 1 0 0 0-1.22.43l-4 6.93c-.25.43-.14.97.24 1.28l4.22 3.31C9.06 22.69 9 23.34 9 24s.06 1.31.14 1.95l-4.22 3.31c-.38.3-.49.84-.24 1.28l4 6.93c.25.43.77.61 1.22.43l4.98-2.01c1.03.79 2.16 1.46 3.38 1.97l.75 5.3c.08.47.49.84.99.84h8c.5 0 .91-.37.99-.84l.75-5.3a14.8 14.8 0 0 0 3.38-1.97l4.98 2.01a1 1 0 0 0 1.22-.43l4-6.93c.25-.43.14-.97-.24-1.28l-4.22-3.31zM24 31c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-square\">\n      <path d=\"M36 8H12c-2.21 0-4 1.79-4 4v24c0 2.21 1.79 4 4 4h24c2.21 0 4-1.79 4-4V12c0-2.21-1.79-4-4-4zm0 28H12V12h24v24z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle\">\n      <circle cx=\"24\" cy=\"24\" r=\"20\"></circle>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle-outline\">\n      <path d=\"M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-circle-inner-circle\">\n      <path d=\"M24 4C12.97 4 4 12.97 4 24s8.97 20 20 20 20-8.97 20-20S35.03 4 24 4zm0 36c-8.82 0-16-7.18-16-16S15.18 8 24 8s16 7.18 16 16-7.18 16-16 16zm6-16c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6 6 2.69 6 6z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cancel\">\n      <path d=\"M24 4C12.95 4 4 12.95 4 24s8.95 20 20 20 20-8.95 20-20S35.05 4 24 4zm10 27.17L31.17 34 24 26.83 16.83 34 14 31.17 21.17 24 14 16.83 16.83 14 24 21.17 31.17 14 34 16.83 26.83 24 34 31.17z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-replay\">\n      <path d=\"M24 10V2L14 12l10 10v-8c6.63 0 12 5.37 12 12s-5.37 12-12 12-12-5.37-12-12H8c0 8.84 7.16 16 16 16s16-7.16 16-16-7.16-16-16-16z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-repeat\">\n      <path d=\"M14 14h20v6l8-8-8-8v6H10v12h4v-8zm20 20H14v-6l-8 8 8 8v-6h24V26h-4v8z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-5\">\n      <path d=\"M17.689 98l-8.697 8.696 8.697 8.697 2.486-2.485-4.32-4.319h1.302c4.93 0 9.071 1.722 12.424 5.165 3.352 3.443 5.029 7.638 5.029 12.584h3.55c0-2.958-.553-5.73-1.658-8.313-1.104-2.583-2.622-4.841-4.555-6.774-1.932-1.932-4.19-3.45-6.773-4.555-2.584-1.104-5.355-1.657-8.313-1.657H15.5l4.615-4.615zm-8.08 21.659v13.861h11.357v5.008H9.609V143h12.7c.834 0 1.55-.298 2.146-.894.596-.597.895-1.31.895-2.145v-7.781c0-.835-.299-1.55-.895-2.147a2.929 2.929 0 0 0-2.147-.894h-8.227v-5.096H25.35v-4.384z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-10\">\n      <path d=\"M42.315 125.63c0-4.997-1.694-9.235-5.08-12.713-3.388-3.479-7.571-5.218-12.552-5.218h-1.315l4.363 4.363-2.51 2.51-8.787-8.786L25.221 97l2.45 2.45-4.662 4.663h1.375c2.988 0 5.788.557 8.397 1.673 2.61 1.116 4.892 2.65 6.844 4.602 1.953 1.953 3.487 4.234 4.602 6.844 1.116 2.61 1.674 5.41 1.674 8.398zM8.183 142v-19.657H3.176V117.8h9.643V142zm13.63 0c-1.156 0-2.127-.393-2.912-1.178-.778-.778-1.168-1.746-1.168-2.902v-16.04c0-1.156.393-2.127 1.178-2.912.779-.779 1.746-1.168 2.902-1.168h7.696c1.156 0 2.126.392 2.911 1.177.779.78 1.168 1.747 1.168 2.903v16.04c0 1.156-.392 2.127-1.177 2.912-.779.779-1.746 1.168-2.902 1.168zm.556-4.636h6.583v-15.02H22.37z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-replay-30\">\n      <path d=\"M26.047 97l-8.733 8.732 8.733 8.733 2.496-2.494-4.336-4.338h1.307c4.95 0 9.108 1.73 12.474 5.187 3.367 3.458 5.051 7.668 5.051 12.635h3.565c0-2.97-.556-5.751-1.665-8.346-1.109-2.594-2.633-4.862-4.574-6.802-1.94-1.941-4.208-3.466-6.803-4.575-2.594-1.109-5.375-1.664-8.345-1.664H23.85l4.634-4.634zM2.555 117.531v4.688h10.297v5.25H5.873v4.687h6.979v5.156H2.555V142H13.36c1.061 0 1.95-.395 2.668-1.186.718-.79 1.076-1.772 1.076-2.94v-16.218c0-1.168-.358-2.149-1.076-2.94-.717-.79-1.607-1.185-2.668-1.185zm22.482.14c-1.149 0-2.11.39-2.885 1.165-.78.78-1.172 1.744-1.172 2.893v15.943c0 1.149.388 2.11 1.163 2.885.78.78 1.745 1.172 2.894 1.172h7.649c1.148 0 2.11-.388 2.884-1.163.78-.78 1.17-1.745 1.17-2.894v-15.943c0-1.15-.386-2.111-1.16-2.885-.78-.78-1.746-1.172-2.894-1.172zm.553 4.518h6.545v14.93H25.59z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-5\">\n      <path d=\"M29.508 97l-2.431 2.43 4.625 4.625h-1.364c-2.965 0-5.742.554-8.332 1.66-2.589 1.107-4.851 2.629-6.788 4.566-1.937 1.937-3.458 4.2-4.565 6.788-1.107 2.59-1.66 5.367-1.66 8.331h3.557c0-4.957 1.68-9.16 5.04-12.611 3.36-3.45 7.51-5.177 12.451-5.177h1.304l-4.326 4.33 2.49 2.49 8.715-8.716zm-9.783 21.61v13.89h11.382v5.018H19.725V142h12.727a2.93 2.93 0 0 0 2.15-.896 2.93 2.93 0 0 0 .896-2.15v-7.798c0-.837-.299-1.554-.896-2.152a2.93 2.93 0 0 0-2.15-.896h-8.245V123h11.29v-4.392z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-10\">\n      <path d=\"M23.119 97l-2.386 2.383 4.538 4.538h-1.339c-2.908 0-5.633.543-8.173 1.63-2.54 1.085-4.76 2.577-6.66 4.478-1.9 1.9-3.392 4.12-4.478 6.66-1.085 2.54-1.629 5.264-1.629 8.172h3.49c0-4.863 1.648-8.986 4.944-12.372 3.297-3.385 7.368-5.078 12.216-5.078h1.279l-4.245 4.247 2.443 2.442 8.55-8.55zm-9.52 21.45v4.42h4.871V142h4.513v-23.55zm18.136 0c-1.125 0-2.066.377-2.824 1.135-.764.764-1.148 1.709-1.148 2.834v15.612c0 1.124.38 2.066 1.139 2.824.764.764 1.708 1.145 2.833 1.145h7.489c1.125 0 2.066-.378 2.824-1.136.764-.764 1.145-1.709 1.145-2.833v-15.612c0-1.125-.378-2.067-1.136-2.825-.764-.764-1.708-1.145-2.833-1.145zm.54 4.42h6.408v14.617h-6.407z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 96 48 48\" id=\"vjs-icon-forward-30\">\n      <path d=\"M25.549 97l-2.437 2.434 4.634 4.635H26.38c-2.97 0-5.753.555-8.347 1.664-2.594 1.109-4.861 2.633-6.802 4.574-1.94 1.94-3.465 4.207-4.574 6.802-1.109 2.594-1.664 5.377-1.664 8.347h3.565c0-4.967 1.683-9.178 5.05-12.636 3.366-3.458 7.525-5.187 12.475-5.187h1.307l-4.335 4.338 2.495 2.494 8.732-8.732zm-11.553 20.53v4.689h10.297v5.249h-6.978v4.688h6.978v5.156H13.996V142h10.808c1.06 0 1.948-.395 2.666-1.186.718-.79 1.077-1.771 1.077-2.94v-16.217c0-1.169-.36-2.15-1.077-2.94-.718-.79-1.605-1.186-2.666-1.186zm21.174.168c-1.149 0-2.11.389-2.884 1.163-.78.78-1.172 1.745-1.172 2.894v15.942c0 1.15.388 2.11 1.162 2.885.78.78 1.745 1.17 2.894 1.17h7.649c1.149 0 2.11-.386 2.885-1.16.78-.78 1.17-1.746 1.17-2.895v-15.942c0-1.15-.387-2.11-1.161-2.885-.78-.78-1.745-1.172-2.894-1.172zm.552 4.516h6.542v14.931h-6.542z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 512 512\" id=\"vjs-icon-audio-description\">\n      <g fill-rule=\"evenodd\"><path d=\"M227.29 381.351V162.993c50.38-1.017 89.108-3.028 117.631 17.126 27.374 19.342 48.734 56.965 44.89 105.325-4.067 51.155-41.335 94.139-89.776 98.475-24.085 2.155-71.972 0-71.972 0s-.84-1.352-.773-2.568m48.755-54.804c31.43 1.26 53.208-16.633 56.495-45.386 4.403-38.51-21.188-63.552-58.041-60.796v103.612c-.036 1.466.575 2.22 1.546 2.57\"></path><path d=\"M383.78 381.328c13.336 3.71 17.387-11.06 23.215-21.408 12.722-22.571 22.294-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.51c-.587 3.874 2.226 7.315 3.865 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894\"></path><path d=\"M425.154 381.328c13.336 3.71 17.384-11.061 23.215-21.408 12.721-22.571 22.291-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.511c-.586 3.874 2.226 7.315 3.866 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894\"></path><path d=\"M466.26 381.328c13.337 3.71 17.385-11.061 23.216-21.408 12.722-22.571 22.292-51.594 22.445-84.774.221-47.594-18.343-82.517-35.6-106.182h-8.51c-.587 3.874 2.225 7.315 3.865 10.276 13.166 23.762 25.367 56.553 25.54 94.194.2 43.176-14.162 79.278-30.955 107.894M4.477 383.005H72.58l18.573-28.484 64.169-.135s.065 19.413.065 28.62h48.756V160.307h-58.816c-5.653 9.537-140.85 222.697-140.85 222.697zm152.667-145.282v71.158l-40.453-.27 40.453-70.888z\"></path></g>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-next-item\">\n      <path d=\"M12 36l17-12-17-12v24zm20-24v24h4V12h-4z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-previous-item\">\n      <path d=\"M12 12h4v24h-4zm7 12l17 12V12z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-shuffle\">\n      <path d=\"M21.17 18.34L10.83 8 8 10.83l10.34 10.34 2.83-2.83zM29 8l4.09 4.09L8 37.17 10.83 40l25.09-25.09L40 19V8H29zm.66 18.83l-2.83 2.83 6.26 6.26L29 40h11V29l-4.09 4.09-6.25-6.26z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-cast\">\n      <path d=\"M42 6H6c-2.21 0-4 1.79-4 4v6h4v-6h36v28H28v4h14c2.21 0 4-1.79 4-4V10c0-2.21-1.79-4-4-4zM2 36v6h6c0-3.31-2.69-6-6-6zm0-8v4c5.52 0 10 4.48 10 10h4c0-7.73-6.27-14-14-14zm0-8v4c9.94 0 18 8.06 18 18h4c0-12.15-9.85-22-22-22z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 48 48\" id=\"vjs-icon-picture-in-picture-enter\">\n      <path d=\"M38 22H22v11.99h16V22zm8 16V9.96C46 7.76 44.2 6 42 6H6C3.8 6 2 7.76 2 9.96V38c0 2.2 1.8 4 4 4h36c2.2 0 4-1.8 4-4zm-4 .04H6V9.94h36v28.1z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 22 18\" id=\"vjs-icon-picture-in-picture-exit\">\n      <path d=\"M18 4H4v10h14V4zm4 12V1.98C22 .88 21.1 0 20 0H2C.9 0 0 .88 0 1.98V16c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H2V1.97h18v14.05z\"></path>\n      <path fill=\"none\" d=\"M-1-3h24v24H-1z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-facebook\">\n      <path d=\"M1343 12v264h-157q-86 0-116 36t-30 108v189h293l-39 296h-254v759H734V905H479V609h255V391q0-186 104-288.5T1115 0q147 0 228 12z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-linkedin\">\n      <path d=\"M477 625v991H147V625h330zm21-306q1 73-50.5 122T312 490h-2q-82 0-132-49t-50-122q0-74 51.5-122.5T314 148t133 48.5T498 319zm1166 729v568h-329v-530q0-105-40.5-164.5T1168 862q-63 0-105.5 34.5T999 982q-11 30-11 81v553H659q2-399 2-647t-1-296l-1-48h329v144h-2q20-32 41-56t56.5-52 87-43.5T1285 602q171 0 275 113.5t104 332.5z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1200 1227\" id=\"vjs-icon-twitter\">\n      <path d=\"M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z\"/>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-tumblr\">\n      <path d=\"M1328 1329l80 237q-23 35-111 66t-177 32q-104 2-190.5-26T787 1564t-95-106-55.5-120-16.5-118V676H452V461q72-26 129-69.5t91-90 58-102 34-99T779 12q1-5 4.5-8.5T791 0h244v424h333v252h-334v518q0 30 6.5 56t22.5 52.5 49.5 41.5 81.5 14q78-2 134-29z\"></path>\n    </symbol>\n    <symbol viewBox=\"0 0 1792 1792\" id=\"vjs-icon-pinterest\">\n      <path d=\"M1664 896q0 209-103 385.5T1281.5 1561 896 1664q-111 0-218-32 59-93 78-164 9-34 54-211 20 39 73 67.5t114 28.5q121 0 216-68.5t147-188.5 52-270q0-114-59.5-214T1180 449t-255-63q-105 0-196 29t-154.5 77-109 110.5-67 129.5T377 866q0 104 40 183t117 111q30 12 38-20 2-7 8-31t8-30q6-23-11-43-51-61-51-151 0-151 104.5-259.5T904 517q151 0 235.5 82t84.5 213q0 170-68.5 289T980 1220q-61 0-98-43.5T859 1072q8-35 26.5-93.5t30-103T927 800q0-50-27-83t-77-33q-62 0-105 57t-43 142q0 73 25 122l-99 418q-17 70-13 177-206-91-333-281T128 896q0-209 103-385.5T510.5 231 896 128t385.5 103T1561 510.5 1664 896z\"></path>\n    </symbol>\n  </defs>\n</svg>";
+
+// /**
+
+// Determine the keycode for the 'back' key based on the platform
+const backKeyCode = IS_TIZEN ? 10009 : IS_WEBOS ? 461 : 8;
+const SpatialNavKeyCodes = {
+  codes: {
+    play: 415,
+    pause: 19,
+    ff: 417,
+    rw: 412,
+    back: backKeyCode
+  },
+  names: {
+    415: 'play',
+    19: 'pause',
+    417: 'ff',
+    412: 'rw',
+    [backKeyCode]: 'back'
+  },
+  isEventKey(event, keyName) {
+    keyName = keyName.toLowerCase();
+    if (this.names[event.keyCode] && this.names[event.keyCode] === keyName) {
+      return true;
+    }
+    return false;
+  },
+  getEventName(event) {
+    if (this.names[event.keyCode]) {
+      return this.names[event.keyCode];
+    } else if (this.codes[event.code]) {
+      const code = this.codes[event.code];
+      return this.names[code];
+    }
+    return null;
+  }
+};
+
+/**
+ * @file spatial-navigation.js
+ */
+
+/** @import Component from './component' */
+/** @import Player from './player' */
+
+// The number of seconds the `step*` functions move the timeline.
+const STEP_SECONDS = 5;
+
+/**
+ * Spatial Navigation in Video.js enhances user experience and accessibility on smartTV devices,
+ * enabling seamless navigation through interactive elements within the player using remote control arrow keys.
+ * This functionality allows users to effortlessly navigate through focusable components.
+ *
+ * @extends EventTarget
+ */
+class SpatialNavigation extends EventTarget$2 {
+  /**
+   * Constructs a SpatialNavigation instance with initial settings.
+   * Sets up the player instance, and prepares the spatial navigation system.
+   *
+   * @class
+   * @param {Player} player - The Video.js player instance to which the spatial navigation is attached.
+   */
+  constructor(player) {
+    super();
+    this.player_ = player;
+    this.focusableComponents = [];
+    this.isListening_ = false;
+    this.isPaused_ = false;
+    this.onKeyDown_ = this.onKeyDown_.bind(this);
+    this.lastFocusedComponent_ = null;
+  }
+
+  /**
+   * Starts the spatial navigation by adding a keydown event listener to the video container.
+   * This method ensures that the event listener is added only once.
+   */
+  start() {
+    // If the listener is already active, exit early.
+    if (this.isListening_) {
+      return;
+    }
+
+    // Add the event listener since the listener is not yet active.
+    this.player_.on('keydown', this.onKeyDown_);
+    this.player_.on('modalKeydown', this.onKeyDown_);
+    // Listen for source change events
+    this.player_.on('loadedmetadata', () => {
+      this.focus(this.updateFocusableComponents()[0]);
+    });
+    this.player_.on('modalclose', () => {
+      this.refocusComponent();
+    });
+    this.player_.on('focusin', this.handlePlayerFocus_.bind(this));
+    this.player_.on('focusout', this.handlePlayerBlur_.bind(this));
+    this.isListening_ = true;
+    if (this.player_.errorDisplay) {
+      this.player_.errorDisplay.on('aftermodalfill', () => {
+        this.updateFocusableComponents();
+        if (this.focusableComponents.length) {
+          // The modal has focusable components:
+
+          if (this.focusableComponents.length > 1) {
+            // The modal has close button + some additional buttons.
+            // Focusing first additional button:
+
+            this.focusableComponents[1].focus();
+          } else {
+            // The modal has only close button,
+            // Focusing it:
+
+            this.focusableComponents[0].focus();
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * Stops the spatial navigation by removing the keydown event listener from the video container.
+   * Also sets the `isListening_` flag to false.
+   */
+  stop() {
+    this.player_.off('keydown', this.onKeyDown_);
+    this.isListening_ = false;
+  }
+
+  /**
+   * Responds to keydown events for spatial navigation and media control.
+   *
+   * Determines if spatial navigation or media control is active and handles key inputs accordingly.
+   *
+   * @param {KeyboardEvent} event - The keydown event to be handled.
+   */
+  onKeyDown_(event) {
+    // Determine if the event is a custom modalKeydown event
+    const actualEvent = event.originalEvent ? event.originalEvent : event;
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(actualEvent.key)) {
+      // Handle directional navigation
+      if (this.isPaused_) {
+        return;
+      }
+      actualEvent.preventDefault();
+
+      // "ArrowLeft" => "left" etc
+      const direction = actualEvent.key.substring(5).toLowerCase();
+      this.move(direction);
+    } else if (SpatialNavKeyCodes.isEventKey(actualEvent, 'play') || SpatialNavKeyCodes.isEventKey(actualEvent, 'pause') || SpatialNavKeyCodes.isEventKey(actualEvent, 'ff') || SpatialNavKeyCodes.isEventKey(actualEvent, 'rw')) {
+      // Handle media actions
+      actualEvent.preventDefault();
+      const action = SpatialNavKeyCodes.getEventName(actualEvent);
+      this.performMediaAction_(action);
+    } else if (SpatialNavKeyCodes.isEventKey(actualEvent, 'Back') && event.target && typeof event.target.closeable === 'function' && event.target.closeable()) {
+      actualEvent.preventDefault();
+      event.target.close();
+    }
+  }
+
+  /**
+   * Performs media control actions based on the given key input.
+   *
+   * Controls the playback and seeking functionalities of the media player.
+   *
+   * @param {string} key - The key representing the media action to be performed.
+   *   Accepted keys: 'play', 'pause', 'ff' (fast-forward), 'rw' (rewind).
+   */
+  performMediaAction_(key) {
+    if (this.player_) {
+      switch (key) {
+        case 'play':
+          if (this.player_.paused()) {
+            this.player_.play();
+          }
+          break;
+        case 'pause':
+          if (!this.player_.paused()) {
+            this.player_.pause();
+          }
+          break;
+        case 'ff':
+          this.userSeek_(this.player_.currentTime() + STEP_SECONDS);
+          break;
+        case 'rw':
+          this.userSeek_(this.player_.currentTime() - STEP_SECONDS);
+          break;
+      }
+    }
+  }
+
+  /**
+   * Prevent liveThreshold from causing seeks to seem like they
+   * are not happening from a user perspective.
+   *
+   * @param {number} ct
+   *        current time to seek to
+   */
+  userSeek_(ct) {
+    if (this.player_.liveTracker && this.player_.liveTracker.isLive()) {
+      this.player_.liveTracker.nextSeekedFromUser();
+    }
+    this.player_.currentTime(ct);
+  }
+
+  /**
+   * Pauses the spatial navigation functionality.
+   * This method sets a flag that can be used to temporarily disable the navigation logic.
+   */
+  pause() {
+    this.isPaused_ = true;
+  }
+
+  /**
+   * Resumes the spatial navigation functionality if it has been paused.
+   * This method resets the pause flag, re-enabling the navigation logic.
+   */
+  resume() {
+    this.isPaused_ = false;
+  }
+
+  /**
+   * Handles Player Blur.
+   *
+   * @param {string|Event|Object} event
+   *        The name of the event, an `Event`, or an object with a key of type set to
+   *        an event name.
+   *
+   * Calls for handling of the Player Blur if:
+   * *The next focused element is not a child of current focused element &
+   * The next focused element is not a child of the Player.
+   * *There is no next focused element
+   */
+  handlePlayerBlur_(event) {
+    const nextFocusedElement = event.relatedTarget;
+    let isChildrenOfPlayer = null;
+    const currentComponent = this.getCurrentComponent(event.target);
+    if (nextFocusedElement) {
+      isChildrenOfPlayer = Boolean(nextFocusedElement.closest('.video-js'));
+
+      // If nextFocusedElement is the 'TextTrackSettings' component
+      if (nextFocusedElement.classList.contains('vjs-text-track-settings') && !this.isPaused_) {
+        this.searchForTrackSelect_();
+      }
+    }
+    if (!event.currentTarget.contains(event.relatedTarget) && !isChildrenOfPlayer || !nextFocusedElement) {
+      if (currentComponent && currentComponent.name() === 'CloseButton') {
+        this.refocusComponent();
+      } else {
+        this.pause();
+        if (currentComponent && currentComponent.el()) {
+          // Store last focused component
+          this.lastFocusedComponent_ = currentComponent;
+        }
+      }
+    }
+  }
+
+  /**
+   * Handles the Player focus event.
+   *
+   * Calls for handling of the Player Focus if current element is focusable.
+   */
+  handlePlayerFocus_() {
+    if (this.getCurrentComponent() && this.getCurrentComponent().getIsFocusable()) {
+      this.resume();
+    }
+  }
+
+  /**
+   * Gets a set of focusable components.
+   *
+   * @return {Array}
+   *         Returns an array of focusable components.
+   */
+  updateFocusableComponents() {
+    const player = this.player_;
+    const focusableComponents = [];
+
+    /**
+     * Searches for children candidates.
+     *
+     * Pushes Components to array of 'focusableComponents'.
+     * Calls itself if there is children elements inside iterated component.
+     *
+     * @param {Array} componentsArray - The array of components to search for focusable children.
+     */
+    function searchForChildrenCandidates(componentsArray) {
+      for (const i of componentsArray) {
+        if (i.hasOwnProperty('el_') && i.getIsFocusable() && i.getIsAvailableToBeFocused(i.el())) {
+          focusableComponents.push(i);
+        }
+        if (i.hasOwnProperty('children_') && i.children_.length > 0) {
+          searchForChildrenCandidates(i.children_);
+        }
+      }
+    }
+
+    // Iterate inside all children components of the player.
+    player.children_.forEach(value => {
+      if (value.hasOwnProperty('el_')) {
+        // If component has required functions 'getIsFocusable' & 'getIsAvailableToBeFocused', is focusable & available to be focused.
+        if (value.getIsFocusable && value.getIsAvailableToBeFocused && value.getIsFocusable() && value.getIsAvailableToBeFocused(value.el())) {
+          focusableComponents.push(value);
+          return;
+          // If component has posible children components as candidates.
+        } else if (value.hasOwnProperty('children_') && value.children_.length > 0) {
+          searchForChildrenCandidates(value.children_);
+          // If component has posible item components as candidates.
+        } else if (value.hasOwnProperty('items') && value.items.length > 0) {
+          searchForChildrenCandidates(value.items);
+          // If there is a suitable child element within the component's DOM element.
+        } else if (this.findSuitableDOMChild(value)) {
+          focusableComponents.push(value);
+        }
+      }
+
+      // TODO - Refactor the following logic after refactor of videojs-errors elements to be components is done.
+      if (value.name_ === 'ErrorDisplay' && value.opened_) {
+        const buttonContainer = value.el_.querySelector('.vjs-errors-ok-button-container');
+        if (buttonContainer) {
+          const modalButtons = buttonContainer.querySelectorAll('button');
+          modalButtons.forEach((element, index) => {
+            // Add elements as objects to be handled by the spatial navigation
+            focusableComponents.push({
+              name: () => {
+                return 'ModalButton' + (index + 1);
+              },
+              el: () => element,
+              getPositions: () => {
+                const rect = element.getBoundingClientRect();
+
+                // Creating objects that mirror DOMRectReadOnly for boundingClientRect and center
+                const boundingClientRect = {
+                  x: rect.x,
+                  y: rect.y,
+                  width: rect.width,
+                  height: rect.height,
+                  top: rect.top,
+                  right: rect.right,
+                  bottom: rect.bottom,
+                  left: rect.left
+                };
+
+                // Calculating the center position
+                const center = {
+                  x: rect.left + rect.width / 2,
+                  y: rect.top + rect.height / 2,
+                  width: 0,
+                  height: 0,
+                  top: rect.top + rect.height / 2,
+                  right: rect.left + rect.width / 2,
+                  bottom: rect.top + rect.height / 2,
+                  left: rect.left + rect.width / 2
+                };
+                return {
+                  boundingClientRect,
+                  center
+                };
+              },
+              // Asume that the following are always focusable
+              getIsAvailableToBeFocused: () => true,
+              getIsFocusable: el => true,
+              focus: () => element.focus()
+            });
+          });
+        }
+      }
+    });
+    this.focusableComponents = focusableComponents;
+    return this.focusableComponents;
+  }
+
+  /**
+   * Finds a suitable child element within the provided component's DOM element.
+   *
+   * @param {Object} component - The component containing the DOM element to search within.
+   * @return {HTMLElement|null} Returns the suitable child element if found, or null if not found.
+   */
+  findSuitableDOMChild(component) {
+    /**
+     * Recursively searches for a suitable child node that can be focused within a given component.
+     * It first checks if the provided node itself can be focused according to the component's
+     * `getIsFocusable` and `getIsAvailableToBeFocused` methods. If not, it recursively searches
+     * through the node's children to find a suitable child node that meets the focusability criteria.
+     *
+     * @param {HTMLElement} node - The DOM node to start the search from.
+     * @return {HTMLElement|null} The first child node that is focusable and available to be focused,
+     * or `null` if no suitable child is found.
+     */
+    function searchForSuitableChild(node) {
+      if (component.getIsFocusable(node) && component.getIsAvailableToBeFocused(node)) {
+        return node;
+      }
+      for (let i = 0; i < node.children.length; i++) {
+        const child = node.children[i];
+        const suitableChild = searchForSuitableChild(child);
+        if (suitableChild) {
+          return suitableChild;
+        }
+      }
+      return null;
+    }
+
+    if (component.el()) {
+      return searchForSuitableChild(component.el());
+    }
+    return null;
+  }
+
+  /**
+   * Gets the currently focused component from the list of focusable components.
+   * If a target element is provided, it uses that element to find the corresponding
+   * component. If no target is provided, it defaults to using the document's currently
+   * active element.
+   *
+   * @param {HTMLElement} [target] - The DOM element to check against the focusable components.
+   *                                 If not provided, `document.activeElement` is used.
+   * @return {Component|null} - Returns the focused component if found among the focusable components,
+   *                            otherwise returns null if no matching component is found.
+   */
+  getCurrentComponent(target) {
+    this.updateFocusableComponents();
+    // eslint-disable-next-line
+    const curComp = target || document.activeElement;
+    if (this.focusableComponents.length) {
+      for (const i of this.focusableComponents) {
+        // If component Node is equal to the current active element.
+        if (i.el() === curComp) {
+          return i;
+        }
+      }
+    }
+  }
+
+  /**
+   * Adds a component to the array of focusable components.
+   *
+   * @param {Component} component
+   *        The `Component` to be added.
+   */
+  add(component) {
+    const focusableComponents = [...this.focusableComponents];
+    if (component.hasOwnProperty('el_') && component.getIsFocusable() && component.getIsAvailableToBeFocused(component.el())) {
+      focusableComponents.push(component);
+    }
+    this.focusableComponents = focusableComponents;
+    // Trigger the notification manually
+    this.trigger({
+      type: 'focusableComponentsChanged',
+      focusableComponents: this.focusableComponents
+    });
+  }
+
+  /**
+   * Removes component from the array of focusable components.
+   *
+   * @param {Component} component - The component to be removed from the focusable components array.
+   */
+  remove(component) {
+    for (let i = 0; i < this.focusableComponents.length; i++) {
+      if (this.focusableComponents[i].name() === component.name()) {
+        this.focusableComponents.splice(i, 1);
+        // Trigger the notification manually
+        this.trigger({
+          type: 'focusableComponentsChanged',
+          focusableComponents: this.focusableComponents
+        });
+        return;
+      }
+    }
+  }
+
+  /**
+   * Clears array of focusable components.
+   */
+  clear() {
+    // Check if the array is already empty to avoid unnecessary event triggering
+    if (this.focusableComponents.length > 0) {
+      // Clear the array
+      this.focusableComponents = [];
+
+      // Trigger the notification manually
+      this.trigger({
+        type: 'focusableComponentsChanged',
+        focusableComponents: this.focusableComponents
+      });
+    }
+  }
+
+  /**
+   * Navigates to the next focusable component based on the specified direction.
+   *
+   * @param {string} direction 'up', 'down', 'left', 'right'
+   */
+  move(direction) {
+    const currentFocusedComponent = this.getCurrentComponent();
+    if (!currentFocusedComponent) {
+      return;
+    }
+    const currentPositions = currentFocusedComponent.getPositions();
+    const candidates = this.focusableComponents.filter(component => component !== currentFocusedComponent && this.isInDirection_(currentPositions.boundingClientRect, component.getPositions().boundingClientRect, direction));
+    const bestCandidate = this.findBestCandidate_(currentPositions.center, candidates, direction);
+    if (bestCandidate) {
+      this.focus(bestCandidate);
+    } else {
+      this.trigger({
+        type: 'endOfFocusableComponents',
+        direction,
+        focusedComponent: currentFocusedComponent
+      });
+    }
+  }
+
+  /**
+   * Finds the best candidate on the current center position,
+   * the list of candidates, and the specified navigation direction.
+   *
+   * @param {Object} currentCenter The center position of the current focused component element.
+   * @param {Array} candidates An array of candidate components to receive focus.
+   * @param {string} direction The direction of navigation ('up', 'down', 'left', 'right').
+   * @return {Object|null} The component that is the best candidate for receiving focus.
+   */
+  findBestCandidate_(currentCenter, candidates, direction) {
+    let minDistance = Infinity;
+    let bestCandidate = null;
+    for (const candidate of candidates) {
+      const candidateCenter = candidate.getPositions().center;
+      const distance = this.calculateDistance_(currentCenter, candidateCenter, direction);
+      if (distance < minDistance) {
+        minDistance = distance;
+        bestCandidate = candidate;
+      }
+    }
+    return bestCandidate;
+  }
+
+  /**
+   * Determines if a target rectangle is in the specified navigation direction
+   * relative to a source rectangle.
+   *
+   * @param {Object} srcRect The bounding rectangle of the source element.
+   * @param {Object} targetRect The bounding rectangle of the target element.
+   * @param {string} direction The navigation direction ('up', 'down', 'left', 'right').
+   * @return {boolean} True if the target is in the specified direction relative to the source.
+   */
+  isInDirection_(srcRect, targetRect, direction) {
+    switch (direction) {
+      case 'right':
+        return targetRect.left >= srcRect.right;
+      case 'left':
+        return targetRect.right <= srcRect.left;
+      case 'down':
+        return targetRect.top >= srcRect.bottom;
+      case 'up':
+        return targetRect.bottom <= srcRect.top;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Focus the last focused component saved before blur on player.
+   */
+  refocusComponent() {
+    if (this.lastFocusedComponent_) {
+      // If user is not active, set it to active.
+      if (!this.player_.userActive()) {
+        this.player_.userActive(true);
+      }
+      this.updateFocusableComponents();
+
+      // Search inside array of 'focusableComponents' for a match of name of
+      // the last focused component.
+      for (let i = 0; i < this.focusableComponents.length; i++) {
+        if (this.focusableComponents[i].name() === this.lastFocusedComponent_.name()) {
+          this.focus(this.focusableComponents[i]);
+          return;
+        }
+      }
+    } else {
+      this.focus(this.updateFocusableComponents()[0]);
+    }
+  }
+
+  /**
+   * Focuses on a given component.
+   * If the component is available to be focused, it focuses on the component.
+   * If not, it attempts to find a suitable DOM child within the component and focuses on it.
+   *
+   * @param {Component} component - The component to be focused.
+   */
+  focus(component) {
+    if (typeof component !== 'object') {
+      return;
+    }
+    if (component.getIsAvailableToBeFocused(component.el())) {
+      component.focus();
+    } else if (this.findSuitableDOMChild(component)) {
+      this.findSuitableDOMChild(component).focus();
+    }
+  }
+
+  /**
+   * Calculates the distance between two points, adjusting the calculation based on
+   * the specified navigation direction.
+   *
+   * @param {Object} center1 The center point of the first element.
+   * @param {Object} center2 The center point of the second element.
+   * @param {string} direction The direction of navigation ('up', 'down', 'left', 'right').
+   * @return {number} The calculated distance between the two centers.
+   */
+  calculateDistance_(center1, center2, direction) {
+    const dx = Math.abs(center1.x - center2.x);
+    const dy = Math.abs(center1.y - center2.y);
+    let distance;
+    switch (direction) {
+      case 'right':
+      case 'left':
+        // Higher weight for vertical distance in horizontal navigation.
+        distance = dx + dy * 100;
+        break;
+      case 'up':
+        // Strongly prioritize vertical proximity for UP navigation.
+        // Adjust the weight to ensure that elements directly above are favored.
+        distance = dy * 2 + dx * 0.5;
+        break;
+      case 'down':
+        // More balanced weight for vertical and horizontal distances.
+        // Adjust the weights here to find the best balance.
+        distance = dy * 5 + dx;
+        break;
+      default:
+        distance = dx + dy;
+    }
+    return distance;
+  }
+
+  /**
+   * This gets called by 'handlePlayerBlur_' if 'spatialNavigation' is enabled.
+   * Searches for the first 'TextTrackSelect' inside of modal to focus.
+   *
+   * @private
+   */
+  searchForTrackSelect_() {
+    const spatialNavigation = this;
+    for (const component of spatialNavigation.updateFocusableComponents()) {
+      if (component.constructor.name === 'TextTrackSelect') {
+        spatialNavigation.focus(component);
+        break;
+      }
+    }
+  }
+}
 
 /**
  * @file loader.js
  */
+
+/** @import Player from '../player' */
 
 /**
  * The `MediaLoader` is the `Component` that decides which playback technology to load
@@ -9679,7 +10755,7 @@ class MediaLoader extends Component$1 {
   /**
    * Create an instance of this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should attach to.
    *
    * @param {Object} [options]
@@ -9724,11 +10800,14 @@ class MediaLoader extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('MediaLoader', MediaLoader);
 
 /**
  * @file clickable-component.js
  */
+
+/** @import Player from './player' */
 
 /**
  * Component which is clickable or keyboard actionable, but is not a
@@ -9740,7 +10819,7 @@ class ClickableComponent extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param  { import('./player').default } player
+   * @param  {Player} player
    *         The `Player` that this class should be attached to.
    *
    * @param  {Object} [options]
@@ -9809,6 +10888,7 @@ class ClickableComponent extends Component$1 {
     this.createControlTextEl(el);
     return el;
   }
+
   dispose() {
     // remove controlTextEl_ on dispose
     this.controlTextEl_ = null;
@@ -9948,7 +11028,7 @@ class ClickableComponent extends Component$1 {
     // Support Space or Enter key operation to fire a click event. Also,
     // prevent the event from propagating through the DOM and triggering
     // Player hotkeys.
-    if (keycode.isEventKey(event, 'Space') || keycode.isEventKey(event, 'Enter')) {
+    if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
       this.trigger('click');
@@ -9958,11 +11038,14 @@ class ClickableComponent extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('ClickableComponent', ClickableComponent);
 
 /**
  * @file poster-image.js
  */
+
+/** @import Player from './player' */
 
 /**
  * A `ClickableComponent` that handles showing the poster image for the player.
@@ -9973,7 +11056,7 @@ class PosterImage extends ClickableComponent {
   /**
    * Create an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should attach to.
    *
    * @param {Object} [options]
@@ -10138,6 +11221,9 @@ Component$1.registerComponent('PosterImage', PosterImage);
 /**
  * @file text-track-display.js
  */
+
+/** @import Player from '../player' */
+
 const darkGray = '#222';
 const lightGray = '#ccc';
 const fontMap = {
@@ -10227,7 +11313,7 @@ class TextTrackDisplay extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -10274,14 +11360,14 @@ class TextTrackDisplay extends Component$1 {
   }
 
   /**
-  * Preselect a track following this precedence:
-  * - matches the previously selected {@link TextTrack}'s language and kind
-  * - matches the previously selected {@link TextTrack}'s language only
-  * - is the first default captions track
-  * - is the first default descriptions track
-  *
-  * @listens Player#loadstart
-  */
+   * Preselect a track following this precedence:
+   * - matches the previously selected {@link TextTrack}'s language and kind
+   * - matches the previously selected {@link TextTrack}'s language only
+   * - is the first default captions track
+   * - is the first default descriptions track
+   *
+   * @listens Player#loadstart
+   */
   preselectTrack() {
     const modes = {
       captions: 1,
@@ -10423,6 +11509,45 @@ class TextTrackDisplay extends Component$1 {
       }
       this.updateForTrack(descriptionsTrack);
     }
+    if (!window$1.CSS.supports('inset', '10px')) {
+      const textTrackDisplay = this.el_;
+      const vjsTextTrackCues = textTrackDisplay.querySelectorAll('.vjs-text-track-cue');
+      const controlBarHeight = this.player_.controlBar.el_.getBoundingClientRect().height;
+      const playerHeight = this.player_.el_.getBoundingClientRect().height;
+
+      // Clear inline style before getting actual height of textTrackDisplay
+      textTrackDisplay.style = '';
+
+      // textrack style updates, this styles are required to be inline
+      tryUpdateStyle(textTrackDisplay, 'position', 'relative');
+      tryUpdateStyle(textTrackDisplay, 'height', playerHeight - controlBarHeight + 'px');
+      tryUpdateStyle(textTrackDisplay, 'top', 'unset');
+      if (IS_SMART_TV) {
+        tryUpdateStyle(textTrackDisplay, 'bottom', playerHeight + 'px');
+      } else {
+        tryUpdateStyle(textTrackDisplay, 'bottom', '0px');
+      }
+
+      // vjsTextTrackCue style updates
+      if (vjsTextTrackCues.length > 0) {
+        vjsTextTrackCues.forEach(vjsTextTrackCue => {
+          // verify if inset styles are inline
+          if (vjsTextTrackCue.style.inset) {
+            const insetStyles = vjsTextTrackCue.style.inset.split(' ');
+
+            // expected value is always 3
+            if (insetStyles.length === 3) {
+              Object.assign(vjsTextTrackCue.style, {
+                top: insetStyles[0],
+                right: insetStyles[1],
+                bottom: insetStyles[2],
+                left: 'unset'
+              });
+            }
+          }
+        });
+      }
+    }
   }
 
   /**
@@ -10558,6 +11683,7 @@ class TextTrackDisplay extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('TextTrackDisplay', TextTrackDisplay);
 
 /**
@@ -10598,6 +11724,7 @@ class LoadingSpinner extends Component$1 {
     this.$('.vjs-control-text').textContent = this.localize('{1} is loading.', [this.player_.isAudio() ? 'Audio Player' : 'Video Player']);
   }
 }
+
 Component$1.registerComponent('LoadingSpinner', LoadingSpinner);
 
 /**
@@ -10706,7 +11833,7 @@ class Button extends ClickableComponent {
     // prevent the event from propagating through the DOM and triggering Player
     // hotkeys. We do not preventDefault here because we _want_ the browser to
     // handle it.
-    if (keycode.isEventKey(event, 'Space') || keycode.isEventKey(event, 'Enter')) {
+    if (event.key === ' ' || event.key === 'Enter') {
       event.stopPropagation();
       return;
     }
@@ -10715,6 +11842,7 @@ class Button extends ClickableComponent {
     super.handleKeyDown(event);
   }
 }
+
 Component$1.registerComponent('Button', Button);
 
 /**
@@ -10775,7 +11903,8 @@ class BigPlayButton extends Button {
     }
     const playFocus = () => playToggle.focus();
     if (isPromise(playPromise)) {
-      playPromise.then(playFocus, () => {});
+      playPromise.then(playFocus, () => {
+      });
     } else {
       this.setTimeout(playFocus, 1);
     }
@@ -10821,6 +11950,8 @@ Component$1.registerComponent('BigPlayButton', BigPlayButton);
  * @file close-button.js
  */
 
+/** @import Player from './player' */
+
 /**
  * The `CloseButton` is a `{@link Button}` that fires a `close` event when
  * it gets clicked.
@@ -10829,14 +11960,14 @@ Component$1.registerComponent('BigPlayButton', BigPlayButton);
  */
 class CloseButton extends Button {
   /**
-  * Creates an instance of the this class.
-  *
-  * @param  { import('./player').default } player
-  *         The `Player` that this class should be attached to.
-  *
-  * @param  {Object} [options]
-  *         The key/value store of player options.
-  */
+   * Creates an instance of the this class.
+   *
+   * @param  {Player} player
+   *         The `Player` that this class should be attached to.
+   *
+   * @param  {Object} [options]
+   *         The key/value store of player options.
+   */
   constructor(player, options) {
     super(player, options);
     this.setIcon('cancel');
@@ -10844,11 +11975,11 @@ class CloseButton extends Button {
   }
 
   /**
-  * Builds the default DOM `className`.
-  *
-  * @return {string}
-  *         The DOM `className` for this object.
-  */
+   * Builds the default DOM `className`.
+   *
+   * @return {string}
+   *         The DOM `className` for this object.
+   */
   buildCSSClass() {
     return `vjs-close-button ${super.buildCSSClass()}`;
   }
@@ -10882,6 +12013,7 @@ class CloseButton extends Button {
       bubbles: false
     });
   }
+
   /**
    * Event handler that is called when a `CloseButton` receives a
    * `keydown` event.
@@ -10895,7 +12027,7 @@ class CloseButton extends Button {
    */
   handleKeyDown(event) {
     // Esc button will trigger `click` event
-    if (keycode.isEventKey(event, 'Esc')) {
+    if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
       this.trigger('click');
@@ -10905,11 +12037,14 @@ class CloseButton extends Button {
     }
   }
 }
+
 Component$1.registerComponent('CloseButton', CloseButton);
 
 /**
  * @file play-toggle.js
  */
+
+/** @import Player from './player' */
 
 /**
  * Button to toggle between play and pause.
@@ -10920,7 +12055,7 @@ class PlayToggle extends Button {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -11051,6 +12186,8 @@ Component$1.registerComponent('PlayToggle', PlayToggle);
  * @file time-display.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * Displays time information about the video
  *
@@ -11060,7 +12197,7 @@ class TimeDisplay extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -11102,6 +12239,7 @@ class TimeDisplay extends Component$1 {
     el.appendChild(this.contentEl_);
     return el;
   }
+
   dispose() {
     this.contentEl_ = null;
     this.textNode_ = null;
@@ -11143,7 +12281,7 @@ class TimeDisplay extends Component$1 {
         oldNode = null;
         log$1.warn('TimeDisplay#updateTextnode_: Prevented replacement of text node element since it was no longer a child of this node. Appending a new node instead.');
       }
-      this.textNode_ = document.createTextNode(this.formattedTime_);
+      this.textNode_ = document$1.createTextNode(this.formattedTime_);
       if (!this.textNode_) {
         return;
       }
@@ -11164,7 +12302,8 @@ class TimeDisplay extends Component$1 {
    *
    * @listens Player#timeupdate
    */
-  updateContent(event) {}
+  updateContent(event) {
+  }
 }
 
 /**
@@ -11249,6 +12388,8 @@ Component$1.registerComponent('CurrentTimeDisplay', CurrentTimeDisplay);
  * @file duration-display.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * Displays the duration
  *
@@ -11258,7 +12399,7 @@ class DurationDisplay extends TimeDisplay {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -11365,11 +12506,14 @@ class TimeDivider extends Component$1 {
     return el;
   }
 }
+
 Component$1.registerComponent('TimeDivider', TimeDivider);
 
 /**
  * @file remaining-time-display.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * Displays the time left in the video
@@ -11380,7 +12524,7 @@ class RemainingTimeDisplay extends TimeDisplay {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -11468,6 +12612,8 @@ Component$1.registerComponent('RemainingTimeDisplay', RemainingTimeDisplay);
  * @file live-display.js
  */
 
+/** @import Player from './player' */
+
 // TODO - Future make it click to snap to live
 
 /**
@@ -11479,7 +12625,7 @@ class LiveDisplay extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -11510,10 +12656,11 @@ class LiveDisplay extends Component$1 {
       className: 'vjs-control-text',
       textContent: `${this.localize('Stream Type')}\u00a0`
     }));
-    this.contentEl_.appendChild(document.createTextNode(this.localize('LIVE')));
+    this.contentEl_.appendChild(document$1.createTextNode(this.localize('LIVE')));
     el.appendChild(this.contentEl_);
     return el;
   }
+
   dispose() {
     this.contentEl_ = null;
     super.dispose();
@@ -11536,11 +12683,14 @@ class LiveDisplay extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('LiveDisplay', LiveDisplay);
 
 /**
  * @file seek-to-live.js
  */
+
+/** @import Player from './player' */
 
 /**
  * Displays the live indicator when duration is Infinity.
@@ -11551,7 +12701,7 @@ class SeekToLive extends Button {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -11624,6 +12774,7 @@ class SeekToLive extends Button {
     super.dispose();
   }
 }
+
 /**
  * The text that should display over the `SeekToLive`s control. Added for localization.
  *
@@ -11666,6 +12817,8 @@ var Num = /*#__PURE__*/Object.freeze({
  * @file slider.js
  */
 
+/** @import Player from '../player' */
+
 /**
  * The base functionality for a slider. Can be vertical or horizontal.
  * For instance the volume bar or the seek bar on a video is a slider.
@@ -11674,14 +12827,14 @@ var Num = /*#__PURE__*/Object.freeze({
  */
 class Slider extends Component$1 {
   /**
-  * Create an instance of this class
-  *
-  * @param { import('../player').default } player
-  *        The `Player` that this class should be attached to.
-  *
-  * @param {Object} [options]
-  *        The key/value store of player options.
-  */
+   * Create an instance of this class
+   *
+   * @param {Player} player
+   *        The `Player` that this class should be attached to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   */
   constructor(player, options) {
     super(player, options);
     this.handleMouseDown_ = e => this.handleMouseDown(e);
@@ -11838,7 +12991,8 @@ class Slider extends Component$1 {
    * @listens mousemove
    * @listens touchmove
    */
-  handleMouseMove(event) {}
+  handleMouseMove(event) {
+  }
 
   /**
    * Handle `mouseup` or `touchend` events on the `Slider`.
@@ -11942,14 +13096,30 @@ class Slider extends Component$1 {
    * @listens keydown
    */
   handleKeyDown(event) {
-    // Left and Down Arrows
-    if (keycode.isEventKey(event, 'Left') || keycode.isEventKey(event, 'Down')) {
+    const spatialNavOptions = this.options_.playerOptions.spatialNavigation;
+    const spatialNavEnabled = spatialNavOptions && spatialNavOptions.enabled;
+    const horizontalSeek = spatialNavOptions && spatialNavOptions.horizontalSeek;
+    if (spatialNavEnabled) {
+      if (horizontalSeek && event.key === 'ArrowLeft' || !horizontalSeek && event.key === 'ArrowDown') {
+        event.preventDefault();
+        event.stopPropagation();
+        this.stepBack();
+      } else if (horizontalSeek && event.key === 'ArrowRight' || !horizontalSeek && event.key === 'ArrowUp') {
+        event.preventDefault();
+        event.stopPropagation();
+        this.stepForward();
+      } else {
+        super.handleKeyDown(event);
+      }
+
+      // Left and Down Arrows
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
       event.preventDefault();
       event.stopPropagation();
       this.stepBack();
 
       // Up and Right Arrows
-    } else if (keycode.isEventKey(event, 'Right') || keycode.isEventKey(event, 'Up')) {
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
       event.preventDefault();
       event.stopPropagation();
       this.stepForward();
@@ -11994,11 +13164,14 @@ class Slider extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('Slider', Slider);
 
 /**
  * @file load-progress-bar.js
  */
+
+/** @import Player from '../../player' */
 
 // get the percent width of a time compared to the total end
 const percentify = (time, end) => clamp(time / end * 100, 0, 100).toFixed(2) + '%';
@@ -12012,7 +13185,7 @@ class LoadProgressBar extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -12040,7 +13213,7 @@ class LoadProgressBar extends Component$1 {
     const loadedText = createEl('span', {
       textContent: this.localize('Loaded')
     });
-    const separator = document.createTextNode(': ');
+    const separator = document$1.createTextNode(': ');
     this.percentageEl_ = createEl('span', {
       className: 'vjs-control-text-loaded-percentage',
       textContent: '0%'
@@ -12051,6 +13224,7 @@ class LoadProgressBar extends Component$1 {
     wrapper.appendChild(this.percentageEl_);
     return el;
   }
+
   dispose() {
     this.partEls_ = null;
     this.percentageEl_ = null;
@@ -12111,11 +13285,14 @@ class LoadProgressBar extends Component$1 {
     });
   }
 }
+
 Component$1.registerComponent('LoadProgressBar', LoadProgressBar);
 
 /**
  * @file time-tooltip.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * Time tooltips display a time above the progress bar.
@@ -12126,7 +13303,7 @@ class TimeTooltip extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The {@link Player} that this class should be attached to.
    *
    * @param {Object} [options]
@@ -12176,14 +13353,23 @@ class TimeTooltip extends Component$1 {
     // of the player. We calculate any gap between the left edge of the player
     // and the left edge of the `SeekBar` and add the number of pixels in the
     // `SeekBar` before hitting the `seekBarPoint`
-    const spaceLeftOfPoint = seekBarRect.left - playerRect.left + seekBarPointPx;
+    let spaceLeftOfPoint = seekBarRect.left - playerRect.left + seekBarPointPx;
 
     // This is the space right of the `seekBarPoint` available within the bounds
     // of the player. We calculate the number of pixels from the `seekBarPoint`
     // to the right edge of the `SeekBar` and add to that any gap between the
     // right edge of the `SeekBar` and the player.
-    const spaceRightOfPoint = seekBarRect.width - seekBarPointPx + (playerRect.right - seekBarRect.right);
+    let spaceRightOfPoint = seekBarRect.width - seekBarPointPx + (playerRect.right - seekBarRect.right);
 
+    // spaceRightOfPoint is always NaN for mouse time display
+    // because the seekbarRect does not have a right property. This causes
+    // the mouse tool tip to be truncated when it's close to the right edge of the player.
+    // In such cases, we ignore the `playerRect.right - seekBarRect.right` value when calculating.
+    // For the sake of consistency, we ignore seekBarRect.left - playerRect.left for the left edge.
+    if (!spaceRightOfPoint) {
+      spaceRightOfPoint = seekBarRect.width - seekBarPointPx;
+      spaceLeftOfPoint = seekBarPointPx;
+    }
     // This is the number of pixels by which the tooltip will need to be pulled
     // further to the right to center it over the `seekBarPoint`.
     let pullTooltipBy = tooltipRect.width / 2;
@@ -12259,6 +13445,7 @@ class TimeTooltip extends Component$1 {
     });
   }
 }
+
 Component$1.registerComponent('TimeTooltip', TimeTooltip);
 
 /**
@@ -12275,7 +13462,7 @@ class PlayProgressBar extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The {@link Player} that this class should be attached to.
    *
    * @param {Object} [options]
@@ -12354,7 +13541,7 @@ class MouseTimeDisplay extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The {@link Player} that this class should be attached to.
    *
    * @param {Object} [options]
@@ -12411,12 +13598,6 @@ Component$1.registerComponent('MouseTimeDisplay', MouseTimeDisplay);
  * @file seek-bar.js
  */
 
-// The number of seconds the `step*` functions move the timeline.
-const STEP_SECONDS = 5;
-
-// The multiplier of STEP_SECONDS that PgUp/PgDown move the timeline.
-const PAGE_KEY_MULTIPLIER = 12;
-
 /**
  * Seek bar and container for the progress bars. Uses {@link PlayProgressBar}
  * as its `bar`.
@@ -12427,14 +13608,30 @@ class SeekBar extends Slider {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
    *        The key/value store of player options.
+   * @param {number} [options.stepSeconds=5]
+   *        The number of seconds to increment on keyboard control
+   * @param {number} [options.pageMultiplier=12]
+   *        The multiplier of stepSeconds that PgUp/PgDown move the timeline.
    */
   constructor(player, options) {
+    options = merge$1(SeekBar.prototype.options_, options);
+
+    // Avoid mutating the prototype's `children` array by creating a copy
+    options.children = [...options.children];
+    const shouldDisableSeekWhileScrubbingOnMobile = player.options_.disableSeekWhileScrubbingOnMobile && (IS_IOS || IS_ANDROID);
+
+    // Add the TimeTooltip as a child if we are on desktop, or on mobile with `disableSeekWhileScrubbingOnMobile: true`
+    if (!IS_IOS && !IS_ANDROID || shouldDisableSeekWhileScrubbingOnMobile) {
+      options.children.splice(1, 0, 'mouseTimeDisplay');
+    }
     super(player, options);
+    this.shouldDisableSeekWhileScrubbingOnMobile_ = shouldDisableSeekWhileScrubbingOnMobile;
+    this.pendingSeekTime_ = null;
     this.setEventHandlers_();
   }
 
@@ -12446,7 +13643,8 @@ class SeekBar extends Slider {
   setEventHandlers_() {
     this.update_ = bind_(this, this.update);
     this.update = throttle(this.update_, UPDATE_REFRESH_INTERVAL);
-    this.on(this.player_, ['ended', 'durationchange', 'timeupdate'], this.update);
+    this.on(this.player_, ['durationchange', 'timeupdate'], this.update);
+    this.on(this.player_, ['ended'], this.update_);
     if (this.player_.liveTracker) {
       this.on(this.player_.liveTracker, 'liveedgechange', this.update);
     }
@@ -12461,12 +13659,13 @@ class SeekBar extends Slider {
 
     // we don't need to update the play progress if the document is hidden,
     // also, this causes the CPU to spike and eventually crash the page on IE11.
-    if ('hidden' in document && 'visibilityState' in document) {
-      this.on(document, 'visibilitychange', this.toggleVisibility_);
+    if ('hidden' in document$1 && 'visibilityState' in document$1) {
+      this.on(document$1, 'visibilitychange', this.toggleVisibility_);
     }
   }
+
   toggleVisibility_(e) {
-    if (document.visibilityState === 'hidden') {
+    if (document$1.visibilityState === 'hidden') {
       this.cancelNamedAnimationFrame('SeekBar#update');
       this.cancelNamedAnimationFrame('Slider#update');
       this.disableInterval_(e);
@@ -12479,12 +13678,14 @@ class SeekBar extends Slider {
       this.update();
     }
   }
+
   enableInterval_() {
     if (this.updateInterval) {
       return;
     }
     this.updateInterval = this.setInterval(this.update, UPDATE_REFRESH_INTERVAL);
   }
+
   disableInterval_(e) {
     if (this.player_.liveTracker && this.player_.liveTracker.isLive() && e && e.type !== 'ended') {
       return;
@@ -12524,7 +13725,7 @@ class SeekBar extends Slider {
    */
   update(event) {
     // ignore updates while the tab is hidden
-    if (document.visibilityState === 'hidden') {
+    if (document$1.visibilityState === 'hidden') {
       return;
     }
     const percent = super.update();
@@ -12589,6 +13790,11 @@ class SeekBar extends Slider {
    *         The percentage of media played so far (0 to 1).
    */
   getPercent() {
+    // If we have a pending seek time, we are scrubbing on mobile and should set the slider percent
+    // to reflect the current scrub location.
+    if (this.pendingSeekTime_) {
+      return this.pendingSeekTime_ / this.player_.duration();
+    }
     const currentTime = this.getCurrentTime_();
     let percent;
     const liveTracker = this.player_.liveTracker;
@@ -12621,7 +13827,12 @@ class SeekBar extends Slider {
     // Stop event propagation to prevent double fire in progress-control.js
     event.stopPropagation();
     this.videoWasPlaying = !this.player_.paused();
-    this.player_.pause();
+
+    // Don't pause if we are on mobile and `disableSeekWhileScrubbingOnMobile: true`.
+    // In that case, playback should continue while the player scrubs to a new location.
+    if (!this.shouldDisableSeekWhileScrubbingOnMobile_) {
+      this.player_.pause();
+    }
     super.handleMouseDown(event);
   }
 
@@ -12679,12 +13890,17 @@ class SeekBar extends Slider {
       }
     }
 
-    // Set new time (tell player to seek to new time)
-    this.userSeek_(newTime);
+    // if on mobile and `disableSeekWhileScrubbingOnMobile: true`, keep track of the desired seek point but we won't initiate the seek until 'touchend'
+    if (this.shouldDisableSeekWhileScrubbingOnMobile_) {
+      this.pendingSeekTime_ = newTime;
+    } else {
+      this.userSeek_(newTime);
+    }
     if (this.player_.options_.enableSmoothSeeking) {
       this.update();
     }
   }
+
   enable() {
     super.enable();
     const mouseTimeDisplay = this.getChild('mouseTimeDisplay');
@@ -12693,6 +13909,7 @@ class SeekBar extends Slider {
     }
     mouseTimeDisplay.show();
   }
+
   disable() {
     super.disable();
     const mouseTimeDisplay = this.getChild('mouseTimeDisplay');
@@ -12719,6 +13936,12 @@ class SeekBar extends Slider {
     }
     this.player_.scrubbing(false);
 
+    // If we have a pending seek time, then we have finished scrubbing on mobile and should initiate a seek.
+    if (this.pendingSeekTime_) {
+      this.userSeek_(this.pendingSeekTime_);
+      this.pendingSeekTime_ = null;
+    }
+
     /**
      * Trigger timeupdate because we're done seeking and the time has changed.
      * This is particularly useful for if the player is paused to time the time displays.
@@ -12744,14 +13967,14 @@ class SeekBar extends Slider {
    * Move more quickly fast forward for keyboard-only users
    */
   stepForward() {
-    this.userSeek_(this.player_.currentTime() + STEP_SECONDS);
+    this.userSeek_(this.player_.currentTime() + this.options().stepSeconds);
   }
 
   /**
    * Move more quickly rewind for keyboard-only users
    */
   stepBack() {
-    this.userSeek_(this.player_.currentTime() - STEP_SECONDS);
+    this.userSeek_(this.player_.currentTime() - this.options().stepSeconds);
   }
 
   /**
@@ -12788,15 +14011,15 @@ class SeekBar extends Slider {
    */
   handleKeyDown(event) {
     const liveTracker = this.player_.liveTracker;
-    if (keycode.isEventKey(event, 'Space') || keycode.isEventKey(event, 'Enter')) {
+    if (event.key === ' ' || event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
       this.handleAction(event);
-    } else if (keycode.isEventKey(event, 'Home')) {
+    } else if (event.key === 'Home') {
       event.preventDefault();
       event.stopPropagation();
       this.userSeek_(0);
-    } else if (keycode.isEventKey(event, 'End')) {
+    } else if (event.key === 'End') {
       event.preventDefault();
       event.stopPropagation();
       if (liveTracker && liveTracker.isLive()) {
@@ -12804,31 +14027,33 @@ class SeekBar extends Slider {
       } else {
         this.userSeek_(this.player_.duration());
       }
-    } else if (/^[0-9]$/.test(keycode(event))) {
+    } else if (/^[0-9]$/.test(event.key)) {
       event.preventDefault();
       event.stopPropagation();
-      const gotoFraction = (keycode.codes[keycode(event)] - keycode.codes['0']) * 10.0 / 100.0;
+      const gotoFraction = parseInt(event.key, 10) * 0.1;
       if (liveTracker && liveTracker.isLive()) {
         this.userSeek_(liveTracker.seekableStart() + liveTracker.liveWindow() * gotoFraction);
       } else {
         this.userSeek_(this.player_.duration() * gotoFraction);
       }
-    } else if (keycode.isEventKey(event, 'PgDn')) {
+    } else if (event.key === 'PageDown') {
       event.preventDefault();
       event.stopPropagation();
-      this.userSeek_(this.player_.currentTime() - STEP_SECONDS * PAGE_KEY_MULTIPLIER);
-    } else if (keycode.isEventKey(event, 'PgUp')) {
+      this.userSeek_(this.player_.currentTime() - this.options().stepSeconds * this.options().pageMultiplier);
+    } else if (event.key === 'PageUp') {
       event.preventDefault();
       event.stopPropagation();
-      this.userSeek_(this.player_.currentTime() + STEP_SECONDS * PAGE_KEY_MULTIPLIER);
+      this.userSeek_(this.player_.currentTime() + this.options().stepSeconds * this.options().pageMultiplier);
     } else {
       // Pass keydown handling up for unsupported keys
       super.handleKeyDown(event);
     }
   }
+
   dispose() {
     this.disableInterval_();
-    this.off(this.player_, ['ended', 'durationchange', 'timeupdate'], this.update);
+    this.off(this.player_, ['durationchange', 'timeupdate'], this.update);
+    this.off(this.player_, ['ended'], this.update_);
     if (this.player_.liveTracker) {
       this.off(this.player_.liveTracker, 'liveedgechange', this.update);
     }
@@ -12837,8 +14062,8 @@ class SeekBar extends Slider {
 
     // we don't need to update the play progress if the document is hidden,
     // also, this causes the CPU to spike and eventually crash the page on IE11.
-    if ('hidden' in document && 'visibilityState' in document) {
-      this.off(document, 'visibilitychange', this.toggleVisibility_);
+    if ('hidden' in document$1 && 'visibilityState' in document$1) {
+      this.off(document$1, 'visibilitychange', this.toggleVisibility_);
     }
     super.dispose();
   }
@@ -12852,13 +14077,10 @@ class SeekBar extends Slider {
  */
 SeekBar.prototype.options_ = {
   children: ['loadProgressBar', 'playProgressBar'],
-  barName: 'playProgressBar'
+  barName: 'playProgressBar',
+  stepSeconds: 5,
+  pageMultiplier: 12
 };
-
-// MouseTimeDisplay tooltips should not be added to a player on mobile devices
-if (!IS_IOS && !IS_ANDROID) {
-  SeekBar.prototype.options_.children.splice(1, 0, 'mouseTimeDisplay');
-}
 Component$1.registerComponent('SeekBar', SeekBar);
 
 /**
@@ -12875,7 +14097,7 @@ class ProgressControl extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -12983,7 +14205,7 @@ class ProgressControl extends Component$1 {
       return;
     }
     this.off(['mousedown', 'touchstart'], this.handleMouseDownHandler_);
-    this.off(this.el_, 'mousemove', this.handleMouseMove);
+    this.off(this.el_, ['mousemove', 'touchmove'], this.handleMouseMove);
     this.removeListenersAddedOnMousedownAndTouchstart();
     this.addClass('disabled');
     this.enabled_ = false;
@@ -13007,7 +14229,7 @@ class ProgressControl extends Component$1 {
       return;
     }
     this.on(['mousedown', 'touchstart'], this.handleMouseDownHandler_);
-    this.on(this.el_, 'mousemove', this.handleMouseMove);
+    this.on(this.el_, ['mousemove', 'touchmove'], this.handleMouseMove);
     this.removeClass('disabled');
     this.enabled_ = true;
   }
@@ -13077,6 +14299,8 @@ Component$1.registerComponent('ProgressControl', ProgressControl);
  * @file picture-in-picture-toggle.js
  */
 
+/** @import Player from './player' */
+
 /**
  * Toggle Picture-in-Picture mode
  *
@@ -13086,7 +14310,7 @@ class PictureInPictureToggle extends Button {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -13144,7 +14368,7 @@ class PictureInPictureToggle extends Button {
    *   element.requestPictureInPicture is available
    */
   handlePictureInPictureEnabledChange() {
-    if (document.pictureInPictureEnabled && this.player_.disablePictureInPicture() === false || this.player_.options_.enableDocumentPictureInPicture && 'documentPictureInPicture' in window$1) {
+    if (document$1.pictureInPictureEnabled && this.player_.disablePictureInPicture() === false || this.player_.options_.enableDocumentPictureInPicture && 'documentPictureInPicture' in window$1) {
       this.enable();
     } else {
       this.disable();
@@ -13197,7 +14421,7 @@ class PictureInPictureToggle extends Button {
    */
   show() {
     // Does not allow to display the pictureInPictureToggle in browsers that do not support the Picture-in-Picture API, e.g. Firefox.
-    if (typeof document.exitPictureInPicture !== 'function') {
+    if (typeof document$1.exitPictureInPicture !== 'function') {
       return;
     }
     super.show();
@@ -13217,6 +14441,8 @@ Component$1.registerComponent('PictureInPictureToggle', PictureInPictureToggle);
  * @file fullscreen-toggle.js
  */
 
+/** @import Player from './player' */
+
 /**
  * Toggle fullscreen video
  *
@@ -13226,7 +14452,7 @@ class FullscreenToggle extends Button {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -13236,7 +14462,7 @@ class FullscreenToggle extends Button {
     super(player, options);
     this.setIcon('fullscreen-enter');
     this.on(player, 'fullscreenchange', e => this.handleFullscreenChange(e));
-    if (document[player.fsApi_.fullscreenEnabled] === false) {
+    if (document$1[player.fsApi_.fullscreenEnabled] === false) {
       this.disable();
     }
   }
@@ -13282,17 +14508,32 @@ class FullscreenToggle extends Button {
    * @listens click
    */
   handleClick(event) {
-    if (!document.fullscreenElement) {
-      // @ts-ignore
-      document.getElementById('vid-cont').requestFullscreen();
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen();
+    if (!this.player_.isFullscreen()) {
+      this.player_.requestFullscreen();
+    } else {
+      this.player_.exitFullscreen();
     }
-    // if (!this.player_.isFullscreen()) {
-    //   this.player_.requestFullscreen();
-    // } else {
-    //   this.player_.exitFullscreen();
-    // }
+  }
+}
+
+/**
+ * This gets called when an `FullscreenToggle` is "clicked". See
+ * {@link ClickableComponent} for more detailed information on what a click can be.
+ *
+ * @param {Event} [event]
+ *        The `keydown`, `tap`, or `click` event that caused this function to be
+ *        called.
+ *
+ * @listens tap
+ * @listens click
+ */
+handleClick(event)
+{
+  if (!document.fullscreenElement) {
+    // @ts-ignore
+    document.getElementById('vid-cont').requestFullscreen();
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
   }
 }
 
@@ -13305,14 +14546,17 @@ class FullscreenToggle extends Button {
 FullscreenToggle.prototype.controlText_ = 'Fullscreen';
 Component$1.registerComponent('FullscreenToggle', FullscreenToggle);
 
+/** @import Component from '../../component' */
+/** @import Player from '../../player' */
+
 /**
  * Check if volume control is supported and if it isn't hide the
  * `Component` that was passed  using the `vjs-hidden` class.
  *
- * @param { import('../../component').default } self
+ * @param {Component} self
  *        The component that should be hidden if volume is unsupported
  *
- * @param { import('../../player').default } player
+ * @param {Player} player
  *        A reference to the player
  *
  * @private
@@ -13358,11 +14602,14 @@ class VolumeLevel extends Component$1 {
     return el;
   }
 }
+
 Component$1.registerComponent('VolumeLevel', VolumeLevel);
 
 /**
  * @file volume-level-tooltip.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * Volume level tooltips display a volume above or side by side the volume bar.
@@ -13373,7 +14620,7 @@ class VolumeLevelTooltip extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The {@link Player} that this class should be attached to.
    *
    * @param {Object} [options]
@@ -13480,6 +14727,7 @@ class VolumeLevelTooltip extends Component$1 {
     });
   }
 }
+
 Component$1.registerComponent('VolumeLevelTooltip', VolumeLevelTooltip);
 
 /**
@@ -13498,7 +14746,7 @@ class MouseVolumeLevelDisplay extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The {@link Player} that this class should be attached to.
    *
    * @param {Object} [options]
@@ -13573,7 +14821,7 @@ class VolumeBar extends Slider {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -13761,7 +15009,7 @@ class VolumeControl extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -13875,14 +15123,17 @@ VolumeControl.prototype.options_ = {
 };
 Component$1.registerComponent('VolumeControl', VolumeControl);
 
+/** @import Component from '../../component' */
+/** @import Player from '../../player' */
+
 /**
  * Check if muting volume is supported and if it isn't hide the mute toggle
  * button.
  *
- * @param { import('../../component').default } self
+ * @param {Component} self
  *        A reference to the mute toggle button
  *
- * @param { import('../../player').default } player
+ * @param {Player} player
  *        A reference to the player
  *
  * @private
@@ -13905,6 +15156,8 @@ const checkMuteSupport = function (self, player) {
  * @file mute-toggle.js
  */
 
+/** @import Player from './player' */
+
 /**
  * A button component for muting the audio.
  *
@@ -13914,7 +15167,7 @@ class MuteToggle extends Button {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -14052,7 +15305,7 @@ class VolumePanel extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -14163,7 +15416,7 @@ class VolumePanel extends Component$1 {
    * @listens keyup
    */
   handleVolumeControlKeyUp(event) {
-    if (keycode.isEventKey(event, 'Esc')) {
+    if (event.key === 'Escape') {
       this.muteToggle.focus();
     }
   }
@@ -14180,7 +15433,7 @@ class VolumePanel extends Component$1 {
    */
   handleMouseOver(event) {
     this.addClass('vjs-hover');
-    on(document, 'keyup', this.handleKeyPressHandler_);
+    on(document$1, 'keyup', this.handleKeyPressHandler_);
   }
 
   /**
@@ -14195,7 +15448,7 @@ class VolumePanel extends Component$1 {
    */
   handleMouseOut(event) {
     this.removeClass('vjs-hover');
-    off(document, 'keyup', this.handleKeyPressHandler_);
+    off(document$1, 'keyup', this.handleKeyPressHandler_);
   }
 
   /**
@@ -14208,7 +15461,7 @@ class VolumePanel extends Component$1 {
    * @listens keydown | keyup
    */
   handleKeyPress(event) {
-    if (keycode.isEventKey(event, 'Esc')) {
+    if (event.key === 'Escape') {
       this.handleMouseOut();
     }
   }
@@ -14240,16 +15493,18 @@ class SkipForward extends Button {
     this.skipTime = this.getSkipForwardTime();
     if (this.skipTime && this.validOptions.includes(this.skipTime)) {
       this.setIcon(`forward-${this.skipTime}`);
-      this.controlText(this.localize('Skip forward {1} seconds', [this.skipTime]));
+      this.controlText(this.localize('Skip forward {1} seconds', [this.skipTime.toLocaleString(player.language())]));
       this.show();
     } else {
       this.hide();
     }
   }
+
   getSkipForwardTime() {
     const playerOptions = this.options_.playerOptions;
     return playerOptions.controlBar && playerOptions.controlBar.skipButtons && playerOptions.controlBar.skipButtons.forward;
   }
+
   buildCSSClass() {
     return `vjs-skip-forward-${this.getSkipForwardTime()} ${super.buildCSSClass()}`;
   }
@@ -14288,6 +15543,7 @@ class SkipForward extends Button {
     this.controlText(this.localize('Skip forward {1} seconds', [this.skipTime]));
   }
 }
+
 SkipForward.prototype.controlText_ = 'Skip Forward';
 Component$1.registerComponent('SkipForward', SkipForward);
 
@@ -14306,16 +15562,18 @@ class SkipBackward extends Button {
     this.skipTime = this.getSkipBackwardTime();
     if (this.skipTime && this.validOptions.includes(this.skipTime)) {
       this.setIcon(`replay-${this.skipTime}`);
-      this.controlText(this.localize('Skip backward {1} seconds', [this.skipTime]));
+      this.controlText(this.localize('Skip backward {1} seconds', [this.skipTime.toLocaleString(player.language())]));
       this.show();
     } else {
       this.hide();
     }
   }
+
   getSkipBackwardTime() {
     const playerOptions = this.options_.playerOptions;
     return playerOptions.controlBar && playerOptions.controlBar.skipButtons && playerOptions.controlBar.skipButtons.backward;
   }
+
   buildCSSClass() {
     return `vjs-skip-backward-${this.getSkipBackwardTime()} ${super.buildCSSClass()}`;
   }
@@ -14353,12 +15611,15 @@ class SkipBackward extends Button {
     this.controlText(this.localize('Skip backward {1} seconds', [this.skipTime]));
   }
 }
+
 SkipBackward.prototype.controlText_ = 'Skip Backward';
 Component$1.registerComponent('SkipBackward', SkipBackward);
 
 /**
  * @file menu.js
  */
+
+/** @import Player from '../player' */
 
 /**
  * The Menu component is used to build popup menus, including subtitle and
@@ -14370,7 +15631,7 @@ class Menu extends Component$1 {
   /**
    * Create an instance of this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *        the player that this component should attach to
    *
    * @param {Object} [options]
@@ -14477,6 +15738,7 @@ class Menu extends Component$1 {
     });
     return el;
   }
+
   dispose() {
     this.contentEl_ = null;
     this.boundHandleBlur_ = null;
@@ -14493,7 +15755,7 @@ class Menu extends Component$1 {
    * @listens blur
    */
   handleBlur(event) {
-    const relatedTarget = event.relatedTarget || document.activeElement;
+    const relatedTarget = event.relatedTarget || document$1.activeElement;
 
     // Close menu popup when a user clicks outside the menu
     if (!this.children().some(element => {
@@ -14545,13 +15807,13 @@ class Menu extends Component$1 {
    */
   handleKeyDown(event) {
     // Left and Down Arrows
-    if (keycode.isEventKey(event, 'Left') || keycode.isEventKey(event, 'Down')) {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
       event.preventDefault();
       event.stopPropagation();
       this.stepForward();
 
       // Up and Right Arrows
-    } else if (keycode.isEventKey(event, 'Right') || keycode.isEventKey(event, 'Up')) {
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
       event.preventDefault();
       event.stopPropagation();
       this.stepBack();
@@ -14603,11 +15865,14 @@ class Menu extends Component$1 {
     }
   }
 }
+
 Component$1.registerComponent('Menu', Menu);
 
 /**
  * @file menu-button.js
  */
+
+/** @import Player from '../player' */
 
 /**
  * A `MenuButton` class for any popup {@link Menu}.
@@ -14618,7 +15883,7 @@ class MenuButton extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -14645,7 +15910,7 @@ class MenuButton extends Component$1 {
     this.on(this.menuButton_, 'mouseenter', () => {
       this.addClass('vjs-hover');
       this.menu.show();
-      on(document, 'keyup', this.handleMenuKeyUp_);
+      on(document$1, 'keyup', this.handleMenuKeyUp_);
     });
     this.on('mouseleave', e => this.handleMouseLeave(e));
     this.on('keydown', e => this.handleSubmenuKeyDown(e));
@@ -14728,7 +15993,8 @@ class MenuButton extends Component$1 {
    *
    * @abstract
    */
-  createItems() {}
+  createItems() {
+  }
 
   /**
    * Create the `MenuButtons`s DOM element.
@@ -14847,7 +16113,7 @@ class MenuButton extends Component$1 {
    */
   handleMouseLeave(event) {
     this.removeClass('vjs-hover');
-    off(document, 'keyup', this.handleMenuKeyUp_);
+    off(document$1, 'keyup', this.handleMenuKeyUp_);
   }
 
   /**
@@ -14875,19 +16141,19 @@ class MenuButton extends Component$1 {
    */
   handleKeyDown(event) {
     // Escape or Tab unpress the 'button'
-    if (keycode.isEventKey(event, 'Esc') || keycode.isEventKey(event, 'Tab')) {
+    if (event.key === 'Escape' || event.key === 'Tab') {
       if (this.buttonPressed_) {
         this.unpressButton();
       }
 
       // Don't preventDefault for Tab key - we still want to lose focus
-      if (!keycode.isEventKey(event, 'Tab')) {
+      if (!event.key === 'Tab') {
         event.preventDefault();
         // Set focus back to the menu button's button
         this.menuButton_.focus();
       }
       // Up Arrow or Down Arrow also 'press' the button to open the menu
-    } else if (keycode.isEventKey(event, 'Up') || keycode.isEventKey(event, 'Down')) {
+    } else if (event.key === 'Up' || event.key === 'Down' && !(this.player_.options_.playerOptions.spatialNavigation && this.player_.options_.playerOptions.spatialNavigation.enabled)) {
       if (!this.buttonPressed_) {
         event.preventDefault();
         this.pressButton();
@@ -14906,7 +16172,7 @@ class MenuButton extends Component$1 {
    */
   handleMenuKeyUp(event) {
     // Escape hides popup menu
-    if (keycode.isEventKey(event, 'Esc') || keycode.isEventKey(event, 'Tab')) {
+    if (event.key === 'Escape' || event.key === 'Tab') {
       this.removeClass('vjs-hover');
     }
   }
@@ -14934,12 +16200,12 @@ class MenuButton extends Component$1 {
    */
   handleSubmenuKeyDown(event) {
     // Escape or Tab unpress the 'button'
-    if (keycode.isEventKey(event, 'Esc') || keycode.isEventKey(event, 'Tab')) {
+    if (event.key === 'Escape' || event.key === 'Tab') {
       if (this.buttonPressed_) {
         this.unpressButton();
       }
       // Don't preventDefault for Tab key - we still want to lose focus
-      if (!keycode.isEventKey(event, 'Tab')) {
+      if (!event.key === 'Tab') {
         event.preventDefault();
         // Set focus back to the menu button's button
         this.menuButton_.focus();
@@ -14998,11 +16264,14 @@ class MenuButton extends Component$1 {
     this.menuButton_.enable();
   }
 }
+
 Component$1.registerComponent('MenuButton', MenuButton);
 
 /**
  * @file track-button.js
  */
+
+/** @import Player from './player' */
 
 /**
  * The base class for buttons that toggle specific  track types (e.g. subtitles).
@@ -15013,7 +16282,7 @@ class TrackButton extends MenuButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15040,25 +16309,14 @@ class TrackButton extends MenuButton {
     });
   }
 }
+
 Component$1.registerComponent('TrackButton', TrackButton);
-
-/**
- * @file menu-keys.js
- */
-
-/**
-  * All keys used for operation of a menu (`MenuButton`, `Menu`, and `MenuItem`)
-  * Note that 'Enter' and 'Space' are not included here (otherwise they would
-  * prevent the `MenuButton` and `MenuItem` from being keyboard-clickable)
- *
-  * @typedef MenuKeys
-  * @array
-  */
-const MenuKeys = ['Tab', 'Esc', 'Up', 'Down', 'Right', 'Left'];
 
 /**
  * @file menu-item.js
  */
+
+/** @import Player from '../player' */
 
 /**
  * The component for a menu item. `<li>`
@@ -15069,7 +16327,7 @@ class MenuItem extends ClickableComponent {
   /**
    * Creates an instance of the this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -15141,7 +16399,7 @@ class MenuItem extends ClickableComponent {
    * @listens keydown
    */
   handleKeyDown(event) {
-    if (!MenuKeys.some(key => keycode.isEventKey(event, key))) {
+    if (!['Tab', 'Escape', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       // Pass keydown handling up for unused keys
       super.handleKeyDown(event);
     }
@@ -15187,11 +16445,14 @@ class MenuItem extends ClickableComponent {
     }
   }
 }
+
 Component$1.registerComponent('MenuItem', MenuItem);
 
 /**
  * @file text-track-menu-item.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * The specific menu item type for selecting a language within a text track kind
@@ -15202,7 +16463,7 @@ class TextTrackMenuItem extends MenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15253,7 +16514,7 @@ class TextTrackMenuItem extends MenuItem {
           }
         }
         if (!event) {
-          event = document.createEvent('Event');
+          event = document$1.createEvent('Event');
           event.initEvent('change', true, true);
         }
         tracks.dispatchEvent(event);
@@ -15323,6 +16584,7 @@ class TextTrackMenuItem extends MenuItem {
       this.selected(shouldBeSelected);
     }
   }
+
   handleSelectedLanguageChange(event) {
     if (this.track.mode === 'showing') {
       const selectedLanguage = this.player_.cache_.selectedLanguage;
@@ -15338,17 +16600,21 @@ class TextTrackMenuItem extends MenuItem {
       };
     }
   }
+
   dispose() {
     // remove reference to track object on dispose
     this.track = null;
     super.dispose();
   }
 }
+
 Component$1.registerComponent('TextTrackMenuItem', TextTrackMenuItem);
 
 /**
  * @file off-text-track-menu-item.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * A special menu item for turning off a specific type of text track
@@ -15359,7 +16625,7 @@ class OffTextTrackMenuItem extends TextTrackMenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15417,6 +16683,7 @@ class OffTextTrackMenuItem extends TextTrackMenuItem {
       this.selected(shouldBeSelected);
     }
   }
+
   handleSelectedLanguageChange(event) {
     const tracks = this.player().textTracks();
     let allHidden = true;
@@ -15442,11 +16709,14 @@ class OffTextTrackMenuItem extends TextTrackMenuItem {
     super.handleLanguagechange();
   }
 }
+
 Component$1.registerComponent('OffTextTrackMenuItem', OffTextTrackMenuItem);
 
 /**
  * @file text-track-button.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * The base class for buttons that toggle specific text track types (e.g. subtitles)
@@ -15457,7 +16727,7 @@ class TextTrackButton extends TrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options={}]
@@ -15516,11 +16786,14 @@ class TextTrackButton extends TrackButton {
     return items;
   }
 }
+
 Component$1.registerComponent('TextTrackButton', TextTrackButton);
 
 /**
  * @file chapters-track-menu-item.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * The chapter track menu item
@@ -15531,7 +16804,7 @@ class ChaptersTrackMenuItem extends MenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15568,11 +16841,18 @@ class ChaptersTrackMenuItem extends MenuItem {
     this.player_.currentTime(this.cue.startTime);
   }
 }
+
 Component$1.registerComponent('ChaptersTrackMenuItem', ChaptersTrackMenuItem);
 
 /**
  * @file chapters-button.js
  */
+
+/** @import Player from '../../player' */
+/** @import Menu from '../../menu/menu' */
+/** @import TextTrack from '../../tracks/text-track' */
+
+/** @import TextTrackMenuItem from '../text-track-controls/text-track-menu-item' */
 
 /**
  * The button component for toggling and selecting chapters
@@ -15585,7 +16865,7 @@ class ChaptersButton extends TextTrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15613,6 +16893,7 @@ class ChaptersButton extends TextTrackButton {
   buildCSSClass() {
     return `vjs-chapters-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-chapters-button ${super.buildWrapperCSSClass()}`;
   }
@@ -15712,7 +16993,7 @@ class ChaptersButton extends TextTrackButton {
   /**
    * Create menu from chapter track
    *
-   * @return { import('../../menu/menu').default }
+   * @return {Menu}
    *         New menu for the chapter buttons
    */
   createMenu() {
@@ -15723,7 +17004,7 @@ class ChaptersButton extends TextTrackButton {
   /**
    * Create a menu item for each text track
    *
-   * @return  { import('./text-track-menu-item').default[] }
+   * @return  {TextTrackMenuItem[]}
    *         Array of menu items
    */
   createItems() {
@@ -15768,6 +17049,8 @@ Component$1.registerComponent('ChaptersButton', ChaptersButton);
  * @file descriptions-button.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * The button component for toggling and selecting descriptions
  *
@@ -15777,7 +17060,7 @@ class DescriptionsButton extends TextTrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15835,6 +17118,7 @@ class DescriptionsButton extends TextTrackButton {
   buildCSSClass() {
     return `vjs-descriptions-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-descriptions-button ${super.buildWrapperCSSClass()}`;
   }
@@ -15861,6 +17145,8 @@ Component$1.registerComponent('DescriptionsButton', DescriptionsButton);
  * @file subtitles-button.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * The button component for toggling and selecting subtitles
  *
@@ -15870,7 +17156,7 @@ class SubtitlesButton extends TextTrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15893,6 +17179,7 @@ class SubtitlesButton extends TextTrackButton {
   buildCSSClass() {
     return `vjs-subtitles-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-subtitles-button ${super.buildWrapperCSSClass()}`;
   }
@@ -15919,6 +17206,8 @@ Component$1.registerComponent('SubtitlesButton', SubtitlesButton);
  * @file caption-settings-menu-item.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * The menu item for caption track settings menu
  *
@@ -15928,7 +17217,7 @@ class CaptionSettingsMenuItem extends TextTrackMenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -15975,11 +17264,14 @@ class CaptionSettingsMenuItem extends TextTrackMenuItem {
     super.handleLanguagechange();
   }
 }
+
 Component$1.registerComponent('CaptionSettingsMenuItem', CaptionSettingsMenuItem);
 
 /**
  * @file captions-button.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * The button component for toggling and selecting captions
@@ -15990,7 +17282,7 @@ class CaptionsButton extends TextTrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16013,6 +17305,7 @@ class CaptionsButton extends TextTrackButton {
   buildCSSClass() {
     return `vjs-captions-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-captions-button ${super.buildWrapperCSSClass()}`;
   }
@@ -16086,11 +17379,14 @@ class SubsCapsMenuItem extends TextTrackMenuItem {
     return el;
   }
 }
+
 Component$1.registerComponent('SubsCapsMenuItem', SubsCapsMenuItem);
 
 /**
  * @file sub-caps-button.js
  */
+
+/** @import Player from '../../player' */
 
 /**
  * The button component for toggling and selecting captions and/or subtitles
@@ -16101,7 +17397,7 @@ class SubsCapsButton extends TextTrackButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16133,6 +17429,7 @@ class SubsCapsButton extends TextTrackButton {
   buildCSSClass() {
     return `vjs-subs-caps-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-subs-caps-button ${super.buildWrapperCSSClass()}`;
   }
@@ -16178,6 +17475,8 @@ Component$1.registerComponent('SubsCapsButton', SubsCapsButton);
  * @file audio-track-menu-item.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * An {@link AudioTrack} {@link MenuItem}
  *
@@ -16187,7 +17486,7 @@ class AudioTrackMenuItem extends MenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16211,10 +17510,11 @@ class AudioTrackMenuItem extends MenuItem {
       tracks.removeEventListener('change', changeHandler);
     });
   }
+
   createEl(type, props, attrs) {
     const el = super.createEl(type, props, attrs);
     const parentSpan = el.querySelector('.vjs-menu-item-text');
-    if (['main-desc', 'description'].indexOf(this.options_.track.kind) >= 0) {
+    if (['main-desc', 'descriptions'].indexOf(this.options_.track.kind) >= 0) {
       parentSpan.appendChild(createEl('span', {
         className: 'vjs-icon-placeholder'
       }, {
@@ -16273,6 +17573,7 @@ class AudioTrackMenuItem extends MenuItem {
     this.selected(this.track.enabled);
   }
 }
+
 Component$1.registerComponent('AudioTrackMenuItem', AudioTrackMenuItem);
 
 /**
@@ -16309,6 +17610,7 @@ class AudioTrackButton extends TrackButton {
   buildCSSClass() {
     return `vjs-audio-button ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-audio-button ${super.buildWrapperCSSClass()}`;
   }
@@ -16353,6 +17655,8 @@ Component$1.registerComponent('AudioTrackButton', AudioTrackButton);
  * @file playback-rate-menu-item.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * The specific menu item type for selecting a playback rate.
  *
@@ -16362,7 +17666,7 @@ class PlaybackRateMenuItem extends MenuItem {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16425,6 +17729,8 @@ Component$1.registerComponent('PlaybackRateMenuItem', PlaybackRateMenuItem);
  * @file playback-rate-menu-button.js
  */
 
+/** @import Player from '../../player' */
+
 /**
  * The component for controlling the playback rate.
  *
@@ -16434,7 +17740,7 @@ class PlaybackRateMenuButton extends MenuButton {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../../player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16467,6 +17773,7 @@ class PlaybackRateMenuButton extends MenuButton {
     el.appendChild(this.labelEl_);
     return el;
   }
+
   dispose() {
     this.labelEl_ = null;
     super.dispose();
@@ -16481,6 +17788,7 @@ class PlaybackRateMenuButton extends MenuButton {
   buildCSSClass() {
     return `vjs-playback-rate ${super.buildCSSClass()}`;
   }
+
   buildWrapperCSSClass() {
     return `vjs-playback-rate ${super.buildWrapperCSSClass()}`;
   }
@@ -16585,11 +17893,11 @@ Component$1.registerComponent('PlaybackRateMenuButton', PlaybackRateMenuButton);
  */
 class Spacer extends Component$1 {
   /**
-  * Builds the default DOM `className`.
-  *
-  * @return {string}
-  *         The DOM `className` for this object.
-  */
+   * Builds the default DOM `className`.
+   *
+   * @return {string}
+   *         The DOM `className` for this object.
+   */
   buildCSSClass() {
     return `vjs-spacer ${super.buildCSSClass()}`;
   }
@@ -16607,6 +17915,7 @@ class Spacer extends Component$1 {
     return super.createEl(tag, props, attributes);
   }
 }
+
 Component$1.registerComponent('Spacer', Spacer);
 
 /**
@@ -16644,6 +17953,7 @@ class CustomControlSpacer extends Spacer {
     });
   }
 }
+
 Component$1.registerComponent('CustomControlSpacer', CustomControlSpacer);
 
 /**
@@ -16685,6 +17995,8 @@ Component$1.registerComponent('ControlBar', ControlBar);
  * @file error-display.js
  */
 
+/** @import Player from './player' */
+
 /**
  * A display that indicates an error has occurred. This means that the video
  * is unplayable.
@@ -16695,7 +18007,7 @@ class ErrorDisplay extends ModalDialog {
   /**
    * Creates an instance of this class.
    *
-   * @param  { import('./player').default } player
+   * @param  {Player} player
    *         The `Player` that this class should be attached to.
    *
    * @param  {Object} [options]
@@ -16704,7 +18016,6 @@ class ErrorDisplay extends ModalDialog {
   constructor(player, options) {
     super(player, options);
     this.on(player, 'error', e => {
-      this.close();
       this.open(e);
     });
   }
@@ -16746,9 +18057,421 @@ ErrorDisplay.prototype.options_ = Object.assign({}, ModalDialog.prototype.option
 });
 Component$1.registerComponent('ErrorDisplay', ErrorDisplay);
 
+/** @import Player from './player' */
+
+/** @import { ContentDescriptor } from  '../utils/dom' */
+
+/**
+ * Creates DOM element of 'select' & its options.
+ *
+ * @extends Component
+ */
+class TextTrackSelect extends Component$1 {
+  /**
+   * Creates an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should be attached to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {ContentDescriptor} [options.content=undefined]
+   *        Provide customized content for this modal.
+   *
+   * @param {string} [options.legendId]
+   *        A text with part of an string to create atribute of aria-labelledby.
+   *
+   * @param {string} [options.id]
+   *        A text with part of an string to create atribute of aria-labelledby.
+   *
+   * @param {Array} [options.SelectOptions]
+   *        Array that contains the value & textContent of for each of the
+   *        options elements.
+   */
+  constructor(player, options = {}) {
+    super(player, options);
+    this.el_.setAttribute('aria-labelledby', this.selectLabelledbyIds);
+  }
+
+  /**
+   * Create the `TextTrackSelect`'s DOM element
+   *
+   * @return {Element}
+   *         The DOM element that gets created.
+   */
+  createEl() {
+    this.selectLabelledbyIds = [this.options_.legendId, this.options_.labelId].join(' ').trim();
+
+    // Create select & inner options
+    const selectoptions = createEl('select', {
+      id: this.options_.id
+    }, {}, this.options_.SelectOptions.map(optionText => {
+      // Constructs an id for the <option>.
+      // For the colour settings that have two <selects> with a <label> each, generates an id based off the label value
+      // For font size/family and edge style with one <select> and no <label>, generates an id with a guid
+      const optionId = (this.options_.labelId ? this.options_.labelId : `vjs-track-option-${newGUID()}`) + '-' + optionText[1].replace(/\W+/g, '');
+      const option = createEl('option', {
+        id: optionId,
+        value: this.localize(optionText[0]),
+        textContent: this.localize(optionText[1])
+      });
+      option.setAttribute('aria-labelledby', `${this.selectLabelledbyIds} ${optionId}`);
+      return option;
+    }));
+    return selectoptions;
+  }
+}
+
+Component$1.registerComponent('TextTrackSelect', TextTrackSelect);
+
+/** @import Player from './player' */
+
+/** @import { ContentDescriptor } from '../utils/dom' */
+
+/**
+ * Creates fieldset section of 'TextTrackSettings'.
+ * Manganes two versions of fieldsets, one for type of 'colors'
+ * & the other for 'font', Component adds diferent DOM elements
+ * to that fieldset  depending on the type.
+ *
+ * @extends Component
+ */
+class TextTrackFieldset extends Component$1 {
+  /**
+   * Creates an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should be attached to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {ContentDescriptor} [options.content=undefined]
+   *        Provide customized content for this modal.
+   *
+   * @param {string} [options.legendId]
+   *        A text with part of an string to create atribute of aria-labelledby.
+   *        It passes to 'TextTrackSelect'.
+   *
+   * @param {string} [options.id]
+   *        A text with part of an string to create atribute of aria-labelledby.
+   *        It passes to 'TextTrackSelect'.
+   *
+   * @param {string} [options.legendText]
+   *        A text to use as the text content of the legend element.
+   *
+   * @param {Array} [options.selects]
+   *        Array that contains the selects that are use to create 'selects'
+   *        components.
+   *
+   * @param {Array} [options.SelectOptions]
+   *        Array that contains the value & textContent of for each of the
+   *        options elements, it passes to 'TextTrackSelect'.
+   *
+   * @param {string} [options.type]
+   *        Conditions if some DOM elements will be added to the fieldset
+   *        component.
+   *
+   * @param {Object} [options.selectConfigs]
+   *        Object with the following properties that are the selects configurations:
+   *        backgroundColor, backgroundOpacity, color, edgeStyle, fontFamily,
+   *        fontPercent, textOpacity, windowColor, windowOpacity.
+   *        These properties are use to configure the 'TextTrackSelect' Component.
+   */
+  constructor(player, options = {}) {
+    super(player, options);
+
+    // Add Components & DOM Elements
+    const legendElement = createEl('legend', {
+      textContent: this.localize(this.options_.legendText),
+      id: this.options_.legendId
+    });
+    this.el().appendChild(legendElement);
+    const selects = this.options_.selects;
+
+    // Iterate array of selects to create 'selects' components
+    for (const i of selects) {
+      const selectConfig = this.options_.selectConfigs[i];
+      const selectClassName = selectConfig.className;
+      const id = selectConfig.id.replace('%s', this.options_.id_);
+      let span = null;
+      const guid = `vjs_select_${newGUID()}`;
+
+      // Conditionally create span to add on the component
+      if (this.options_.type === 'colors') {
+        span = createEl('span', {
+          className: selectClassName
+        });
+        const label = createEl('label', {
+          id,
+          className: 'vjs-label',
+          textContent: this.localize(selectConfig.label)
+        });
+        label.setAttribute('for', guid);
+        span.appendChild(label);
+      }
+      const textTrackSelect = new TextTrackSelect(player, {
+        SelectOptions: selectConfig.options,
+        legendId: this.options_.legendId,
+        id: guid,
+        labelId: id
+      });
+      this.addChild(textTrackSelect);
+
+      // Conditionally append to 'select' component to conditionally created span
+      if (this.options_.type === 'colors') {
+        span.appendChild(textTrackSelect.el());
+        this.el().appendChild(span);
+      }
+    }
+  }
+
+  /**
+   * Create the `TextTrackFieldset`'s DOM element
+   *
+   * @return {Element}
+   *         The DOM element that gets created.
+   */
+  createEl() {
+    const el = createEl('fieldset', {
+      // Prefixing classes of elements within a player with "vjs-"
+      // is a convention used in Video.js.
+      className: this.options_.className
+    });
+    return el;
+  }
+}
+
+Component$1.registerComponent('TextTrackFieldset', TextTrackFieldset);
+
+/** @import Player from './player' */
+
+/** @import { ContentDescriptor } from  '../utils/dom' */
+
+/**
+ * The component 'TextTrackSettingsColors' displays a set of 'fieldsets'
+ * using the component 'TextTrackFieldset'.
+ *
+ * @extends Component
+ */
+class TextTrackSettingsColors extends Component$1 {
+  /**
+   * Creates an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should be attached to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {ContentDescriptor} [options.content=undefined]
+   *        Provide customized content for this modal.
+   *
+   * @param {Array} [options.fieldSets]
+   *        Array that contains the configurations for the selects.
+   *
+   * @param {Object} [options.selectConfigs]
+   *        Object with the following properties that are the select confugations:
+   *        backgroundColor, backgroundOpacity, color, edgeStyle, fontFamily,
+   *        fontPercent, textOpacity, windowColor, windowOpacity.
+   *        it passes to 'TextTrackFieldset'.
+   */
+  constructor(player, options = {}) {
+    super(player, options);
+    const id_ = this.options_.textTrackComponentid;
+
+    // createElFgColor_
+    const ElFgColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-text-legend-${id_}`,
+      legendText: this.localize('Text'),
+      className: 'vjs-fg vjs-track-setting',
+      selects: this.options_.fieldSets[0],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'colors'
+    });
+    this.addChild(ElFgColorFieldset);
+
+    // createElBgColor_
+    const ElBgColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-background-${id_}`,
+      legendText: this.localize('Text Background'),
+      className: 'vjs-bg vjs-track-setting',
+      selects: this.options_.fieldSets[1],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'colors'
+    });
+    this.addChild(ElBgColorFieldset);
+
+    // createElWinColor_
+    const ElWinColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-window-${id_}`,
+      legendText: this.localize('Caption Area Background'),
+      className: 'vjs-window vjs-track-setting',
+      selects: this.options_.fieldSets[2],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'colors'
+    });
+    this.addChild(ElWinColorFieldset);
+  }
+
+  /**
+   * Create the `TextTrackSettingsColors`'s DOM element
+   *
+   * @return {Element}
+   *         The DOM element that gets created.
+   */
+  createEl() {
+    const el = createEl('div', {
+      className: 'vjs-track-settings-colors'
+    });
+    return el;
+  }
+}
+
+Component$1.registerComponent('TextTrackSettingsColors', TextTrackSettingsColors);
+
+/** @import Player from './player' */
+
+/** @import { ContentDescriptor } from  '../utils/dom' */
+
+/**
+ * The component 'TextTrackSettingsFont' displays a set of 'fieldsets'
+ * using the component 'TextTrackFieldset'.
+ *
+ * @extends Component
+ */
+class TextTrackSettingsFont extends Component$1 {
+  /**
+   * Creates an instance of this class.
+   *
+   * @param {Player} player
+   *        The `Player` that this class should be attached to.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {ContentDescriptor} [options.content=undefined]
+   *        Provide customized content for this modal.
+   *
+   * @param {Array} [options.fieldSets]
+   *        Array that contains the configurations for the selects.
+   *
+   * @param {Object} [options.selectConfigs]
+   *        Object with the following properties that are the select confugations:
+   *        backgroundColor, backgroundOpacity, color, edgeStyle, fontFamily,
+   *        fontPercent, textOpacity, windowColor, windowOpacity.
+   *        it passes to 'TextTrackFieldset'.
+   */
+  constructor(player, options = {}) {
+    super(player, options);
+    const id_ = this.options_.textTrackComponentid;
+    const ElFgColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-font-size-${id_}`,
+      legendText: 'Font Size',
+      className: 'vjs-font-percent vjs-track-setting',
+      selects: this.options_.fieldSets[0],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'font'
+    });
+    this.addChild(ElFgColorFieldset);
+    const ElBgColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-edge-style-${id_}`,
+      legendText: this.localize('Text Edge Style'),
+      className: 'vjs-edge-style vjs-track-setting',
+      selects: this.options_.fieldSets[1],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'font'
+    });
+    this.addChild(ElBgColorFieldset);
+    const ElWinColorFieldset = new TextTrackFieldset(player, {
+      id_,
+      legendId: `captions-font-family-${id_}`,
+      legendText: this.localize('Font Family'),
+      className: 'vjs-font-family vjs-track-setting',
+      selects: this.options_.fieldSets[2],
+      selectConfigs: this.options_.selectConfigs,
+      type: 'font'
+    });
+    this.addChild(ElWinColorFieldset);
+  }
+
+  /**
+   * Create the `TextTrackSettingsFont`'s DOM element
+   *
+   * @return {Element}
+   *         The DOM element that gets created.
+   */
+  createEl() {
+    const el = createEl('div', {
+      className: 'vjs-track-settings-font'
+    });
+    return el;
+  }
+}
+
+Component$1.registerComponent('TextTrackSettingsFont', TextTrackSettingsFont);
+
+/**
+ * Buttons of reset & done that modal 'TextTrackSettings'
+ * uses as part of its content.
+ *
+ * 'Reset': Resets all settings on 'TextTrackSettings'.
+ * 'Done': Closes 'TextTrackSettings' modal.
+ *
+ * @extends Component
+ */
+class TrackSettingsControls extends Component$1 {
+  constructor(player, options = {}) {
+    super(player, options);
+
+    // Create DOM elements
+    const defaultsDescription = this.localize('restore all settings to the default values');
+    const resetButton = new Button(player, {
+      controlText: defaultsDescription,
+      className: 'vjs-default-button'
+    });
+    resetButton.el().classList.remove('vjs-control', 'vjs-button');
+    resetButton.el().textContent = this.localize('Reset');
+    this.addChild(resetButton);
+    const doneButton = new Button(player, {
+      controlText: defaultsDescription,
+      className: 'vjs-done-button'
+    });
+
+    // Remove unrequired style classes
+    doneButton.el().classList.remove('vjs-control', 'vjs-button');
+    doneButton.el().textContent = this.localize('Done');
+    this.addChild(doneButton);
+  }
+
+  /**
+   * Create the `TrackSettingsControls`'s DOM element
+   *
+   * @return {Element}
+   *         The DOM element that gets created.
+   */
+  createEl() {
+    const el = createEl('div', {
+      className: 'vjs-track-settings-controls'
+    });
+    return el;
+  }
+}
+
+Component$1.registerComponent('TrackSettingsControls', TrackSettingsControls);
+
 /**
  * @file text-track-settings.js
  */
+
+/** @import Player from '../player' */
+
 const LOCAL_STORAGE_KEY$1 = 'vjs-text-track-settings';
 const COLOR_BLACK = ['#000', 'Black'];
 const COLOR_BLUE = ['#00F', 'Blue'];
@@ -16778,35 +18501,38 @@ const selectConfigs = {
     selector: '.vjs-bg-color > select',
     id: 'captions-background-color-%s',
     label: 'Color',
-    options: [COLOR_BLACK, COLOR_WHITE, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN]
+    options: [COLOR_BLACK, COLOR_WHITE, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN],
+    className: 'vjs-bg-color'
   },
   backgroundOpacity: {
     selector: '.vjs-bg-opacity > select',
     id: 'captions-background-opacity-%s',
     label: 'Opacity',
-    options: [OPACITY_OPAQUE, OPACITY_SEMI, OPACITY_TRANS]
+    options: [OPACITY_OPAQUE, OPACITY_SEMI, OPACITY_TRANS],
+    className: 'vjs-bg-opacity vjs-opacity'
   },
   color: {
     selector: '.vjs-text-color > select',
     id: 'captions-foreground-color-%s',
     label: 'Color',
-    options: [COLOR_WHITE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN]
+    options: [COLOR_WHITE, COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN],
+    className: 'vjs-text-color'
   },
   edgeStyle: {
     selector: '.vjs-edge-style > select',
-    id: '%s',
+    id: '',
     label: 'Text Edge Style',
     options: [['none', 'None'], ['raised', 'Raised'], ['depressed', 'Depressed'], ['uniform', 'Uniform'], ['dropshadow', 'Drop shadow']]
   },
   fontFamily: {
     selector: '.vjs-font-family > select',
-    id: 'captions-font-family-%s',
+    id: '',
     label: 'Font Family',
     options: [['proportionalSansSerif', 'Proportional Sans-Serif'], ['monospaceSansSerif', 'Monospace Sans-Serif'], ['proportionalSerif', 'Proportional Serif'], ['monospaceSerif', 'Monospace Serif'], ['casual', 'Casual'], ['script', 'Script'], ['small-caps', 'Small Caps']]
   },
   fontPercent: {
     selector: '.vjs-font-percent > select',
-    id: 'captions-font-size-%s',
+    id: '',
     label: 'Font Size',
     options: [['0.50', '50%'], ['0.75', '75%'], ['1.00', '100%'], ['1.25', '125%'], ['1.50', '150%'], ['1.75', '175%'], ['2.00', '200%'], ['3.00', '300%'], ['4.00', '400%']],
     default: 2,
@@ -16816,20 +18542,23 @@ const selectConfigs = {
     selector: '.vjs-text-opacity > select',
     id: 'captions-foreground-opacity-%s',
     label: 'Opacity',
-    options: [OPACITY_OPAQUE, OPACITY_SEMI]
+    options: [OPACITY_OPAQUE, OPACITY_SEMI],
+    className: 'vjs-text-opacity vjs-opacity'
   },
   // Options for this object are defined below.
   windowColor: {
     selector: '.vjs-window-color > select',
     id: 'captions-window-color-%s',
-    label: 'Color'
+    label: 'Color',
+    className: 'vjs-window-color'
   },
   // Options for this object are defined below.
   windowOpacity: {
     selector: '.vjs-window-opacity > select',
     id: 'captions-window-opacity-%s',
     label: 'Opacity',
-    options: [OPACITY_TRANS, OPACITY_SEMI, OPACITY_OPAQUE]
+    options: [OPACITY_TRANS, OPACITY_SEMI, OPACITY_OPAQUE],
+    className: 'vjs-window-opacity vjs-opacity'
   }
 };
 selectConfigs.windowColor.options = selectConfigs.backgroundColor.options;
@@ -16916,7 +18645,7 @@ class TextTrackSettings extends ModalDialog {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('../player').default } player
+   * @param {Player} player
    *         The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -16930,6 +18659,7 @@ class TextTrackSettings extends ModalDialog {
     // fill the modal and pretend we have opened it
     this.fill();
     this.hasBeenOpened_ = this.hasBeenFilled_ = true;
+    this.renderModalComponents(player);
     this.endDialog = createEl('p', {
       className: 'vjs-control-text',
       textContent: this.localize('End of dialog window.')
@@ -16941,147 +18671,56 @@ class TextTrackSettings extends ModalDialog {
     if (options.persistTextTrackSettings === undefined) {
       this.options_.persistTextTrackSettings = this.options_.playerOptions.persistTextTrackSettings;
     }
-    this.on(this.$('.vjs-done-button'), 'click', () => {
+    this.bindFunctionsToSelectsAndButtons();
+    if (this.options_.persistTextTrackSettings) {
+      this.restoreSettings();
+    }
+  }
+
+  renderModalComponents(player) {
+    const textTrackSettingsColors = new TextTrackSettingsColors(player, {
+      textTrackComponentid: this.id_,
+      selectConfigs,
+      fieldSets: [['color', 'textOpacity'], ['backgroundColor', 'backgroundOpacity'], ['windowColor', 'windowOpacity']]
+    });
+    this.addChild(textTrackSettingsColors);
+    const textTrackSettingsFont = new TextTrackSettingsFont(player, {
+      textTrackComponentid: this.id_,
+      selectConfigs,
+      fieldSets: [['fontPercent'], ['edgeStyle'], ['fontFamily']]
+    });
+    this.addChild(textTrackSettingsFont);
+    const trackSettingsControls = new TrackSettingsControls(player);
+    this.addChild(trackSettingsControls);
+  }
+
+  bindFunctionsToSelectsAndButtons() {
+    this.on(this.$('.vjs-done-button'), ['click', 'tap'], () => {
       this.saveSettings();
       this.close();
     });
-    this.on(this.$('.vjs-default-button'), 'click', () => {
+    this.on(this.$('.vjs-default-button'), ['click', 'tap'], () => {
       this.setDefaults();
       this.updateDisplay();
     });
     each(selectConfigs, config => {
       this.on(this.$(config.selector), 'change', this.updateDisplay);
     });
-    if (this.options_.persistTextTrackSettings) {
-      this.restoreSettings();
-    }
   }
+
   dispose() {
     this.endDialog = null;
     super.dispose();
   }
 
-  /**
-   * Create a <select> element with configured options.
-   *
-   * @param {string} key
-   *        Configuration key to use during creation.
-   *
-   * @param {string} [legendId]
-   *        Id of associated <legend>.
-   *
-   * @param {string} [type=label]
-   *        Type of labelling element, `label` or `legend`
-   *
-   * @return {string}
-   *         An HTML string.
-   *
-   * @private
-   */
-  createElSelect_(key, legendId = '', type = 'label') {
-    const config = selectConfigs[key];
-    const id = config.id.replace('%s', this.id_);
-    const selectLabelledbyIds = [legendId, id].join(' ').trim();
-    const guid = `vjs_select_${newGUID()}`;
-    return [`<${type} id="${id}"${type === 'label' ? ` for="${guid}" class="vjs-label"` : ''}>`, this.localize(config.label), `</${type}>`, `<select aria-labelledby="${selectLabelledbyIds}" id="${guid}">`].concat(config.options.map(o => {
-      const optionId = id + '-' + o[1].replace(/\W+/g, '');
-      return [`<option id="${optionId}" value="${o[0]}" `, `aria-labelledby="${selectLabelledbyIds} ${optionId}">`, this.localize(o[1]), '</option>'].join('');
-    })).concat('</select>').join('');
-  }
-
-  /**
-   * Create foreground color element for the component
-   *
-   * @return {string}
-   *         An HTML string.
-   *
-   * @private
-   */
-  createElFgColor_() {
-    const legendId = `captions-text-legend-${this.id_}`;
-    return ['<fieldset class="vjs-fg vjs-track-setting">', `<legend id="${legendId}">`, this.localize('Text'), '</legend>', '<span class="vjs-text-color">', this.createElSelect_('color', legendId), '</span>', '<span class="vjs-text-opacity vjs-opacity">', this.createElSelect_('textOpacity', legendId), '</span>', '</fieldset>'].join('');
-  }
-
-  /**
-   * Create background color element for the component
-   *
-   * @return {string}
-   *         An HTML string.
-   *
-   * @private
-   */
-  createElBgColor_() {
-    const legendId = `captions-background-${this.id_}`;
-    return ['<fieldset class="vjs-bg vjs-track-setting">', `<legend id="${legendId}">`, this.localize('Text Background'), '</legend>', '<span class="vjs-bg-color">', this.createElSelect_('backgroundColor', legendId), '</span>', '<span class="vjs-bg-opacity vjs-opacity">', this.createElSelect_('backgroundOpacity', legendId), '</span>', '</fieldset>'].join('');
-  }
-
-  /**
-   * Create window color element for the component
-   *
-   * @return {string}
-   *         An HTML string.
-   *
-   * @private
-   */
-  createElWinColor_() {
-    const legendId = `captions-window-${this.id_}`;
-    return ['<fieldset class="vjs-window vjs-track-setting">', `<legend id="${legendId}">`, this.localize('Caption Area Background'), '</legend>', '<span class="vjs-window-color">', this.createElSelect_('windowColor', legendId), '</span>', '<span class="vjs-window-opacity vjs-opacity">', this.createElSelect_('windowOpacity', legendId), '</span>', '</fieldset>'].join('');
-  }
-
-  /**
-   * Create color elements for the component
-   *
-   * @return {Element}
-   *         The element that was created
-   *
-   * @private
-   */
-  createElColors_() {
-    return createEl('div', {
-      className: 'vjs-track-settings-colors',
-      innerHTML: [this.createElFgColor_(), this.createElBgColor_(), this.createElWinColor_()].join('')
-    });
-  }
-
-  /**
-   * Create font elements for the component
-   *
-   * @return {Element}
-   *         The element that was created.
-   *
-   * @private
-   */
-  createElFont_() {
-    return createEl('div', {
-      className: 'vjs-track-settings-font',
-      innerHTML: ['<fieldset class="vjs-font-percent vjs-track-setting">', this.createElSelect_('fontPercent', '', 'legend'), '</fieldset>', '<fieldset class="vjs-edge-style vjs-track-setting">', this.createElSelect_('edgeStyle', '', 'legend'), '</fieldset>', '<fieldset class="vjs-font-family vjs-track-setting">', this.createElSelect_('fontFamily', '', 'legend'), '</fieldset>'].join('')
-    });
-  }
-
-  /**
-   * Create controls for the component
-   *
-   * @return {Element}
-   *         The element that was created.
-   *
-   * @private
-   */
-  createElControls_() {
-    const defaultsDescription = this.localize('restore all settings to the default values');
-    return createEl('div', {
-      className: 'vjs-track-settings-controls',
-      innerHTML: [`<button type="button" class="vjs-default-button" title="${defaultsDescription}">`, this.localize('Reset'), `<span class="vjs-control-text"> ${defaultsDescription}</span>`, '</button>', `<button type="button" class="vjs-done-button">${this.localize('Done')}</button>`].join('')
-    });
-  }
-  content() {
-    return [this.createElColors_(), this.createElFont_(), this.createElControls_()];
-  }
   label() {
     return this.localize('Caption Settings Dialog');
   }
+
   description() {
     return this.localize('Beginning of dialog window. Escape will cancel and close the window.');
   }
+
   buildCSSClass() {
     return super.buildCSSClass() + ' vjs-text-track-settings';
   }
@@ -17169,29 +18808,15 @@ class TextTrackSettings extends ModalDialog {
   }
 
   /**
-   * conditionally blur the element and refocus the captions button
-   *
-   * @private
-   */
-  conditionalBlur_() {
-    this.previouslyActiveEl_ = null;
-    const cb = this.player_.controlBar;
-    const subsCapsBtn = cb && cb.subsCapsButton;
-    const ccBtn = cb && cb.captionsButton;
-    if (subsCapsBtn) {
-      subsCapsBtn.focus();
-    } else if (ccBtn) {
-      ccBtn.focus();
-    }
-  }
-
-  /**
    * Repopulate dialog with new localizations on languagechange
    */
   handleLanguagechange() {
     this.fill();
+    this.renderModalComponents(this.player_);
+    this.bindFunctionsToSelectsAndButtons();
   }
 }
+
 Component$1.registerComponent('TextTrackSettings', TextTrackSettings);
 
 /**
@@ -17246,7 +18871,7 @@ class ResizeManager extends Component$1 {
     this.ResizeObserver = options.ResizeObserver || window$1.ResizeObserver;
     this.loadListener_ = null;
     this.resizeObserver_ = null;
-    this.debouncedHandler_ = debounce(() => {
+    this.debouncedHandler_ = debounce$1(() => {
       this.resizeHandler();
     }, 100, false, this);
     if (RESIZE_OBSERVER_AVAILABLE) {
@@ -17272,6 +18897,7 @@ class ResizeManager extends Component$1 {
       this.one('load', this.loadListener_);
     }
   }
+
   createEl() {
     return super.createEl('iframe', {
       className: 'vjs-resize-manager',
@@ -17301,6 +18927,7 @@ class ResizeManager extends Component$1 {
     }
     this.player_.trigger('playerresize');
   }
+
   dispose() {
     if (this.debouncedHandler_) {
       this.debouncedHandler_.cancel();
@@ -17324,9 +18951,12 @@ class ResizeManager extends Component$1 {
     super.dispose();
   }
 }
+
 Component$1.registerComponent('ResizeManager', ResizeManager);
 
-const defaults = {
+/** @import Player from './player' */
+
+const defaults$1 = {
   trackingThreshold: 20,
   liveTolerance: 15
 };
@@ -17342,7 +18972,7 @@ class LiveTracker extends Component$1 {
   /**
    * Creates an instance of this class.
    *
-   * @param { import('./player').default } player
+   * @param {Player} player
    *        The `Player` that this class should be attached to.
    *
    * @param {Object} [options]
@@ -17360,7 +18990,7 @@ class LiveTracker extends Component$1 {
    */
   constructor(player, options) {
     // LiveTracker does not need an element
-    const options_ = merge$1(defaults, options, {
+    const options_ = merge$1(defaults$1, options, {
       createEl: false
     });
     super(player, options_);
@@ -17675,6 +19305,7 @@ class LiveTracker extends Component$1 {
     super.dispose();
   }
 }
+
 Component$1.registerComponent('LiveTracker', LiveTracker);
 
 /**
@@ -17797,7 +19428,125 @@ class TitleBar extends Component$1 {
     this.els = null;
   }
 }
+
 Component$1.registerComponent('TitleBar', TitleBar);
+
+/** @import Player from './player' */
+
+/**
+ * @typedef {object} TransientButtonOptions
+ * @property {string} [controlText] Control text, usually visible for these buttons
+ * @property {number} [initialDisplay=4000] Time in ms that button should initially remain visible
+ * @property {Array<'top'|'neartop'|'bottom'|'left'|'right'>} [position] Array of position strings to add basic styles for positioning
+ * @property {string} [className] Class(es) to add
+ * @property {boolean} [takeFocus=false] Whether element sohuld take focus when shown
+ * @property {Function} [clickHandler] Function called on button activation
+ */
+
+/** @type {TransientButtonOptions} */
+const defaults = {
+  initialDisplay: 4000,
+  position: [],
+  takeFocus: false
+};
+
+/**
+ * A floating transient button.
+ * It's recommended to insert these buttons _before_ the control bar with the this argument to `addChild`
+ * for a logical tab order.
+ *
+ * @example
+ * ```
+ * player.addChild(
+ *   'TransientButton',
+ *   options,
+ *   player.children().indexOf(player.getChild("ControlBar"))
+ * )
+ * ```
+ *
+ * @extends Button
+ */
+class TransientButton extends Button {
+  /**
+   * TransientButton constructor
+   *
+   * @param {Player} player The button's player
+   * @param {TransientButtonOptions} options Options for the transient button
+   */
+  constructor(player, options) {
+    options = merge$1(defaults, options);
+    super(player, options);
+    this.controlText(options.controlText);
+    this.hide();
+
+    // When shown, the float button will be visible even if the user is inactive.
+    // Clear this if there is any interaction.
+    this.on(this.player_, ['useractive', 'userinactive'], e => {
+      this.removeClass('force-display');
+    });
+  }
+
+  /**
+   * Return CSS class including position classes
+   *
+   * @return {string} CSS class list
+   */
+  buildCSSClass() {
+    return `vjs-transient-button focus-visible ${this.options_.position.map(c => `vjs-${c}`).join(' ')}`;
+  }
+
+  /**
+   * Create the button element
+   *
+   * @return {HTMLButtonElement} The button element
+   */
+  createEl() {
+    /** @type HTMLButtonElement */
+    const el = createEl('button', {}, {
+      type: 'button',
+      class: this.buildCSSClass()
+    }, createEl('span'));
+    this.controlTextEl_ = el.querySelector('span');
+    return el;
+  }
+
+  /**
+   * Show the button. The button will remain visible for the `initialDisplay` time, default 4s,
+   * and when there is user activity.
+   */
+  show() {
+    super.show();
+    this.addClass('force-display');
+    if (this.options_.takeFocus) {
+      this.el().focus({
+        preventScroll: true
+      });
+    }
+    this.forceDisplayTimeout = this.player_.setTimeout(() => {
+      this.removeClass('force-display');
+    }, this.options_.initialDisplay);
+  }
+
+  /**
+   * Hide the display, even if during the `initialDisplay` time.
+   */
+  hide() {
+    this.removeClass('force-display');
+    super.hide();
+  }
+
+  /**
+   * Dispose the component
+   */
+  dispose() {
+    this.player_.clearTimeout(this.forceDisplayTimeout);
+    super.dispose();
+  }
+}
+
+Component$1.registerComponent('TransientButton', TransientButton);
+
+/** @import Html5 from './html5' */
 
 /**
  * This function is used to fire a sourceset when there is something
@@ -17806,7 +19555,7 @@ Component$1.registerComponent('TitleBar', TitleBar);
  * with the source that was found or empty string if we cannot know. If it cannot
  * find a source then `sourceset` will not be fired.
  *
- * @param { import('./html5').default } tech
+ * @param {Html5} tech
  *        The tech object that sourceset was setup on
  *
  * @return {boolean}
@@ -17874,13 +19623,13 @@ const innerHTMLDescriptorPolyfill = Object.defineProperty({}, 'innerHTML', {
   },
   set(v) {
     // make a dummy node to use innerHTML on
-    const dummy = document.createElement(this.nodeName.toLowerCase());
+    const dummy = document$1.createElement(this.nodeName.toLowerCase());
 
     // set innerHTML to the value provided
     dummy.innerHTML = v;
 
     // make a document fragment to hold the nodes from dummy
-    const docFrag = document.createDocumentFragment();
+    const docFrag = document$1.createDocumentFragment();
 
     // copy all of the nodes created by the innerHTML on dummy
     // to the document fragment
@@ -18080,14 +19829,14 @@ const setupSourceset = function (tech) {
  */
 class Html5 extends Tech {
   /**
-  * Create an instance of this Tech.
-  *
-  * @param {Object} [options]
-  *        The key/value store of player options.
-  *
-  * @param {Function} [ready]
-  *        Callback function to call when the `HTML5` Tech is ready.
-  */
+   * Create an instance of this Tech.
+   *
+   * @param {Object} [options]
+   *        The key/value store of player options.
+   *
+   * @param {Function} [ready]
+   *        Callback function to call when the `HTML5` Tech is ready.
+   */
   constructor(options, ready) {
     super(options, ready);
     const source = options.source;
@@ -18398,7 +20147,7 @@ class Html5 extends Tech {
         Html5.disposeMediaElement(el);
         el = clone;
       } else {
-        el = document.createElement('video');
+        el = document$1.createElement('video');
 
         // determine if native controls should be used
         const tagAttributes = this.options_.tag && getAttributes(this.options_.tag);
@@ -18774,6 +20523,59 @@ class Html5 extends Tech {
   }
 
   /**
+   * Add a <source> element to the <video> element.
+   *
+   * @param {string} srcUrl
+   *        The URL of the video source.
+   *
+   * @param {string} [mimeType]
+   *        The MIME type of the video source. Optional but recommended.
+   *
+   * @return {boolean}
+   *         Returns true if the source element was successfully added, false otherwise.
+   */
+  addSourceElement(srcUrl, mimeType) {
+    if (!srcUrl) {
+      log$1.error('Invalid source URL.');
+      return false;
+    }
+    const sourceAttributes = {
+      src: srcUrl
+    };
+    if (mimeType) {
+      sourceAttributes.type = mimeType;
+    }
+    const sourceElement = createEl('source', {}, sourceAttributes);
+    this.el_.appendChild(sourceElement);
+    return true;
+  }
+
+  /**
+   * Remove a <source> element from the <video> element by its URL.
+   *
+   * @param {string} srcUrl
+   *        The URL of the source to remove.
+   *
+   * @return {boolean}
+   *         Returns true if the source element was successfully removed, false otherwise.
+   */
+  removeSourceElement(srcUrl) {
+    if (!srcUrl) {
+      log$1.error('Source URL is required to remove the source element.');
+      return false;
+    }
+    const sourceElements = this.el_.querySelectorAll('source');
+    for (const sourceElement of sourceElements) {
+      if (sourceElement.src === srcUrl) {
+        this.el_.removeChild(sourceElement);
+        return true;
+      }
+    }
+    log$1.warn(`No matching source element found with src: ${srcUrl}`);
+    return false;
+  }
+
+  /**
    * Reset the tech by removing all sources and then calling
    * {@link Html5.resetMediaElement}.
    */
@@ -18860,7 +20662,7 @@ class Html5 extends Tech {
     if (!this.featuresNativeTextTracks) {
       return super.createRemoteTextTrack(options);
     }
-    const htmlTrackElement = document.createElement('track');
+    const htmlTrackElement = document$1.createElement('track');
     if (options.kind) {
       htmlTrackElement.kind = options.kind;
     }
@@ -18959,8 +20761,8 @@ defineLazyProperty(Html5, 'TEST_VID', function () {
   if (!isReal()) {
     return;
   }
-  const video = document.createElement('video');
-  const track = document.createElement('track');
+  const video = document$1.createElement('video');
+  const track = document$1.createElement('track');
   track.kind = 'captions';
   track.srclang = 'en';
   track.label = 'English';
@@ -19108,20 +20910,21 @@ Html5.canOverrideAttributes = function () {
   // if we cannot overwrite the src/innerHTML property, there is no support
   // iOS 7 safari for instance cannot do this.
   try {
-    const noop = () => {};
-    Object.defineProperty(document.createElement('video'), 'src', {
+    const noop = () => {
+    };
+    Object.defineProperty(document$1.createElement('video'), 'src', {
       get: noop,
       set: noop
     });
-    Object.defineProperty(document.createElement('audio'), 'src', {
+    Object.defineProperty(document$1.createElement('audio'), 'src', {
       get: noop,
       set: noop
     });
-    Object.defineProperty(document.createElement('video'), 'innerHTML', {
+    Object.defineProperty(document$1.createElement('video'), 'innerHTML', {
       get: noop,
       set: noop
     });
-    Object.defineProperty(document.createElement('audio'), 'innerHTML', {
+    Object.defineProperty(document$1.createElement('audio'), 'innerHTML', {
       get: noop,
       set: noop
     });
@@ -19328,90 +21131,90 @@ Html5.resetMediaElement = function (el) {
 // The list is as followed:
 // muted, defaultMuted, autoplay, controls, loop, playsinline
 [
-/**
- * Get the value of `muted` from the media element. `muted` indicates
- * that the volume for the media should be set to silent. This does not actually change
- * the `volume` attribute.
- *
- * @method Html5#muted
- * @return {boolean}
- *         - True if the value of `volume` should be ignored and the audio set to silent.
- *         - False if the value of `volume` should be used.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-muted}
- */
-'muted',
-/**
- * Get the value of `defaultMuted` from the media element. `defaultMuted` indicates
- * whether the media should start muted or not. Only changes the default state of the
- * media. `muted` and `defaultMuted` can have different values. {@link Html5#muted} indicates the
- * current state.
- *
- * @method Html5#defaultMuted
- * @return {boolean}
- *         - The value of `defaultMuted` from the media element.
- *         - True indicates that the media should start muted.
- *         - False indicates that the media should not start muted
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultmuted}
- */
-'defaultMuted',
-/**
- * Get the value of `autoplay` from the media element. `autoplay` indicates
- * that the media should start to play as soon as the page is ready.
- *
- * @method Html5#autoplay
- * @return {boolean}
- *         - The value of `autoplay` from the media element.
- *         - True indicates that the media should start as soon as the page loads.
- *         - False indicates that the media should not start as soon as the page loads.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-autoplay}
- */
-'autoplay',
-/**
- * Get the value of `controls` from the media element. `controls` indicates
- * whether the native media controls should be shown or hidden.
- *
- * @method Html5#controls
- * @return {boolean}
- *         - The value of `controls` from the media element.
- *         - True indicates that native controls should be showing.
- *         - False indicates that native controls should be hidden.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-controls}
- */
-'controls',
-/**
- * Get the value of `loop` from the media element. `loop` indicates
- * that the media should return to the start of the media and continue playing once
- * it reaches the end.
- *
- * @method Html5#loop
- * @return {boolean}
- *         - The value of `loop` from the media element.
- *         - True indicates that playback should seek back to start once
- *           the end of a media is reached.
- *         - False indicates that playback should not loop back to the start when the
- *           end of the media is reached.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-loop}
- */
-'loop',
-/**
- * Get the value of `playsinline` from the media element. `playsinline` indicates
- * to the browser that non-fullscreen playback is preferred when fullscreen
- * playback is the native default, such as in iOS Safari.
- *
- * @method Html5#playsinline
- * @return {boolean}
- *         - The value of `playsinline` from the media element.
- *         - True indicates that the media should play inline.
- *         - False indicates that the media should not play inline.
- *
- * @see [Spec]{@link https://html.spec.whatwg.org/#attr-video-playsinline}
- */
-'playsinline'].forEach(function (prop) {
+  /**
+   * Get the value of `muted` from the media element. `muted` indicates
+   * that the volume for the media should be set to silent. This does not actually change
+   * the `volume` attribute.
+   *
+   * @method Html5#muted
+   * @return {boolean}
+   *         - True if the value of `volume` should be ignored and the audio set to silent.
+   *         - False if the value of `volume` should be used.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-muted}
+   */
+  'muted',
+  /**
+   * Get the value of `defaultMuted` from the media element. `defaultMuted` indicates
+   * whether the media should start muted or not. Only changes the default state of the
+   * media. `muted` and `defaultMuted` can have different values. {@link Html5#muted} indicates the
+   * current state.
+   *
+   * @method Html5#defaultMuted
+   * @return {boolean}
+   *         - The value of `defaultMuted` from the media element.
+   *         - True indicates that the media should start muted.
+   *         - False indicates that the media should not start muted
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultmuted}
+   */
+  'defaultMuted',
+  /**
+   * Get the value of `autoplay` from the media element. `autoplay` indicates
+   * that the media should start to play as soon as the page is ready.
+   *
+   * @method Html5#autoplay
+   * @return {boolean}
+   *         - The value of `autoplay` from the media element.
+   *         - True indicates that the media should start as soon as the page loads.
+   *         - False indicates that the media should not start as soon as the page loads.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-autoplay}
+   */
+  'autoplay',
+  /**
+   * Get the value of `controls` from the media element. `controls` indicates
+   * whether the native media controls should be shown or hidden.
+   *
+   * @method Html5#controls
+   * @return {boolean}
+   *         - The value of `controls` from the media element.
+   *         - True indicates that native controls should be showing.
+   *         - False indicates that native controls should be hidden.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-controls}
+   */
+  'controls',
+  /**
+   * Get the value of `loop` from the media element. `loop` indicates
+   * that the media should return to the start of the media and continue playing once
+   * it reaches the end.
+   *
+   * @method Html5#loop
+   * @return {boolean}
+   *         - The value of `loop` from the media element.
+   *         - True indicates that playback should seek back to start once
+   *           the end of a media is reached.
+   *         - False indicates that playback should not loop back to the start when the
+   *           end of the media is reached.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-loop}
+   */
+  'loop',
+  /**
+   * Get the value of `playsinline` from the media element. `playsinline` indicates
+   * to the browser that non-fullscreen playback is preferred when fullscreen
+   * playback is the native default, such as in iOS Safari.
+   *
+   * @method Html5#playsinline
+   * @return {boolean}
+   *         - The value of `playsinline` from the media element.
+   *         - True indicates that the media should play inline.
+   *         - False indicates that the media should not play inline.
+   *
+   * @see [Spec]{@link https://html.spec.whatwg.org/#attr-video-playsinline}
+   */
+  'playsinline'].forEach(function (prop) {
   Html5.prototype[prop] = function () {
     return this.el_[prop] || this.el_.hasAttribute(prop);
   };
@@ -19422,70 +21225,70 @@ Html5.resetMediaElement = function (el) {
 // setMuted, setDefaultMuted, setAutoplay, setLoop, setPlaysinline
 // setControls is special-cased above
 [
-/**
- * Set the value of `muted` on the media element. `muted` indicates that the current
- * audio level should be silent.
- *
- * @method Html5#setMuted
- * @param {boolean} muted
- *        - True if the audio should be set to silent
- *        - False otherwise
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-muted}
- */
-'muted',
-/**
- * Set the value of `defaultMuted` on the media element. `defaultMuted` indicates that the current
- * audio level should be silent, but will only effect the muted level on initial playback..
- *
- * @method Html5.prototype.setDefaultMuted
- * @param {boolean} defaultMuted
- *        - True if the audio should be set to silent
- *        - False otherwise
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultmuted}
- */
-'defaultMuted',
-/**
- * Set the value of `autoplay` on the media element. `autoplay` indicates
- * that the media should start to play as soon as the page is ready.
- *
- * @method Html5#setAutoplay
- * @param {boolean} autoplay
- *         - True indicates that the media should start as soon as the page loads.
- *         - False indicates that the media should not start as soon as the page loads.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-autoplay}
- */
-'autoplay',
-/**
- * Set the value of `loop` on the media element. `loop` indicates
- * that the media should return to the start of the media and continue playing once
- * it reaches the end.
- *
- * @method Html5#setLoop
- * @param {boolean} loop
- *         - True indicates that playback should seek back to start once
- *           the end of a media is reached.
- *         - False indicates that playback should not loop back to the start when the
- *           end of the media is reached.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-loop}
- */
-'loop',
-/**
- * Set the value of `playsinline` from the media element. `playsinline` indicates
- * to the browser that non-fullscreen playback is preferred when fullscreen
- * playback is the native default, such as in iOS Safari.
- *
- * @method Html5#setPlaysinline
- * @param {boolean} playsinline
- *         - True indicates that the media should play inline.
- *         - False indicates that the media should not play inline.
- *
- * @see [Spec]{@link https://html.spec.whatwg.org/#attr-video-playsinline}
- */
-'playsinline'].forEach(function (prop) {
+  /**
+   * Set the value of `muted` on the media element. `muted` indicates that the current
+   * audio level should be silent.
+   *
+   * @method Html5#setMuted
+   * @param {boolean} muted
+   *        - True if the audio should be set to silent
+   *        - False otherwise
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-muted}
+   */
+  'muted',
+  /**
+   * Set the value of `defaultMuted` on the media element. `defaultMuted` indicates that the current
+   * audio level should be silent, but will only effect the muted level on initial playback..
+   *
+   * @method Html5.prototype.setDefaultMuted
+   * @param {boolean} defaultMuted
+   *        - True if the audio should be set to silent
+   *        - False otherwise
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultmuted}
+   */
+  'defaultMuted',
+  /**
+   * Set the value of `autoplay` on the media element. `autoplay` indicates
+   * that the media should start to play as soon as the page is ready.
+   *
+   * @method Html5#setAutoplay
+   * @param {boolean} autoplay
+   *         - True indicates that the media should start as soon as the page loads.
+   *         - False indicates that the media should not start as soon as the page loads.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-autoplay}
+   */
+  'autoplay',
+  /**
+   * Set the value of `loop` on the media element. `loop` indicates
+   * that the media should return to the start of the media and continue playing once
+   * it reaches the end.
+   *
+   * @method Html5#setLoop
+   * @param {boolean} loop
+   *         - True indicates that playback should seek back to start once
+   *           the end of a media is reached.
+   *         - False indicates that playback should not loop back to the start when the
+   *           end of the media is reached.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-loop}
+   */
+  'loop',
+  /**
+   * Set the value of `playsinline` from the media element. `playsinline` indicates
+   * to the browser that non-fullscreen playback is preferred when fullscreen
+   * playback is the native default, such as in iOS Safari.
+   *
+   * @method Html5#setPlaysinline
+   * @param {boolean} playsinline
+   *         - True indicates that the media should play inline.
+   *         - False indicates that the media should not play inline.
+   *
+   * @see [Spec]{@link https://html.spec.whatwg.org/#attr-video-playsinline}
+   */
+  'playsinline'].forEach(function (prop) {
   Html5.prototype['set' + toTitleCase$1(prop)] = function (v) {
     this.el_[prop] = v;
     if (v) {
@@ -19502,259 +21305,259 @@ Html5.resetMediaElement = function (el) {
 // seekable, ended, playbackRate, defaultPlaybackRate, disablePictureInPicture
 // played, networkState, readyState, videoWidth, videoHeight, crossOrigin
 [
-/**
- * Get the value of `paused` from the media element. `paused` indicates whether the media element
- * is currently paused or not.
- *
- * @method Html5#paused
- * @return {boolean}
- *         The value of `paused` from the media element.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-paused}
- */
-'paused',
-/**
- * Get the value of `currentTime` from the media element. `currentTime` indicates
- * the current second that the media is at in playback.
- *
- * @method Html5#currentTime
- * @return {number}
- *         The value of `currentTime` from the media element.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-currenttime}
- */
-'currentTime',
-/**
- * Get the value of `buffered` from the media element. `buffered` is a `TimeRange`
- * object that represents the parts of the media that are already downloaded and
- * available for playback.
- *
- * @method Html5#buffered
- * @return {TimeRange}
- *         The value of `buffered` from the media element.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-buffered}
- */
-'buffered',
-/**
- * Get the value of `volume` from the media element. `volume` indicates
- * the current playback volume of audio for a media. `volume` will be a value from 0
- * (silent) to 1 (loudest and default).
- *
- * @method Html5#volume
- * @return {number}
- *         The value of `volume` from the media element. Value will be between 0-1.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-a-volume}
- */
-'volume',
-/**
- * Get the value of `poster` from the media element. `poster` indicates
- * that the url of an image file that can/will be shown when no media data is available.
- *
- * @method Html5#poster
- * @return {string}
- *         The value of `poster` from the media element. Value will be a url to an
- *         image.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-video-poster}
- */
-'poster',
-/**
- * Get the value of `preload` from the media element. `preload` indicates
- * what should download before the media is interacted with. It can have the following
- * values:
- * - none: nothing should be downloaded
- * - metadata: poster and the first few frames of the media may be downloaded to get
- *   media dimensions and other metadata
- * - auto: allow the media and metadata for the media to be downloaded before
- *    interaction
- *
- * @method Html5#preload
- * @return {string}
- *         The value of `preload` from the media element. Will be 'none', 'metadata',
- *         or 'auto'.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-preload}
- */
-'preload',
-/**
- * Get the value of the `error` from the media element. `error` indicates any
- * MediaError that may have occurred during playback. If error returns null there is no
- * current error.
- *
- * @method Html5#error
- * @return {MediaError|null}
- *         The value of `error` from the media element. Will be `MediaError` if there
- *         is a current error and null otherwise.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-error}
- */
-'error',
-/**
- * Get the value of `seeking` from the media element. `seeking` indicates whether the
- * media is currently seeking to a new position or not.
- *
- * @method Html5#seeking
- * @return {boolean}
- *         - The value of `seeking` from the media element.
- *         - True indicates that the media is currently seeking to a new position.
- *         - False indicates that the media is not seeking to a new position at this time.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-seeking}
- */
-'seeking',
-/**
- * Get the value of `seekable` from the media element. `seekable` returns a
- * `TimeRange` object indicating ranges of time that can currently be `seeked` to.
- *
- * @method Html5#seekable
- * @return {TimeRange}
- *         The value of `seekable` from the media element. A `TimeRange` object
- *         indicating the current ranges of time that can be seeked to.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-seekable}
- */
-'seekable',
-/**
- * Get the value of `ended` from the media element. `ended` indicates whether
- * the media has reached the end or not.
- *
- * @method Html5#ended
- * @return {boolean}
- *         - The value of `ended` from the media element.
- *         - True indicates that the media has ended.
- *         - False indicates that the media has not ended.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-ended}
- */
-'ended',
-/**
- * Get the value of `playbackRate` from the media element. `playbackRate` indicates
- * the rate at which the media is currently playing back. Examples:
- *   - if playbackRate is set to 2, media will play twice as fast.
- *   - if playbackRate is set to 0.5, media will play half as fast.
- *
- * @method Html5#playbackRate
- * @return {number}
- *         The value of `playbackRate` from the media element. A number indicating
- *         the current playback speed of the media, where 1 is normal speed.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
- */
-'playbackRate',
-/**
- * Get the value of `defaultPlaybackRate` from the media element. `defaultPlaybackRate` indicates
- * the rate at which the media is currently playing back. This value will not indicate the current
- * `playbackRate` after playback has started, use {@link Html5#playbackRate} for that.
- *
- * Examples:
- *   - if defaultPlaybackRate is set to 2, media will play twice as fast.
- *   - if defaultPlaybackRate is set to 0.5, media will play half as fast.
- *
- * @method Html5.prototype.defaultPlaybackRate
- * @return {number}
- *         The value of `defaultPlaybackRate` from the media element. A number indicating
- *         the current playback speed of the media, where 1 is normal speed.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
- */
-'defaultPlaybackRate',
-/**
- * Get the value of 'disablePictureInPicture' from the video element.
- *
- * @method Html5#disablePictureInPicture
- * @return {boolean} value
- *         - The value of `disablePictureInPicture` from the video element.
- *         - True indicates that the video can't be played in Picture-In-Picture mode
- *         - False indicates that the video can be played in Picture-In-Picture mode
- *
- * @see [Spec]{@link https://w3c.github.io/picture-in-picture/#disable-pip}
- */
-'disablePictureInPicture',
-/**
- * Get the value of `played` from the media element. `played` returns a `TimeRange`
- * object representing points in the media timeline that have been played.
- *
- * @method Html5#played
- * @return {TimeRange}
- *         The value of `played` from the media element. A `TimeRange` object indicating
- *         the ranges of time that have been played.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-played}
- */
-'played',
-/**
- * Get the value of `networkState` from the media element. `networkState` indicates
- * the current network state. It returns an enumeration from the following list:
- * - 0: NETWORK_EMPTY
- * - 1: NETWORK_IDLE
- * - 2: NETWORK_LOADING
- * - 3: NETWORK_NO_SOURCE
- *
- * @method Html5#networkState
- * @return {number}
- *         The value of `networkState` from the media element. This will be a number
- *         from the list in the description.
- *
- * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-networkstate}
- */
-'networkState',
-/**
- * Get the value of `readyState` from the media element. `readyState` indicates
- * the current state of the media element. It returns an enumeration from the
- * following list:
- * - 0: HAVE_NOTHING
- * - 1: HAVE_METADATA
- * - 2: HAVE_CURRENT_DATA
- * - 3: HAVE_FUTURE_DATA
- * - 4: HAVE_ENOUGH_DATA
- *
- * @method Html5#readyState
- * @return {number}
- *         The value of `readyState` from the media element. This will be a number
- *         from the list in the description.
- *
- * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#ready-states}
- */
-'readyState',
-/**
- * Get the value of `videoWidth` from the video element. `videoWidth` indicates
- * the current width of the video in css pixels.
- *
- * @method Html5#videoWidth
- * @return {number}
- *         The value of `videoWidth` from the video element. This will be a number
- *         in css pixels.
- *
- * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-video-videowidth}
- */
-'videoWidth',
-/**
- * Get the value of `videoHeight` from the video element. `videoHeight` indicates
- * the current height of the video in css pixels.
- *
- * @method Html5#videoHeight
- * @return {number}
- *         The value of `videoHeight` from the video element. This will be a number
- *         in css pixels.
- *
- * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-video-videowidth}
- */
-'videoHeight',
-/**
- * Get the value of `crossOrigin` from the media element. `crossOrigin` indicates
- * to the browser that should sent the cookies along with the requests for the
- * different assets/playlists
- *
- * @method Html5#crossOrigin
- * @return {string}
- *         - anonymous indicates that the media should not sent cookies.
- *         - use-credentials indicates that the media should sent cookies along the requests.
- *
- * @see [Spec]{@link https://html.spec.whatwg.org/#attr-media-crossorigin}
- */
-'crossOrigin'].forEach(function (prop) {
+  /**
+   * Get the value of `paused` from the media element. `paused` indicates whether the media element
+   * is currently paused or not.
+   *
+   * @method Html5#paused
+   * @return {boolean}
+   *         The value of `paused` from the media element.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-paused}
+   */
+  'paused',
+  /**
+   * Get the value of `currentTime` from the media element. `currentTime` indicates
+   * the current second that the media is at in playback.
+   *
+   * @method Html5#currentTime
+   * @return {number}
+   *         The value of `currentTime` from the media element.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-currenttime}
+   */
+  'currentTime',
+  /**
+   * Get the value of `buffered` from the media element. `buffered` is a `TimeRange`
+   * object that represents the parts of the media that are already downloaded and
+   * available for playback.
+   *
+   * @method Html5#buffered
+   * @return {TimeRange}
+   *         The value of `buffered` from the media element.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-buffered}
+   */
+  'buffered',
+  /**
+   * Get the value of `volume` from the media element. `volume` indicates
+   * the current playback volume of audio for a media. `volume` will be a value from 0
+   * (silent) to 1 (loudest and default).
+   *
+   * @method Html5#volume
+   * @return {number}
+   *         The value of `volume` from the media element. Value will be between 0-1.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-a-volume}
+   */
+  'volume',
+  /**
+   * Get the value of `poster` from the media element. `poster` indicates
+   * that the url of an image file that can/will be shown when no media data is available.
+   *
+   * @method Html5#poster
+   * @return {string}
+   *         The value of `poster` from the media element. Value will be a url to an
+   *         image.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-video-poster}
+   */
+  'poster',
+  /**
+   * Get the value of `preload` from the media element. `preload` indicates
+   * what should download before the media is interacted with. It can have the following
+   * values:
+   * - none: nothing should be downloaded
+   * - metadata: poster and the first few frames of the media may be downloaded to get
+   *   media dimensions and other metadata
+   * - auto: allow the media and metadata for the media to be downloaded before
+   *    interaction
+   *
+   * @method Html5#preload
+   * @return {string}
+   *         The value of `preload` from the media element. Will be 'none', 'metadata',
+   *         or 'auto'.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-preload}
+   */
+  'preload',
+  /**
+   * Get the value of the `error` from the media element. `error` indicates any
+   * MediaError that may have occurred during playback. If error returns null there is no
+   * current error.
+   *
+   * @method Html5#error
+   * @return {MediaError|null}
+   *         The value of `error` from the media element. Will be `MediaError` if there
+   *         is a current error and null otherwise.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-error}
+   */
+  'error',
+  /**
+   * Get the value of `seeking` from the media element. `seeking` indicates whether the
+   * media is currently seeking to a new position or not.
+   *
+   * @method Html5#seeking
+   * @return {boolean}
+   *         - The value of `seeking` from the media element.
+   *         - True indicates that the media is currently seeking to a new position.
+   *         - False indicates that the media is not seeking to a new position at this time.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-seeking}
+   */
+  'seeking',
+  /**
+   * Get the value of `seekable` from the media element. `seekable` returns a
+   * `TimeRange` object indicating ranges of time that can currently be `seeked` to.
+   *
+   * @method Html5#seekable
+   * @return {TimeRange}
+   *         The value of `seekable` from the media element. A `TimeRange` object
+   *         indicating the current ranges of time that can be seeked to.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-seekable}
+   */
+  'seekable',
+  /**
+   * Get the value of `ended` from the media element. `ended` indicates whether
+   * the media has reached the end or not.
+   *
+   * @method Html5#ended
+   * @return {boolean}
+   *         - The value of `ended` from the media element.
+   *         - True indicates that the media has ended.
+   *         - False indicates that the media has not ended.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-ended}
+   */
+  'ended',
+  /**
+   * Get the value of `playbackRate` from the media element. `playbackRate` indicates
+   * the rate at which the media is currently playing back. Examples:
+   *   - if playbackRate is set to 2, media will play twice as fast.
+   *   - if playbackRate is set to 0.5, media will play half as fast.
+   *
+   * @method Html5#playbackRate
+   * @return {number}
+   *         The value of `playbackRate` from the media element. A number indicating
+   *         the current playback speed of the media, where 1 is normal speed.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
+   */
+  'playbackRate',
+  /**
+   * Get the value of `defaultPlaybackRate` from the media element. `defaultPlaybackRate` indicates
+   * the rate at which the media is currently playing back. This value will not indicate the current
+   * `playbackRate` after playback has started, use {@link Html5#playbackRate} for that.
+   *
+   * Examples:
+   *   - if defaultPlaybackRate is set to 2, media will play twice as fast.
+   *   - if defaultPlaybackRate is set to 0.5, media will play half as fast.
+   *
+   * @method Html5.prototype.defaultPlaybackRate
+   * @return {number}
+   *         The value of `defaultPlaybackRate` from the media element. A number indicating
+   *         the current playback speed of the media, where 1 is normal speed.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
+   */
+  'defaultPlaybackRate',
+  /**
+   * Get the value of 'disablePictureInPicture' from the video element.
+   *
+   * @method Html5#disablePictureInPicture
+   * @return {boolean} value
+   *         - The value of `disablePictureInPicture` from the video element.
+   *         - True indicates that the video can't be played in Picture-In-Picture mode
+   *         - False indicates that the video can be played in Picture-In-Picture mode
+   *
+   * @see [Spec]{@link https://w3c.github.io/picture-in-picture/#disable-pip}
+   */
+  'disablePictureInPicture',
+  /**
+   * Get the value of `played` from the media element. `played` returns a `TimeRange`
+   * object representing points in the media timeline that have been played.
+   *
+   * @method Html5#played
+   * @return {TimeRange}
+   *         The value of `played` from the media element. A `TimeRange` object indicating
+   *         the ranges of time that have been played.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-played}
+   */
+  'played',
+  /**
+   * Get the value of `networkState` from the media element. `networkState` indicates
+   * the current network state. It returns an enumeration from the following list:
+   * - 0: NETWORK_EMPTY
+   * - 1: NETWORK_IDLE
+   * - 2: NETWORK_LOADING
+   * - 3: NETWORK_NO_SOURCE
+   *
+   * @method Html5#networkState
+   * @return {number}
+   *         The value of `networkState` from the media element. This will be a number
+   *         from the list in the description.
+   *
+   * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-networkstate}
+   */
+  'networkState',
+  /**
+   * Get the value of `readyState` from the media element. `readyState` indicates
+   * the current state of the media element. It returns an enumeration from the
+   * following list:
+   * - 0: HAVE_NOTHING
+   * - 1: HAVE_METADATA
+   * - 2: HAVE_CURRENT_DATA
+   * - 3: HAVE_FUTURE_DATA
+   * - 4: HAVE_ENOUGH_DATA
+   *
+   * @method Html5#readyState
+   * @return {number}
+   *         The value of `readyState` from the media element. This will be a number
+   *         from the list in the description.
+   *
+   * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#ready-states}
+   */
+  'readyState',
+  /**
+   * Get the value of `videoWidth` from the video element. `videoWidth` indicates
+   * the current width of the video in css pixels.
+   *
+   * @method Html5#videoWidth
+   * @return {number}
+   *         The value of `videoWidth` from the video element. This will be a number
+   *         in css pixels.
+   *
+   * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-video-videowidth}
+   */
+  'videoWidth',
+  /**
+   * Get the value of `videoHeight` from the video element. `videoHeight` indicates
+   * the current height of the video in css pixels.
+   *
+   * @method Html5#videoHeight
+   * @return {number}
+   *         The value of `videoHeight` from the video element. This will be a number
+   *         in css pixels.
+   *
+   * @see [Spec] {@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-video-videowidth}
+   */
+  'videoHeight',
+  /**
+   * Get the value of `crossOrigin` from the media element. `crossOrigin` indicates
+   * to the browser that should sent the cookies along with the requests for the
+   * different assets/playlists
+   *
+   * @method Html5#crossOrigin
+   * @return {string}
+   *         - anonymous indicates that the media should not sent cookies.
+   *         - use-credentials indicates that the media should sent cookies along the requests.
+   *
+   * @see [Spec]{@link https://html.spec.whatwg.org/#attr-media-crossorigin}
+   */
+  'crossOrigin'].forEach(function (prop) {
   Html5.prototype[prop] = function () {
     return this.el_[prop];
   };
@@ -19766,114 +21569,114 @@ Html5.resetMediaElement = function (el) {
 // setVolume, setSrc, setPoster, setPreload, setPlaybackRate, setDefaultPlaybackRate,
 // setDisablePictureInPicture, setCrossOrigin
 [
-/**
- * Set the value of `volume` on the media element. `volume` indicates the current
- * audio level as a percentage in decimal form. This means that 1 is 100%, 0.5 is 50%, and
- * so on.
- *
- * @method Html5#setVolume
- * @param {number} percentAsDecimal
- *        The volume percent as a decimal. Valid range is from 0-1.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-a-volume}
- */
-'volume',
-/**
- * Set the value of `src` on the media element. `src` indicates the current
- * {@link Tech~SourceObject} for the media.
- *
- * @method Html5#setSrc
- * @param {Tech~SourceObject} src
- *        The source object to set as the current source.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-src}
- */
-'src',
-/**
- * Set the value of `poster` on the media element. `poster` is the url to
- * an image file that can/will be shown when no media data is available.
- *
- * @method Html5#setPoster
- * @param {string} poster
- *        The url to an image that should be used as the `poster` for the media
- *        element.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-poster}
- */
-'poster',
-/**
- * Set the value of `preload` on the media element. `preload` indicates
- * what should download before the media is interacted with. It can have the following
- * values:
- * - none: nothing should be downloaded
- * - metadata: poster and the first few frames of the media may be downloaded to get
- *   media dimensions and other metadata
- * - auto: allow the media and metadata for the media to be downloaded before
- *    interaction
- *
- * @method Html5#setPreload
- * @param {string} preload
- *         The value of `preload` to set on the media element. Must be 'none', 'metadata',
- *         or 'auto'.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-preload}
- */
-'preload',
-/**
- * Set the value of `playbackRate` on the media element. `playbackRate` indicates
- * the rate at which the media should play back. Examples:
- *   - if playbackRate is set to 2, media will play twice as fast.
- *   - if playbackRate is set to 0.5, media will play half as fast.
- *
- * @method Html5#setPlaybackRate
- * @return {number}
- *         The value of `playbackRate` from the media element. A number indicating
- *         the current playback speed of the media, where 1 is normal speed.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
- */
-'playbackRate',
-/**
- * Set the value of `defaultPlaybackRate` on the media element. `defaultPlaybackRate` indicates
- * the rate at which the media should play back upon initial startup. Changing this value
- * after a video has started will do nothing. Instead you should used {@link Html5#setPlaybackRate}.
- *
- * Example Values:
- *   - if playbackRate is set to 2, media will play twice as fast.
- *   - if playbackRate is set to 0.5, media will play half as fast.
- *
- * @method Html5.prototype.setDefaultPlaybackRate
- * @return {number}
- *         The value of `defaultPlaybackRate` from the media element. A number indicating
- *         the current playback speed of the media, where 1 is normal speed.
- *
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultplaybackrate}
- */
-'defaultPlaybackRate',
-/**
- * Prevents the browser from suggesting a Picture-in-Picture context menu
- * or to request Picture-in-Picture automatically in some cases.
- *
- * @method Html5#setDisablePictureInPicture
- * @param {boolean} value
- *         The true value will disable Picture-in-Picture mode.
- *
- * @see [Spec]{@link https://w3c.github.io/picture-in-picture/#disable-pip}
- */
-'disablePictureInPicture',
-/**
- * Set the value of `crossOrigin` from the media element. `crossOrigin` indicates
- * to the browser that should sent the cookies along with the requests for the
- * different assets/playlists
- *
- * @method Html5#setCrossOrigin
- * @param {string} crossOrigin
- *         - anonymous indicates that the media should not sent cookies.
- *         - use-credentials indicates that the media should sent cookies along the requests.
- *
- * @see [Spec]{@link https://html.spec.whatwg.org/#attr-media-crossorigin}
- */
-'crossOrigin'].forEach(function (prop) {
+  /**
+   * Set the value of `volume` on the media element. `volume` indicates the current
+   * audio level as a percentage in decimal form. This means that 1 is 100%, 0.5 is 50%, and
+   * so on.
+   *
+   * @method Html5#setVolume
+   * @param {number} percentAsDecimal
+   *        The volume percent as a decimal. Valid range is from 0-1.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-a-volume}
+   */
+  'volume',
+  /**
+   * Set the value of `src` on the media element. `src` indicates the current
+   * {@link Tech~SourceObject} for the media.
+   *
+   * @method Html5#setSrc
+   * @param {Tech~SourceObject} src
+   *        The source object to set as the current source.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-src}
+   */
+  'src',
+  /**
+   * Set the value of `poster` on the media element. `poster` is the url to
+   * an image file that can/will be shown when no media data is available.
+   *
+   * @method Html5#setPoster
+   * @param {string} poster
+   *        The url to an image that should be used as the `poster` for the media
+   *        element.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-poster}
+   */
+  'poster',
+  /**
+   * Set the value of `preload` on the media element. `preload` indicates
+   * what should download before the media is interacted with. It can have the following
+   * values:
+   * - none: nothing should be downloaded
+   * - metadata: poster and the first few frames of the media may be downloaded to get
+   *   media dimensions and other metadata
+   * - auto: allow the media and metadata for the media to be downloaded before
+   *    interaction
+   *
+   * @method Html5#setPreload
+   * @param {string} preload
+   *         The value of `preload` to set on the media element. Must be 'none', 'metadata',
+   *         or 'auto'.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#attr-media-preload}
+   */
+  'preload',
+  /**
+   * Set the value of `playbackRate` on the media element. `playbackRate` indicates
+   * the rate at which the media should play back. Examples:
+   *   - if playbackRate is set to 2, media will play twice as fast.
+   *   - if playbackRate is set to 0.5, media will play half as fast.
+   *
+   * @method Html5#setPlaybackRate
+   * @return {number}
+   *         The value of `playbackRate` from the media element. A number indicating
+   *         the current playback speed of the media, where 1 is normal speed.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-playbackrate}
+   */
+  'playbackRate',
+  /**
+   * Set the value of `defaultPlaybackRate` on the media element. `defaultPlaybackRate` indicates
+   * the rate at which the media should play back upon initial startup. Changing this value
+   * after a video has started will do nothing. Instead you should used {@link Html5#setPlaybackRate}.
+   *
+   * Example Values:
+   *   - if playbackRate is set to 2, media will play twice as fast.
+   *   - if playbackRate is set to 0.5, media will play half as fast.
+   *
+   * @method Html5.prototype.setDefaultPlaybackRate
+   * @return {number}
+   *         The value of `defaultPlaybackRate` from the media element. A number indicating
+   *         the current playback speed of the media, where 1 is normal speed.
+   *
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-defaultplaybackrate}
+   */
+  'defaultPlaybackRate',
+  /**
+   * Prevents the browser from suggesting a Picture-in-Picture context menu
+   * or to request Picture-in-Picture automatically in some cases.
+   *
+   * @method Html5#setDisablePictureInPicture
+   * @param {boolean} value
+   *         The true value will disable Picture-in-Picture mode.
+   *
+   * @see [Spec]{@link https://w3c.github.io/picture-in-picture/#disable-pip}
+   */
+  'disablePictureInPicture',
+  /**
+   * Set the value of `crossOrigin` from the media element. `crossOrigin` indicates
+   * to the browser that should sent the cookies along with the requests for the
+   * different assets/playlists
+   *
+   * @method Html5#setCrossOrigin
+   * @param {string} crossOrigin
+   *         - anonymous indicates that the media should not sent cookies.
+   *         - use-credentials indicates that the media should sent cookies along the requests.
+   *
+   * @see [Spec]{@link https://html.spec.whatwg.org/#attr-media-crossorigin}
+   */
+  'crossOrigin'].forEach(function (prop) {
   Html5.prototype['set' + toTitleCase$1(prop)] = function (v) {
     this.el_[prop] = v;
   };
@@ -19883,30 +21686,30 @@ Html5.resetMediaElement = function (el) {
 // The list is as follows:
 // pause, load, play
 [
-/**
- * A wrapper around the media elements `pause` function. This will call the `HTML5`
- * media elements `pause` function.
- *
- * @method Html5#pause
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-pause}
- */
-'pause',
-/**
- * A wrapper around the media elements `load` function. This will call the `HTML5`s
- * media element `load` function.
- *
- * @method Html5#load
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-load}
- */
-'load',
-/**
- * A wrapper around the media elements `play` function. This will call the `HTML5`s
- * media element `play` function.
- *
- * @method Html5#play
- * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-play}
- */
-'play'].forEach(function (prop) {
+  /**
+   * A wrapper around the media elements `pause` function. This will call the `HTML5`
+   * media elements `pause` function.
+   *
+   * @method Html5#pause
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-pause}
+   */
+  'pause',
+  /**
+   * A wrapper around the media elements `load` function. This will call the `HTML5`s
+   * media element `load` function.
+   *
+   * @method Html5#load
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-load}
+   */
+  'load',
+  /**
+   * A wrapper around the media elements `play` function. This will call the `HTML5`s
+   * media element `play` function.
+   *
+   * @method Html5#play
+   * @see [Spec]{@link https://www.w3.org/TR/html5/embedded-content-0.html#dom-media-play}
+   */
+  'play'].forEach(function (prop) {
   Html5.prototype[prop] = function () {
     return this.el_[prop]();
   };
@@ -19986,7 +21789,8 @@ Html5.nativeSourceHandler.handleSource = function (source, tech, options) {
 /**
  * A noop for the native dispose function, as cleanup is not needed.
  */
-Html5.nativeSourceHandler.dispose = function () {};
+Html5.nativeSourceHandler.dispose = function () {
+};
 
 // Register the native source handler
 Html5.registerSourceHandler(Html5.nativeSourceHandler);
@@ -19996,174 +21800,183 @@ Tech.registerTech('Html5', Html5);
  * @file player.js
  */
 
+/** @import { TimeRange } from './utils/time' */
+/** @import HtmlTrackElement from './tracks/html-track-element' */
+
+/**
+ * @callback PlayerReadyCallback
+ * @this     {Player}
+ * @returns  {void}
+ */
+
 // The following tech events are simply re-triggered
 // on the player when they happen
 const TECH_EVENTS_RETRIGGER = [
-/**
- * Fired while the user agent is downloading media data.
- *
- * @event Player#progress
- * @type {Event}
- */
-/**
- * Retrigger the `progress` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechProgress_
- * @fires Player#progress
- * @listens Tech#progress
- */
-'progress',
-/**
- * Fires when the loading of an audio/video is aborted.
- *
- * @event Player#abort
- * @type {Event}
- */
-/**
- * Retrigger the `abort` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechAbort_
- * @fires Player#abort
- * @listens Tech#abort
- */
-'abort',
-/**
- * Fires when the browser is intentionally not getting media data.
- *
- * @event Player#suspend
- * @type {Event}
- */
-/**
- * Retrigger the `suspend` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechSuspend_
- * @fires Player#suspend
- * @listens Tech#suspend
- */
-'suspend',
-/**
- * Fires when the current playlist is empty.
- *
- * @event Player#emptied
- * @type {Event}
- */
-/**
- * Retrigger the `emptied` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechEmptied_
- * @fires Player#emptied
- * @listens Tech#emptied
- */
-'emptied',
-/**
- * Fires when the browser is trying to get media data, but data is not available.
- *
- * @event Player#stalled
- * @type {Event}
- */
-/**
- * Retrigger the `stalled` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechStalled_
- * @fires Player#stalled
- * @listens Tech#stalled
- */
-'stalled',
-/**
- * Fires when the browser has loaded meta data for the audio/video.
- *
- * @event Player#loadedmetadata
- * @type {Event}
- */
-/**
- * Retrigger the `loadedmetadata` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechLoadedmetadata_
- * @fires Player#loadedmetadata
- * @listens Tech#loadedmetadata
- */
-'loadedmetadata',
-/**
- * Fires when the browser has loaded the current frame of the audio/video.
- *
- * @event Player#loadeddata
- * @type {event}
- */
-/**
- * Retrigger the `loadeddata` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechLoaddeddata_
- * @fires Player#loadeddata
- * @listens Tech#loadeddata
- */
-'loadeddata',
-/**
- * Fires when the current playback position has changed.
- *
- * @event Player#timeupdate
- * @type {event}
- */
-/**
- * Retrigger the `timeupdate` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechTimeUpdate_
- * @fires Player#timeupdate
- * @listens Tech#timeupdate
- */
-'timeupdate',
-/**
- * Fires when the video's intrinsic dimensions change
- *
- * @event Player#resize
- * @type {event}
- */
-/**
- * Retrigger the `resize` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechResize_
- * @fires Player#resize
- * @listens Tech#resize
- */
-'resize',
-/**
- * Fires when the volume has been changed
- *
- * @event Player#volumechange
- * @type {event}
- */
-/**
- * Retrigger the `volumechange` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechVolumechange_
- * @fires Player#volumechange
- * @listens Tech#volumechange
- */
-'volumechange',
-/**
- * Fires when the text track has been changed
- *
- * @event Player#texttrackchange
- * @type {event}
- */
-/**
- * Retrigger the `texttrackchange` event that was triggered by the {@link Tech}.
- *
- * @private
- * @method Player#handleTechTexttrackchange_
- * @fires Player#texttrackchange
- * @listens Tech#texttrackchange
- */
-'texttrackchange'];
+  /**
+   * Fired while the user agent is downloading media data.
+   *
+   * @event Player#progress
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `progress` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechProgress_
+   * @fires Player#progress
+   * @listens Tech#progress
+   */
+  'progress',
+  /**
+   * Fires when the loading of an audio/video is aborted.
+   *
+   * @event Player#abort
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `abort` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechAbort_
+   * @fires Player#abort
+   * @listens Tech#abort
+   */
+  'abort',
+  /**
+   * Fires when the browser is intentionally not getting media data.
+   *
+   * @event Player#suspend
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `suspend` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechSuspend_
+   * @fires Player#suspend
+   * @listens Tech#suspend
+   */
+  'suspend',
+  /**
+   * Fires when the current playlist is empty.
+   *
+   * @event Player#emptied
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `emptied` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechEmptied_
+   * @fires Player#emptied
+   * @listens Tech#emptied
+   */
+  'emptied',
+  /**
+   * Fires when the browser is trying to get media data, but data is not available.
+   *
+   * @event Player#stalled
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `stalled` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechStalled_
+   * @fires Player#stalled
+   * @listens Tech#stalled
+   */
+  'stalled',
+  /**
+   * Fires when the browser has loaded meta data for the audio/video.
+   *
+   * @event Player#loadedmetadata
+   * @type {Event}
+   */
+  /**
+   * Retrigger the `loadedmetadata` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechLoadedmetadata_
+   * @fires Player#loadedmetadata
+   * @listens Tech#loadedmetadata
+   */
+  'loadedmetadata',
+  /**
+   * Fires when the browser has loaded the current frame of the audio/video.
+   *
+   * @event Player#loadeddata
+   * @type {event}
+   */
+  /**
+   * Retrigger the `loadeddata` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechLoaddeddata_
+   * @fires Player#loadeddata
+   * @listens Tech#loadeddata
+   */
+  'loadeddata',
+  /**
+   * Fires when the current playback position has changed.
+   *
+   * @event Player#timeupdate
+   * @type {event}
+   */
+  /**
+   * Retrigger the `timeupdate` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechTimeUpdate_
+   * @fires Player#timeupdate
+   * @listens Tech#timeupdate
+   */
+  'timeupdate',
+  /**
+   * Fires when the video's intrinsic dimensions change
+   *
+   * @event Player#resize
+   * @type {event}
+   */
+  /**
+   * Retrigger the `resize` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechResize_
+   * @fires Player#resize
+   * @listens Tech#resize
+   */
+  'resize',
+  /**
+   * Fires when the volume has been changed
+   *
+   * @event Player#volumechange
+   * @type {event}
+   */
+  /**
+   * Retrigger the `volumechange` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechVolumechange_
+   * @fires Player#volumechange
+   * @listens Tech#volumechange
+   */
+  'volumechange',
+  /**
+   * Fires when the text track has been changed
+   *
+   * @event Player#texttrackchange
+   * @type {event}
+   */
+  /**
+   * Retrigger the `texttrackchange` event that was triggered by the {@link Tech}.
+   *
+   * @private
+   * @method Player#handleTechTexttrackchange_
+   * @fires Player#texttrackchange
+   * @listens Tech#texttrackchange
+   */
+  'texttrackchange'];
 
 // events to queue when playback rate is zero
 // this is a hash for the sole purpose of mapping non-camel-cased event names
@@ -20220,7 +22033,7 @@ class Player extends Component$1 {
    * @param {Object} [options]
    *        Object of option names and values.
    *
-   * @param {Function} [ready]
+   * @param {PlayerReadyCallback} [ready]
    *        Ready callback function.
    */
   constructor(tag, options, ready) {
@@ -20272,6 +22085,7 @@ class Player extends Component$1 {
     this.boundHandleTechTouchMove_ = e => this.handleTechTouchMove_(e);
     this.boundHandleTechTouchEnd_ = e => this.handleTechTouchEnd_(e);
     this.boundHandleTechTap_ = e => this.handleTechTap_(e);
+    this.boundUpdatePlayerHeightOnAudioOnlyMode_ = e => this.updatePlayerHeightOnAudioOnlyMode_(e);
 
     // default isFullscreen_ to false
     this.isFullscreen_ = false;
@@ -20309,6 +22123,7 @@ class Player extends Component$1 {
 
     // Init state audioOnlyCache_
     this.audioOnlyCache_ = {
+      controlBarHeight: null,
       playerHeight: null,
       hiddenChildren: []
     };
@@ -20395,7 +22210,7 @@ class Player extends Component$1 {
     // make sure that we listen to fullscreenchange events before everything else to make sure that
     // our isFullscreen method is updated properly for internal components as well as external.
     if (this.fsApi_.requestFullscreen) {
-      on(document, this.fsApi_.fullscreenchange, this.boundDocumentFullscreenChange_);
+      on(document$1, this.fsApi_.fullscreenchange, this.boundDocumentFullscreenChange_);
       this.on(this.fsApi_.fullscreenchange, this.boundDocumentFullscreenChange_);
     }
     if (this.fluid_) {
@@ -20460,6 +22275,13 @@ class Player extends Component$1 {
       this.addClass('vjs-audio');
     }
 
+    // Check if spatial navigation is enabled in the options.
+    // If enabled, instantiate the SpatialNavigation class.
+    if (options.spatialNavigation && options.spatialNavigation.enabled) {
+      this.spatialNavigation = new SpatialNavigation(this);
+      this.addClass('vjs-spatial-navigation-enabled');
+    }
+
     // TODO: Make this smarter. Toggle user state between touching/mousing
     // using events, since devices can have both touch and mouse events.
     // TODO: Make this check be performed again when the window switches between monitors
@@ -20520,8 +22342,8 @@ class Player extends Component$1 {
     this.off('dispose');
 
     // Make sure all player-specific document listeners are unbound. This is
-    off(document, this.fsApi_.fullscreenchange, this.boundDocumentFullscreenChange_);
-    off(document, 'keydown', this.boundFullWindowOnEscKey_);
+    off(document$1, this.fsApi_.fullscreenchange, this.boundDocumentFullscreenChange_);
+    off(document$1, 'keydown', this.boundFullWindowOnEscKey_);
     if (this.styleEl_ && this.styleEl_.parentNode) {
       this.styleEl_.parentNode.removeChild(this.styleEl_);
       this.styleEl_ = null;
@@ -20590,7 +22412,7 @@ class Player extends Component$1 {
     const attrs = getAttributes(tag);
     if (divEmbed) {
       el = this.el_ = tag;
-      tag = this.tag = document.createElement('video');
+      tag = this.tag = document$1.createElement('video');
       while (el.children.length) {
         tag.appendChild(el.firstChild);
       }
@@ -20657,6 +22479,10 @@ class Player extends Component$1 {
     tag.player = el.player = this;
     // Default state of video is paused
     this.addClass('vjs-paused');
+    const deviceClassNames = ['IS_SMART_TV', 'IS_TIZEN', 'IS_WEBOS', 'IS_ANDROID', 'IS_IPAD', 'IS_IPHONE', 'IS_CHROMECAST_RECEIVER'].filter(key => browser[key]).map(key => {
+      return 'vjs-device-' + key.substring(3).toLowerCase().replace(/\_/g, '-');
+    });
+    this.addClass(...deviceClassNames);
 
     // Add a style element in the player that we'll use to set the width/height
     // of the player in a way that's still overridable by CSS, just like the
@@ -21460,7 +23286,8 @@ class Player extends Component$1 {
         // if both the tech source and the player source were updated we assume
         // something like @videojs/http-streaming did the sourceset and skip updating the source cache.
         if (!this.lastSource_ || this.lastSource_.tech !== eventSrc && this.lastSource_.player !== playerSrc) {
-          updateSourceCaches = () => {};
+          updateSourceCaches = () => {
+          };
         }
       }
 
@@ -21775,7 +23602,8 @@ class Player extends Component$1 {
   }
 
   /**
-   * Handle a double-click on the media element to enter/exit fullscreen
+   * Handle a double-click on the media element to enter/exit fullscreen,
+   * or exit documentPictureInPicture mode
    *
    * @param {Event} event
    *        the event that caused this function to trigger
@@ -21802,6 +23630,12 @@ class Player extends Component$1 {
       if (this.options_ === undefined || this.options_.userActions === undefined || this.options_.userActions.doubleClick === undefined || this.options_.userActions.doubleClick !== false) {
         if (this.options_ !== undefined && this.options_.userActions !== undefined && typeof this.options_.userActions.doubleClick === 'function') {
           this.options_.userActions.doubleClick.call(this, event);
+        } else if (this.isInPictureInPicture() && !document$1.pictureInPictureElement) {
+          // Checking the presence of `window.documentPictureInPicture.window` complicates
+          // tests, checking `document.pictureInPictureElement` also works. It wouldn't
+          // be null in regular picture in picture.
+          // Exit picture in picture mode. This gesture can't trigger pip on the main window.
+          this.exitPictureInPicture();
         } else if (this.isFullscreen()) {
           this.exitFullscreen();
         } else {
@@ -21884,7 +23718,7 @@ class Player extends Component$1 {
       return;
     }
     const el = this.el();
-    let isFs = document[this.fsApi_.fullscreenElement] === el;
+    let isFs = document$1[this.fsApi_.fullscreenElement] === el;
     if (!isFs && el.matches) {
       isFs = el.matches(':' + this.fsApi_.fullscreen);
     }
@@ -21915,6 +23749,7 @@ class Player extends Component$1 {
       this.isFullscreen(data.isFullscreen);
     }
   }
+
   handleTechFullscreenError_(event, err) {
     this.trigger('fullscreenerror', err);
   }
@@ -22231,7 +24066,7 @@ class Player extends Component$1 {
    * Get a TimeRange object representing the current ranges of time that the user
    * has played.
    *
-   * @return { import('./utils/time').TimeRange }
+   * @return {TimeRange}
    *         A time range object that represents all the increments of time that have
    *         been played.
    */
@@ -22391,7 +24226,7 @@ class Player extends Component$1 {
    *
    * @see [Buffered Spec]{@link http://dev.w3.org/html5/spec/video.html#dom-media-buffered}
    *
-   * @return { import('./utils/time').TimeRange }
+   * @return {TimeRange}
    *         A mock {@link TimeRanges} object (following HTML spec)
    */
   buffered() {
@@ -22408,7 +24243,7 @@ class Player extends Component$1 {
    *
    * @see [Seekable Spec]{@link https://html.spec.whatwg.org/multipage/media.html#dom-media-seekable}
    *
-   * @return { import('./utils/time').TimeRange }
+   * @return {TimeRange}
    *         A mock {@link TimeRanges} object (following HTML spec)
    */
   seekable() {
@@ -22658,9 +24493,9 @@ class Player extends Component$1 {
       // fullWindow mode is treated as a prefixed event and will get a fullscreenchange event as well
       if (this.isFullscreen_ !== oldValue && this.fsApi_.prefixed) {
         /**
-           * @event Player#fullscreenchange
-           * @type {Event}
-           */
+         * @event Player#fullscreenchange
+         * @type {Event}
+         */
         this.trigger('fullscreenchange');
       }
       this.toggleFullscreenClass_();
@@ -22693,14 +24528,17 @@ class Player extends Component$1 {
         self.off('fullscreenerror', errorHandler);
         self.off('fullscreenchange', changeHandler);
       }
+
       function changeHandler() {
         offHandler();
         resolve();
       }
+
       function errorHandler(e, err) {
         offHandler();
         reject(err);
       }
+
       self.one('fullscreenchange', changeHandler);
       self.one('fullscreenerror', errorHandler);
       const promise = self.requestFullscreenHelper_(fullscreenOptions);
@@ -22710,6 +24548,7 @@ class Player extends Component$1 {
       }
     });
   }
+
   requestFullscreenHelper_(fullscreenOptions) {
     let fsOptions;
 
@@ -22760,14 +24599,17 @@ class Player extends Component$1 {
         self.off('fullscreenerror', errorHandler);
         self.off('fullscreenchange', changeHandler);
       }
+
       function changeHandler() {
         offHandler();
         resolve();
       }
+
       function errorHandler(e, err) {
         offHandler();
         reject(err);
       }
+
       self.one('fullscreenchange', changeHandler);
       self.one('fullscreenerror', errorHandler);
       const promise = self.exitFullscreenHelper_();
@@ -22778,9 +24620,10 @@ class Player extends Component$1 {
       }
     });
   }
+
   exitFullscreenHelper_() {
     if (this.fsApi_.requestFullscreen) {
-      const promise = document[this.fsApi_.exitFullscreen]();
+      const promise = document$1[this.fsApi_.exitFullscreen]();
 
       // Even on browsers with promise support this may not return a promise
       if (promise) {
@@ -22807,16 +24650,16 @@ class Player extends Component$1 {
     this.isFullWindow = true;
 
     // Storing original doc overflow value to return to when fullscreen is off
-    this.docOrigOverflow = document.documentElement.style.overflow;
+    this.docOrigOverflow = document$1.documentElement.style.overflow;
 
     // Add listener for esc key to exit fullscreen
-    on(document, 'keydown', this.boundFullWindowOnEscKey_);
+    on(document$1, 'keydown', this.boundFullWindowOnEscKey_);
 
     // Hide any scroll bars
-    document.documentElement.style.overflow = 'hidden';
+    document$1.documentElement.style.overflow = 'hidden';
 
     // Apply fullscreen styles
-    addClass(document.body, 'vjs-full-window');
+    addClass(document$1.body, 'vjs-full-window');
 
     /**
      * @event Player#enterFullWindow
@@ -22833,7 +24676,7 @@ class Player extends Component$1 {
    *        Event to check for key press
    */
   fullWindowOnEscKey(event) {
-    if (keycode.isEventKey(event, 'Esc')) {
+    if (event.key === 'Escape') {
       if (this.isFullscreen() === true) {
         if (!this.isFullWindow) {
           this.exitFullscreen();
@@ -22852,13 +24695,13 @@ class Player extends Component$1 {
   exitFullWindow() {
     this.isFullscreen(false);
     this.isFullWindow = false;
-    off(document, 'keydown', this.boundFullWindowOnEscKey_);
+    off(document$1, 'keydown', this.boundFullWindowOnEscKey_);
 
     // Unhide scroll bars.
-    document.documentElement.style.overflow = this.docOrigOverflow;
+    document$1.documentElement.style.overflow = this.docOrigOverflow;
 
     // Remove fullscreen styles
-    removeClass(document.body, 'vjs-full-window');
+    removeClass(document$1.body, 'vjs-full-window');
 
     // Resize the box, controller, and poster to original sizes
     // this.positionAll();
@@ -22927,7 +24770,7 @@ class Player extends Component$1 {
    */
   requestPictureInPicture() {
     if (this.options_.enableDocumentPictureInPicture && window$1.documentPictureInPicture) {
-      const pipContainer = document.createElement(this.el().tagName);
+      const pipContainer = document$1.createElement(this.el().tagName);
       pipContainer.classList = this.el().classList;
       pipContainer.classList.add('vjs-pip-container');
       if (this.posterImage) {
@@ -22949,7 +24792,10 @@ class Player extends Component$1 {
         pipWindow.document.body.appendChild(this.el_);
         pipWindow.document.body.classList.add('vjs-pip-window');
         this.player_.isInPictureInPicture(true);
-        this.player_.trigger('enterpictureinpicture');
+        this.player_.trigger({
+          type: 'enterpictureinpicture',
+          pipWindow
+        });
 
         // Listen for the PiP closing event to move the video back.
         pipWindow.addEventListener('pagehide', event => {
@@ -22961,7 +24807,7 @@ class Player extends Component$1 {
         return pipWindow;
       });
     }
-    if ('pictureInPictureEnabled' in document && this.disablePictureInPicture() === false) {
+    if ('pictureInPictureEnabled' in document$1 && this.disablePictureInPicture() === false) {
       /**
        * This event fires when the player enters picture in picture mode
        *
@@ -22989,14 +24835,14 @@ class Player extends Component$1 {
       window$1.documentPictureInPicture.window.close();
       return Promise.resolve();
     }
-    if ('pictureInPictureEnabled' in document) {
+    if ('pictureInPictureEnabled' in document$1) {
       /**
        * This event fires when the player leaves picture in picture mode
        *
        * @event Player#leavepictureinpicture
        * @type {Event}
        */
-      return document.exitPictureInPicture();
+      return document$1.exitPictureInPicture();
     }
   }
 
@@ -23070,15 +24916,15 @@ class Player extends Component$1 {
 
     // set fullscreenKey, muteKey, playPauseKey from `hotkeys`, use defaults if not set
     const {
-      fullscreenKey = keydownEvent => keycode.isEventKey(keydownEvent, 'f'),
-      muteKey = keydownEvent => keycode.isEventKey(keydownEvent, 'm'),
-      playPauseKey = keydownEvent => keycode.isEventKey(keydownEvent, 'k') || keycode.isEventKey(keydownEvent, 'Space')
+      fullscreenKey = keydownEvent => event.key.toLowerCase() === 'f',
+      muteKey = keydownEvent => event.key.toLowerCase() === 'm',
+      playPauseKey = keydownEvent => event.key.toLowerCase() === 'k' || event.key.toLowerCase() === ' '
     } = hotkeys;
     if (fullscreenKey.call(this, event)) {
       event.preventDefault();
       event.stopPropagation();
       const FSToggle = Component$1.getComponent('FullscreenToggle');
-      if (document[this.fsApi_.fullscreenEnabled] !== false) {
+      if (document$1[this.fsApi_.fullscreenEnabled] !== false) {
         FSToggle.prototype.handleClick.call(this, event);
       }
     } else if (muteKey.call(this, event)) {
@@ -23372,6 +25218,41 @@ class Player extends Component$1 {
   }
 
   /**
+   * Add a <source> element to the <video> element.
+   *
+   * @param {string} srcUrl
+   *        The URL of the video source.
+   *
+   * @param {string} [mimeType]
+   *        The MIME type of the video source. Optional but recommended.
+   *
+   * @return {boolean}
+   *         Returns true if the source element was successfully added, false otherwise.
+   */
+  addSourceElement(srcUrl, mimeType) {
+    if (!this.tech_) {
+      return false;
+    }
+    return this.tech_.addSourceElement(srcUrl, mimeType);
+  }
+
+  /**
+   * Remove a <source> element from the <video> element by its URL.
+   *
+   * @param {string} srcUrl
+   *        The URL of the source to remove.
+   *
+   * @return {boolean}
+   *         Returns true if the source element was successfully removed, false otherwise.
+   */
+  removeSourceElement(srcUrl) {
+    if (!this.tech_) {
+      return false;
+    }
+    return this.tech_.removeSourceElement(srcUrl);
+  }
+
+  /**
    * Begin loading the src data.
    */
   load() {
@@ -23397,6 +25278,7 @@ class Player extends Component$1 {
       silencePromise(playPromise.then(() => this.doReset_()));
     }
   }
+
   doReset_() {
     if (this.tech_) {
       this.tech_.clearTracks('text');
@@ -24125,6 +26007,16 @@ class Player extends Component$1 {
     }
     return !!this.isAudio_;
   }
+
+  updatePlayerHeightOnAudioOnlyMode_() {
+    const controlBar = this.getChild('ControlBar');
+    if (!controlBar || this.audioOnlyCache_.controlBarHeight === controlBar.currentHeight()) {
+      return;
+    }
+    this.audioOnlyCache_.controlBarHeight = controlBar.currentHeight();
+    this.height(this.audioOnlyCache_.controlBarHeight);
+  }
+
   enableAudioOnlyUI_() {
     // Update styling immediately to show the control bar so we can get its height
     this.addClass('vjs-audio-only-mode');
@@ -24144,13 +26036,17 @@ class Player extends Component$1 {
       }
     });
     this.audioOnlyCache_.playerHeight = this.currentHeight();
+    this.audioOnlyCache_.controlBarHeight = controlBarHeight;
+    this.on('playerresize', this.boundUpdatePlayerHeightOnAudioOnlyMode_);
 
     // Set the player height the same as the control bar
     this.height(controlBarHeight);
     this.trigger('audioonlymodechange');
   }
+
   disableAudioOnlyUI_() {
     this.removeClass('vjs-audio-only-mode');
+    this.off('playerresize', this.boundUpdatePlayerHeightOnAudioOnlyMode_);
 
     // Show player components that were previously hidden
     this.audioOnlyCache_.hiddenChildren.forEach(child => child.show());
@@ -24199,6 +26095,7 @@ class Player extends Component$1 {
     // Disable Audio Only Mode
     return Promise.resolve().then(() => this.disableAudioOnlyUI_());
   }
+
   enablePosterModeUI_() {
     // Hide the video element and show the poster image to enable posterModeUI
     const tech = this.tech_ && this.tech_;
@@ -24206,6 +26103,7 @@ class Player extends Component$1 {
     this.addClass('vjs-audio-poster-mode');
     this.trigger('audiopostermodechange');
   }
+
   disablePosterModeUI_() {
     // Show the video element and hide the poster image to disable posterModeUI
     const tech = this.tech_ && this.tech_;
@@ -24286,7 +26184,7 @@ class Player extends Component$1 {
    *                                        from the TextTrackList and HtmlTrackElementList
    *                                        after a source change
    *
-   * @return { import('./tracks/html-track-element').default }
+   * @return {HtmlTrackElement}
    *         the HTMLTrackElement that was created and added
    *         to the HtmlTrackElementList and the remote
    *         TextTrackList
@@ -24386,11 +26284,11 @@ class Player extends Component$1 {
       // during first init, it's possible some things won't be evented
       if (isEvented(this)) {
         /**
-        * fires when the player language change
-        *
-        * @event Player#languagechange
-        * @type {Event}
-        */
+         * fires when the player language change
+         *
+         * @event Player#languagechange
+         * @type {Event}
+         */
         this.trigger('languagechange');
       }
     }
@@ -24782,12 +26680,12 @@ class Player extends Component$1 {
     // Check if data-setup attr exists.
     if (dataSetup !== null) {
       // Parse options JSON
-      // If empty string, make it a parsable json object.
-      const [err, data] = safeParseTuple(dataSetup || '{}');
-      if (err) {
-        log$1.error(err);
+      try {
+        // If empty string, make it a parsable json object.
+        Object.assign(tagOptions, JSON.parse(dataSetup || '{}'));
+      } catch (e) {
+        log$1.error('data-setup', e);
       }
-      Object.assign(tagOptions, data);
     }
     Object.assign(baseOptions, tagOptions);
 
@@ -24840,7 +26738,7 @@ class Player extends Component$1 {
    * Values other than arrays are ignored.
    *
    * @fires Player#playbackrateschange
-   * @param {number[]} newRates
+   * @param {number[]} [newRates]
    *                   The new rates that the playback rates menu should update to.
    *                   An empty array will hide the menu
    * @return {number[]} When used as a getter will return the current playback rates
@@ -24862,13 +26760,41 @@ class Player extends Component$1 {
     this.cache_.playbackRates = newRates;
 
     /**
-    * fires when the playback rates in a player are changed
-    *
-    * @event Player#playbackrateschange
-    * @type {Event}
-    */
+     * fires when the playback rates in a player are changed
+     *
+     * @event Player#playbackrateschange
+     * @type {Event}
+     */
     this.trigger('playbackrateschange');
   }
+
+  /**
+   * Reports whether or not a player has a plugin available.
+   *
+   * This does not report whether or not the plugin has ever been initialized
+   * on this player. For that, [usingPlugin]{@link Player#usingPlugin}.
+   *
+   * @method hasPlugin
+   * @param  {string}  name
+   *         The name of a plugin.
+   *
+   * @return {boolean}
+   *         Whether or not this player has the requested plugin available.
+   */
+
+  /**
+   * Reports whether or not a player is using a plugin by name.
+   *
+   * For basic plugins, this only reports whether the plugin has _ever_ been
+   * initialized on this player.
+   *
+   * @method Player#usingPlugin
+   * @param  {string} name
+   *         The name of a plugin.
+   *
+   * @return {boolean}
+   *         Whether or not this player is using the requested plugin.
+   */
 }
 
 /**
@@ -25002,8 +26928,13 @@ Player.prototype.options_ = {
   responsive: false,
   audioOnlyMode: false,
   audioPosterMode: false,
+  spatialNavigation: {
+    enabled: false,
+    horizontalSeek: false
+  },
   // Default smooth seeking to false
-  enableSmoothSeeking: false
+  enableSmoothSeeking: false,
+  disableSeekWhileScrubbingOnMobile: false
 };
 TECH_EVENTS_RETRIGGER.forEach(function (event) {
   Player.prototype[`handleTech${toTitleCase$1(event)}_`] = function () {
@@ -25039,34 +26970,6 @@ TECH_EVENTS_RETRIGGER.forEach(function (event) {
  *
  * @event Player#volumechange
  * @type {Event}
- */
-
-/**
- * Reports whether or not a player has a plugin available.
- *
- * This does not report whether or not the plugin has ever been initialized
- * on this player. For that, [usingPlugin]{@link Player#usingPlugin}.
- *
- * @method Player#hasPlugin
- * @param  {string}  name
- *         The name of a plugin.
- *
- * @return {boolean}
- *         Whether or not this player has the requested plugin available.
- */
-
-/**
- * Reports whether or not a player is using a plugin by name.
- *
- * For basic plugins, this only reports whether the plugin has _ever_ been
- * initialized on this player.
- *
- * @method Player#usingPlugin
- * @param  {string} name
- *         The name of a plugin.
- *
- * @return {boolean}
- *         Whether or not this player is using the requested plugin.
  */
 
 Component$1.registerComponent('Player', Player);
@@ -25342,7 +27245,8 @@ class Plugin {
    *           An object describing changes that occurred with the "statechanged"
    *           event.
    */
-  handleStateChanged(e) {}
+  handleStateChanged(e) {
+  }
 
   /**
    * Disposes a plugin.
@@ -25623,10 +27527,29 @@ function deprecateForMajor(major, oldName, newName, fn) {
   return deprecate(`${oldName} is deprecated and will be removed in ${major}.0; please use ${newName} instead.`, fn);
 }
 
+var VjsErrors = {
+  NetworkBadStatus: 'networkbadstatus',
+  NetworkRequestFailed: 'networkrequestfailed',
+  NetworkRequestAborted: 'networkrequestaborted',
+  NetworkRequestTimeout: 'networkrequesttimeout',
+  NetworkBodyParserFailed: 'networkbodyparserfailed',
+  StreamingHlsPlaylistParserError: 'streaminghlsplaylistparsererror',
+  StreamingDashManifestParserError: 'streamingdashmanifestparsererror',
+  StreamingContentSteeringParserError: 'streamingcontentsteeringparsererror',
+  StreamingVttParserError: 'streamingvttparsererror',
+  StreamingFailedToSelectNextSegment: 'streamingfailedtoselectnextsegment',
+  StreamingFailedToDecryptSegment: 'streamingfailedtodecryptsegment',
+  StreamingFailedToTransmuxSegment: 'streamingfailedtotransmuxsegment',
+  StreamingFailedToAppendSegment: 'streamingfailedtoappendsegment',
+  StreamingCodecsChangeError: 'streamingcodecschangeerror'
+};
+
 /**
  * @file video.js
  * @module videojs
  */
+
+/** @import { PlayerReadyCallback } from './player' */
 
 /**
  * Normalize an `id` value by trimming off a leading `#`
@@ -25639,13 +27562,6 @@ function deprecateForMajor(major, oldName, newName, fn) {
  *          The string, without any leading `#`.
  */
 const normalizeId = id => id.indexOf('#') === 0 ? id.slice(1) : id;
-
-/**
- * A callback that is called when a component is ready. Does not have any
- * parameters and any callback value will be ignored. See: {@link Component~ReadyCallback}
- *
- * @callback ReadyCallback
- */
 
 /**
  * The `videojs()` function doubles as the main function for users to create a
@@ -25708,7 +27624,7 @@ const normalizeId = id => id.indexOf('#') === 0 ? id.slice(1) : id;
  *         Options object for providing settings.
  *         See: [Options Guide](https://docs.videojs.com/tutorial-options.html).
  *
- * @param  {ReadyCallback} [ready]
+ * @param  {PlayerReadyCallback} [ready]
  *         A function to be called when the {@link Player} and {@link Tech} are
  *         ready.
  *
@@ -25749,7 +27665,7 @@ function videojs(id, options, ready) {
   // Store a copy of the el before modification, if it is to be restored in destroy()
   // If div ingest, store the parent div
   if (options.restoreEl === true) {
-    options.restoreEl = (el.parentNode && el.parentNode.hasAttribute('data-vjs-player') ? el.parentNode : el).cloneNode(true);
+    options.restoreEl = (el.parentNode && el.parentNode.hasAttribute && el.parentNode.hasAttribute('data-vjs-player') ? el.parentNode : el).cloneNode(true);
   }
   hooks('beforesetup').forEach(hookFunction => {
     const opts = hookFunction(el, merge$1(options));
@@ -25767,6 +27683,7 @@ function videojs(id, options, ready) {
   hooks('setup').forEach(hookFunction => hookFunction(player));
   return player;
 }
+
 videojs.hooks_ = hooks_;
 videojs.hooks = hooks;
 videojs.hook = hook;
@@ -25876,7 +27793,7 @@ videojs.getPlayer = id => {
 videojs.getAllPlayers = () =>
 // Disposed players leave a key with a `null` value, so we need to make sure
 // we filter those out.
-Object.keys(Player.players).map(k => Player.players[k]).filter(Boolean);
+  Object.keys(Player.players).map(k => Player.players[k]).filter(Boolean);
 videojs.players = Player.players;
 videojs.getComponent = Component$1.getComponent;
 
@@ -25977,7 +27894,7 @@ videojs.deregisterPlugin = Plugin.deregisterPlugin;
  *
  * @param {string} name
  *        The plugin name
-*
+ *
  * @param {typeof Plugin|Function} plugin
  *         The plugin sub-class or function
  *
@@ -26162,7 +28079,10 @@ videojs.str = Str;
  */
 videojs.url = Url;
 
-/*! @name videojs-contrib-quality-levels @version 4.0.0 @license Apache-2.0 */
+// The list of possible error types to occur in video.js
+videojs.Error = VjsErrors;
+
+/*! @name videojs-contrib-quality-levels @version 4.1.0 @license Apache-2.0 */
 
 /**
  * A single QualityLevel.
@@ -26242,7 +28162,6 @@ class QualityLevel {
  * @extends videojs.EventTarget
  * @class QualityLevelList
  */
-
 class QualityLevelList extends videojs.EventTarget {
   /**
    * Creates a QualityLevelList.
@@ -26253,25 +28172,25 @@ class QualityLevelList extends videojs.EventTarget {
 
     list.levels_ = [];
     list.selectedIndex_ = -1;
+
     /**
      * Get the index of the currently selected QualityLevel.
      *
      * @returns {number} The index of the selected QualityLevel. -1 if none selected.
      * @readonly
      */
-
     Object.defineProperty(list, 'selectedIndex', {
       get() {
         return list.selectedIndex_;
       }
     });
+
     /**
      * Get the length of the list of QualityLevels.
      *
      * @returns {number} The length of the list.
      * @readonly
      */
-
     Object.defineProperty(list, 'length', {
       get() {
         return list.levels_.length;
@@ -26280,6 +28199,7 @@ class QualityLevelList extends videojs.EventTarget {
     list[Symbol.iterator] = () => list.levels_.values();
     return list;
   }
+
   /**
    * Adds a quality level to the list.
    *
@@ -26293,10 +28213,10 @@ class QualityLevelList extends videojs.EventTarget {
    * @return {QualityLevel} the QualityLevel added to the list
    * @method addQualityLevel
    */
-
   addQualityLevel(representation) {
-    let qualityLevel = this.getQualityLevelById(representation.id); // Do not add duplicate quality levels
+    let qualityLevel = this.getQualityLevelById(representation.id);
 
+    // Do not add duplicate quality levels
     if (qualityLevel) {
       return qualityLevel;
     }
@@ -26316,6 +28236,7 @@ class QualityLevelList extends videojs.EventTarget {
     });
     return qualityLevel;
   }
+
   /**
    * Removes a quality level from the list.
    *
@@ -26323,7 +28244,6 @@ class QualityLevelList extends videojs.EventTarget {
    * @return {QualityLevel|null} the QualityLevel removed or null if nothing removed
    * @method removeQualityLevel
    */
-
   removeQualityLevel(qualityLevel) {
     let removed = null;
     for (let i = 0, l = this.length; i < l; i++) {
@@ -26345,6 +28265,7 @@ class QualityLevelList extends videojs.EventTarget {
     }
     return removed;
   }
+
   /**
    * Searches for a QualityLevel with the given id.
    *
@@ -26352,7 +28273,6 @@ class QualityLevelList extends videojs.EventTarget {
    * @return {QualityLevel|null} The QualityLevel with id, or null if not found.
    * @method getQualityLevelById
    */
-
   getQualityLevelById(id) {
     for (let i = 0, l = this.length; i < l; i++) {
       const level = this[i];
@@ -26362,33 +28282,34 @@ class QualityLevelList extends videojs.EventTarget {
     }
     return null;
   }
+
   /**
    * Resets the list of QualityLevels to empty
    *
    * @method dispose
    */
-
   dispose() {
     this.selectedIndex_ = -1;
     this.levels_.length = 0;
   }
 }
+
 /**
  * change - The selected QualityLevel has changed.
  * addqualitylevel - A QualityLevel has been added to the QualityLevelList.
  * removequalitylevel - A QualityLevel has been removed from the QualityLevelList.
  */
-
 QualityLevelList.prototype.allowedEvents_ = {
   change: 'change',
   addqualitylevel: 'addqualitylevel',
   removequalitylevel: 'removequalitylevel'
-}; // emulate attribute EventHandler support to allow for feature detection
+};
 
+// emulate attribute EventHandler support to allow for feature detection
 for (const event in QualityLevelList.prototype.allowedEvents_) {
   QualityLevelList.prototype['on' + event] = null;
 }
-var version$5 = "4.0.0";
+var version$5 = "4.1.0";
 
 /**
  * Initialization function for the qualityLevels plugin. Sets up the QualityLevelList and
@@ -26398,7 +28319,6 @@ var version$5 = "4.0.0";
  * @param {Object} options Plugin options object.
  * @return {QualityLevelList} a list of QualityLevels
  */
-
 const initPlugin$1 = function (player, options) {
   const originalPluginFn = player.qualityLevels;
   const qualityLevelList = new QualityLevelList();
@@ -26412,6 +28332,7 @@ const initPlugin$1 = function (player, options) {
   player.qualityLevels.VERSION = version$5;
   return qualityLevelList;
 };
+
 /**
  * A video.js plugin.
  *
@@ -26423,16 +28344,17 @@ const initPlugin$1 = function (player, options) {
  * @param {Object} options Plugin options object
  * @return {QualityLevelList} a list of QualityLevels
  */
-
 const qualityLevels = function (options) {
   return initPlugin$1(this, videojs.obj.merge({}, options));
-}; // Register the plugin with video.js.
+};
 
-videojs.registerPlugin('qualityLevels', qualityLevels); // Include the version number.
+// Register the plugin with video.js.
+videojs.registerPlugin('qualityLevels', qualityLevels);
 
+// Include the version number.
 qualityLevels.VERSION = version$5;
 
-/*! @name @videojs/http-streaming @version 3.10.0 @license Apache-2.0 */
+/*! @name @videojs/http-streaming @version 3.17.0 @license Apache-2.0 */
 
 /**
  * @file resolve-url.js - Handling how URLs are resolved and manipulated
@@ -26463,7 +28385,8 @@ const logger = source => {
   if (videojs.log.debug) {
     return videojs.log.debug.bind(videojs, 'VHS:', `${source} >`);
   }
-  return function () {};
+  return function () {
+  };
 };
 
 /**
@@ -26479,6 +28402,7 @@ function merge(...args) {
   const fn = context.merge || context.mergeOptions;
   return fn.apply(context, args);
 }
+
 /**
  * Delegates to videojs.time.createTimeRanges (Video.js 8) or
  * videojs.createTimeRanges (Video.js 7).
@@ -26488,6 +28412,27 @@ function createTimeRanges(...args) {
   const context = videojs.time || videojs;
   const fn = context.createTimeRanges || context.createTimeRanges;
   return fn.apply(context, args);
+}
+
+/**
+ * Converts provided buffered ranges to a descriptive string
+ *
+ * @param {TimeRanges} buffered - received buffered time ranges
+ *
+ * @return {string} - descriptive string
+ */
+
+function bufferedRangesToString(buffered) {
+  if (buffered.length === 0) {
+    return 'Buffered Ranges are empty';
+  }
+  let bufferedRangesStr = 'Buffered Ranges: \n';
+  for (let i = 0; i < buffered.length; i++) {
+    const start = buffered.start(i);
+    const end = buffered.end(i);
+    bufferedRangesStr += `${start} --> ${end}. Duration (${end - start})\n`;
+  }
+  return bufferedRangesStr;
 }
 
 /**
@@ -26844,8 +28789,8 @@ const getLastParts = media => {
   return lastSegment && lastSegment.parts || [];
 };
 const getKnownPartCount = ({
-  preloadSegment
-}) => {
+                             preloadSegment
+                           }) => {
   if (!preloadSegment) {
     return;
   }
@@ -26975,18 +28920,18 @@ const forwardDuration = function (playlist, endSequence) {
   };
 };
 /**
-  * Calculate the media duration from the segments associated with a
-  * playlist. The duration of a subinterval of the available segments
-  * may be calculated by specifying an end index.
-  *
-  * @param {Object} playlist a media playlist object
-  * @param {number=} endSequence an exclusive upper boundary
-  * for the playlist.  Defaults to playlist length.
-  * @param {number} expired the amount of time that has dropped
-  * off the front of the playlist in a live scenario
-  * @return {number} the duration between the first available segment
-  * and end index.
-  */
+ * Calculate the media duration from the segments associated with a
+ * playlist. The duration of a subinterval of the available segments
+ * may be calculated by specifying an end index.
+ *
+ * @param {Object} playlist a media playlist object
+ * @param {number=} endSequence an exclusive upper boundary
+ * for the playlist.  Defaults to playlist length.
+ * @param {number} expired the amount of time that has dropped
+ * off the front of the playlist in a live scenario
+ * @return {number} the duration between the first available segment
+ * and end index.
+ */
 
 const intervalDuration = function (playlist, endSequence, expired) {
   if (typeof endSequence === 'undefined') {
@@ -27015,20 +28960,20 @@ const intervalDuration = function (playlist, endSequence, expired) {
   return backward.result + expired;
 };
 /**
-  * Calculates the duration of a playlist. If a start and end index
-  * are specified, the duration will be for the subset of the media
-  * timeline between those two indices. The total duration for live
-  * playlists is always Infinity.
-  *
-  * @param {Object} playlist a media playlist object
-  * @param {number=} endSequence an exclusive upper
-  * boundary for the playlist. Defaults to the playlist media
-  * sequence number plus its length.
-  * @param {number=} expired the amount of time that has
-  * dropped off the front of the playlist in a live scenario
-  * @return {number} the duration between the start index and end
-  * index.
-  */
+ * Calculates the duration of a playlist. If a start and end index
+ * are specified, the duration will be for the subset of the media
+ * timeline between those two indices. The total duration for live
+ * playlists is always Infinity.
+ *
+ * @param {Object} playlist a media playlist object
+ * @param {number=} endSequence an exclusive upper
+ * boundary for the playlist. Defaults to the playlist media
+ * sequence number plus its length.
+ * @param {number=} expired the amount of time that has
+ * dropped off the front of the playlist in a live scenario
+ * @return {number} the duration between the start index and end
+ * index.
+ */
 
 const duration = function (playlist, endSequence, expired) {
   if (!playlist) {
@@ -27053,24 +28998,24 @@ const duration = function (playlist, endSequence, expired) {
   return intervalDuration(playlist, endSequence, expired);
 };
 /**
-  * Calculate the time between two indexes in the current playlist
-  * neight the start- nor the end-index need to be within the current
-  * playlist in which case, the targetDuration of the playlist is used
-  * to approximate the durations of the segments
-  *
-  * @param {Array} options.durationList list to iterate over for durations.
-  * @param {number} options.defaultDuration duration to use for elements before or after the durationList
-  * @param {number} options.startIndex partsAndSegments index to start
-  * @param {number} options.endIndex partsAndSegments index to end.
-  * @return {number} the number of seconds between startIndex and endIndex
-  */
+ * Calculate the time between two indexes in the current playlist
+ * neight the start- nor the end-index need to be within the current
+ * playlist in which case, the targetDuration of the playlist is used
+ * to approximate the durations of the segments
+ *
+ * @param {Array} options.durationList list to iterate over for durations.
+ * @param {number} options.defaultDuration duration to use for elements before or after the durationList
+ * @param {number} options.startIndex partsAndSegments index to start
+ * @param {number} options.endIndex partsAndSegments index to end.
+ * @return {number} the number of seconds between startIndex and endIndex
+ */
 
 const sumDurations = function ({
-  defaultDuration,
-  durationList,
-  startIndex,
-  endIndex
-}) {
+                                 defaultDuration,
+                                 durationList,
+                                 startIndex,
+                                 endIndex
+                               }) {
   let durations = 0;
   if (startIndex > endIndex) {
     [startIndex, endIndex] = [endIndex, startIndex];
@@ -27126,22 +29071,22 @@ const playlistEnd = function (playlist, expired, useSafeLiveEnd, liveEdgePadding
   return Math.max(0, lastSegmentEndTime);
 };
 /**
-  * Calculates the interval of time that is currently seekable in a
-  * playlist. The returned time ranges are relative to the earliest
-  * moment in the specified playlist that is still available. A full
-  * seekable implementation for live streams would need to offset
-  * these values by the duration of content that has expired from the
-  * stream.
-  *
-  * @param {Object} playlist a media playlist object
-  * dropped off the front of the playlist in a live scenario
-  * @param {number=} expired the amount of time that has
-  * dropped off the front of the playlist in a live scenario
-  * @param {number} liveEdgePadding how far from the end of the playlist we should be in seconds.
-  *        Corresponds to suggestedPresentationDelay in DASH manifests.
-  * @return {TimeRanges} the periods of time that are valid targets
-  * for seeking
-  */
+ * Calculates the interval of time that is currently seekable in a
+ * playlist. The returned time ranges are relative to the earliest
+ * moment in the specified playlist that is still available. A full
+ * seekable implementation for live streams would need to offset
+ * these values by the duration of content that has expired from the
+ * stream.
+ *
+ * @param {Object} playlist a media playlist object
+ * dropped off the front of the playlist in a live scenario
+ * @param {number=} expired the amount of time that has
+ * dropped off the front of the playlist in a live scenario
+ * @param {number} liveEdgePadding how far from the end of the playlist we should be in seconds.
+ *        Corresponds to suggestedPresentationDelay in DASH manifests.
+ * @return {TimeRanges} the periods of time that are valid targets
+ * for seeking
+ */
 
 const seekable = function (playlist, expired, liveEdgePadding) {
   const useSafeLiveEnd = true;
@@ -27171,13 +29116,13 @@ const seekable = function (playlist, expired, liveEdgePadding) {
  */
 
 const getMediaInfoForTime = function ({
-  playlist,
-  currentTime,
-  startingSegmentIndex,
-  startingPartIndex,
-  startTime,
-  exactManifestTimings
-}) {
+                                        playlist,
+                                        currentTime,
+                                        startingSegmentIndex,
+                                        startingPartIndex,
+                                        startTime,
+                                        exactManifestTimings
+                                      }) {
   let time = currentTime - startTime;
   const partsAndSegments = getPartsAndSegments(playlist);
   let startIndex = 0;
@@ -27533,13 +29478,13 @@ const groupID = (type, group, label) => {
  */
 
 const parseManifest = ({
-  onwarn,
-  oninfo,
-  manifestString,
-  customTagParsers = [],
-  customTagMappers = [],
-  llhls
-}) => {
+                         onwarn,
+                         oninfo,
+                         manifestString,
+                         customTagParsers = [],
+                         customTagMappers = [],
+                         llhls
+                       }) => {
   const parser = new Parser();
   if (onwarn) {
     parser.on('warn', onwarn);
@@ -27637,10 +29582,10 @@ const forEachMediaGroup = (main, callback) => {
  */
 
 const setupMediaPlaylist = ({
-  playlist,
-  uri,
-  id
-}) => {
+                              playlist,
+                              uri,
+                              id
+                            }) => {
   playlist.id = id;
   playlist.playlistErrors_ = 0;
   if (uri) {
@@ -27807,12 +29752,14 @@ const addPropertiesToMain = (main, uri, createGroupID = groupID) => {
   setupMediaPlaylists(main);
   resolveMediaGroupUris(main);
 };
+
 class DateRangesStorage {
   constructor() {
     this.offset_ = null;
     this.pendingDateRanges_ = new Map();
     this.processedDateRanges_ = new Map();
   }
+
   setOffset(segments = []) {
     // already set
     if (this.offset_ !== null) {
@@ -27830,6 +29777,7 @@ class DateRangesStorage {
 
     this.offset_ = firstSegment.programDateTime / 1000;
   }
+
   setPendingDateRanges(dateRanges = []) {
     if (!dateRanges.length) {
       return;
@@ -27842,10 +29790,12 @@ class DateRangesStorage {
       return map;
     }, new Map());
   }
+
   processDateRange(dateRange) {
     this.pendingDateRanges_.delete(dateRange.id);
     this.processedDateRanges_.set(dateRange.id, dateRange);
   }
+
   getDateRangesToProcess() {
     if (this.offset_ === null) {
       return [];
@@ -27886,6 +29836,7 @@ class DateRangesStorage {
     }
     return dateRangesToProcess;
   }
+
   trimProcessedDateRanges_(startTime) {
     const copy = new Map(this.processedDateRanges_);
     copy.forEach((dateRange, id) => {
@@ -27895,6 +29846,141 @@ class DateRangesStorage {
     });
   }
 }
+
+const QUOTA_EXCEEDED_ERR = 22;
+const getStreamingNetworkErrorMetadata = ({
+                                            requestType,
+                                            request,
+                                            error,
+                                            parseFailure
+                                          }) => {
+  const isBadStatus = request.status < 200 || request.status > 299;
+  const isFailure = request.status >= 400 && request.status <= 499;
+  const errorMetadata = {
+    uri: request.uri,
+    requestType
+  };
+  const isBadStatusOrParseFailure = isBadStatus && !isFailure || parseFailure;
+  if (error && isFailure) {
+    // copy original error and add to the metadata.
+    errorMetadata.error = _extends({}, error);
+    errorMetadata.errorType = videojs.Error.NetworkRequestFailed;
+  } else if (request.aborted) {
+    errorMetadata.errorType = videojs.Error.NetworkRequestAborted;
+  } else if (request.timedout) {
+    errorMetadata.erroType = videojs.Error.NetworkRequestTimeout;
+  } else if (isBadStatusOrParseFailure) {
+    const errorType = parseFailure ? videojs.Error.NetworkBodyParserFailed : videojs.Error.NetworkBadStatus;
+    errorMetadata.errorType = errorType;
+    errorMetadata.status = request.status;
+    errorMetadata.headers = request.headers;
+  }
+  return errorMetadata;
+};
+
+/**
+ * @file - codecs.js - Handles tasks regarding codec strings such as translating them to
+ * codec strings, or translating codec strings into objects that can be examined.
+ */
+const logFn$1 = logger('CodecUtils');
+/**
+ * Returns a set of codec strings parsed from the playlist or the default
+ * codec strings if no codecs were specified in the playlist
+ *
+ * @param {Playlist} media the current media playlist
+ * @return {Object} an object with the video and audio codecs
+ */
+
+const getCodecs = function (media) {
+  // if the codecs were explicitly specified, use them instead of the
+  // defaults
+  const mediaAttributes = media.attributes || {};
+  if (mediaAttributes.CODECS) {
+    return parseCodecs(mediaAttributes.CODECS);
+  }
+};
+const isMaat = (main, media) => {
+  const mediaAttributes = media.attributes || {};
+  return main && main.mediaGroups && main.mediaGroups.AUDIO && mediaAttributes.AUDIO && main.mediaGroups.AUDIO[mediaAttributes.AUDIO];
+};
+const isMuxed = (main, media) => {
+  if (!isMaat(main, media)) {
+    return true;
+  }
+  const mediaAttributes = media.attributes || {};
+  const audioGroup = main.mediaGroups.AUDIO[mediaAttributes.AUDIO];
+  for (const groupId in audioGroup) {
+    // If an audio group has a URI (the case for HLS, as HLS will use external playlists),
+    // or there are listed playlists (the case for DASH, as the manifest will have already
+    // provided all of the details necessary to generate the audio playlist, as opposed to
+    // HLS' externally requested playlists), then the content is demuxed.
+    if (!audioGroup[groupId].uri && !audioGroup[groupId].playlists) {
+      return true;
+    }
+  }
+  return false;
+};
+const unwrapCodecList = function (codecList) {
+  const codecs = {};
+  codecList.forEach(({
+                       mediaType,
+                       type,
+                       details
+                     }) => {
+    codecs[mediaType] = codecs[mediaType] || [];
+    codecs[mediaType].push(translateLegacyCodec(`${type}${details}`));
+  });
+  Object.keys(codecs).forEach(function (mediaType) {
+    if (codecs[mediaType].length > 1) {
+      logFn$1(`multiple ${mediaType} codecs found as attributes: ${codecs[mediaType].join(', ')}. Setting playlist codecs to null so that we wait for mux.js to probe segments for real codecs.`);
+      codecs[mediaType] = null;
+      return;
+    }
+    codecs[mediaType] = codecs[mediaType][0];
+  });
+  return codecs;
+};
+const codecCount = function (codecObj) {
+  let count = 0;
+  if (codecObj.audio) {
+    count++;
+  }
+  if (codecObj.video) {
+    count++;
+  }
+  return count;
+};
+/**
+ * Calculates the codec strings for a working configuration of
+ * SourceBuffers to play variant streams in a main playlist. If
+ * there is no possible working configuration, an empty object will be
+ * returned.
+ *
+ * @param main {Object} the m3u8 object for the main playlist
+ * @param media {Object} the m3u8 object for the variant playlist
+ * @return {Object} the codec strings.
+ *
+ * @private
+ */
+
+const codecsForPlaylist = function (main, media) {
+  const mediaAttributes = media.attributes || {};
+  const codecInfo = unwrapCodecList(getCodecs(media) || []); // HLS with multiple-audio tracks must always get an audio codec.
+  // Put another way, there is no way to have a video-only multiple-audio HLS!
+
+  if (isMaat(main, media) && !codecInfo.audio) {
+    if (!isMuxed(main, media)) {
+      // It is possible for codecs to be specified on the audio media group playlist but
+      // not on the rendition playlist. This is mostly the case for DASH, where audio and
+      // video are always separate (and separately specified).
+      const defaultCodecs = unwrapCodecList(codecsFromDefault(main, mediaAttributes.AUDIO) || []);
+      if (defaultCodecs.audio) {
+        codecInfo.audio = defaultCodecs.audio;
+      }
+    }
+  }
+  return codecInfo;
+};
 const {
   EventTarget: EventTarget$1
 } = videojs;
@@ -28102,17 +30188,17 @@ const getAllSegments = function (media) {
 
 const isPlaylistUnchanged = (a, b) => a === b || a.segments && b.segments && a.segments.length === b.segments.length && a.endList === b.endList && a.mediaSequence === b.mediaSequence && a.preloadSegment === b.preloadSegment;
 /**
-  * Returns a new main playlist that is the result of merging an
-  * updated media playlist into the original version. If the
-  * updated media playlist does not match any of the playlist
-  * entries in the original main playlist, null is returned.
-  *
-  * @param {Object} main a parsed main M3U8 object
-  * @param {Object} media a parsed media M3U8 object
-  * @return {Object} a new object that represents the original
-  * main playlist with the updated media playlist merged in, or
-  * null if the merge produced no change.
-  */
+ * Returns a new main playlist that is the result of merging an
+ * updated media playlist into the original version. If the
+ * updated media playlist does not match any of the playlist
+ * entries in the original main playlist, null is returned.
+ *
+ * @param {Object} main a parsed main M3U8 object
+ * @param {Object} media a parsed media M3U8 object
+ * @return {Object} a new object that represents the original
+ * main playlist with the updated media playlist merged in, or
+ * null if the merge produced no change.
+ */
 
 const updateMain$1 = (main, newMedia, unchangedCheck = isPlaylistUnchanged) => {
   const result = merge(main, {});
@@ -28194,6 +30280,35 @@ const refreshDelay = (media, update) => {
 
   return (media.partTargetDuration || media.targetDuration || 10) * 500;
 };
+const playlistMetadataPayload = (playlists, type, isLive) => {
+  if (!playlists) {
+    return;
+  }
+  const renditions = [];
+  playlists.forEach(playlist => {
+    // we need attributes to populate rendition data.
+    if (!playlist.attributes) {
+      return;
+    }
+    const {
+      BANDWIDTH,
+      RESOLUTION,
+      CODECS
+    } = playlist.attributes;
+    renditions.push({
+      id: playlist.id,
+      bandwidth: BANDWIDTH,
+      resolution: RESOLUTION,
+      codecs: CODECS
+    });
+  });
+  return {
+    type,
+    isLive,
+    renditions
+  };
+};
+
 /**
  * Load a playlist from a remote location
  *
@@ -28230,6 +30345,7 @@ class PlaylistLoader extends EventTarget$1 {
     this.on('mediaupdatetimeout', this.handleMediaupdatetimeout_);
     this.on('loadedplaylist', this.handleLoadedPlaylist_.bind(this));
   }
+
   handleLoadedPlaylist_() {
     const mediaPlaylist = this.media();
     if (!mediaPlaylist) {
@@ -28243,6 +30359,7 @@ class PlaylistLoader extends EventTarget$1 {
     }
     this.addDateRangesToTextTrack_(availableDateRanges);
   }
+
   handleMediaupdatetimeout_() {
     if (this.state !== 'HAVE_METADATA') {
       // only refresh the media playlist if no other activity is going on
@@ -28256,7 +30373,8 @@ class PlaylistLoader extends EventTarget$1 {
     this.state = 'HAVE_CURRENT_METADATA';
     this.request = this.vhs_.xhr({
       uri,
-      withCredentials: this.withCredentials
+      withCredentials: this.withCredentials,
+      requestType: 'hls-playlist'
     }, (error, req) => {
       // disposed
       if (!this.request) {
@@ -28272,6 +30390,7 @@ class PlaylistLoader extends EventTarget$1 {
       });
     });
   }
+
   playlistRequestError(xhr, playlist, startingState) {
     const {
       uri,
@@ -28287,27 +30406,78 @@ class PlaylistLoader extends EventTarget$1 {
       status: xhr.status,
       message: `HLS playlist request error at URL: ${uri}.`,
       responseText: xhr.responseText,
-      code: xhr.status >= 500 ? 4 : 2
+      code: xhr.status >= 500 ? 4 : 2,
+      metadata: getStreamingNetworkErrorMetadata({
+        requestType: xhr.requestType,
+        request: xhr,
+        error: xhr.error
+      })
     };
     this.trigger('error');
   }
+
   parseManifest_({
-    url,
-    manifestString
-  }) {
-    return parseManifest({
-      onwarn: ({
-        message
-      }) => this.logger_(`m3u8-parser warn for ${url}: ${message}`),
-      oninfo: ({
-        message
-      }) => this.logger_(`m3u8-parser info for ${url}: ${message}`),
-      manifestString,
-      customTagParsers: this.customTagParsers,
-      customTagMappers: this.customTagMappers,
-      llhls: this.llhls
-    });
+                   url,
+                   manifestString
+                 }) {
+    try {
+      const parsed = parseManifest({
+        onwarn: ({
+                   message
+                 }) => this.logger_(`m3u8-parser warn for ${url}: ${message}`),
+        oninfo: ({
+                   message
+                 }) => this.logger_(`m3u8-parser info for ${url}: ${message}`),
+        manifestString,
+        customTagParsers: this.customTagParsers,
+        customTagMappers: this.customTagMappers,
+        llhls: this.llhls
+      });
+      /**
+       * VHS does not support switching between variants with and without audio and video
+       * so we want to filter out audio-only variants when variants with video and(or) audio are also detected.
+       */
+
+      if (!parsed.playlists || !parsed.playlists.length) {
+        return parsed;
+      }
+      this.excludeAudioOnlyVariants(parsed.playlists);
+      return parsed;
+    } catch (error) {
+      this.error = error;
+      this.error.metadata = {
+        errorType: videojs.Error.StreamingHlsPlaylistParserError,
+        error
+      };
+    }
   }
+
+  excludeAudioOnlyVariants(playlists) {
+    // helper function
+    const hasVideo = playlist => {
+      const attributes = playlist.attributes || {};
+      const {
+        width,
+        height
+      } = attributes.RESOLUTION || {};
+      if (width && height) {
+        return true;
+      } // parse codecs string from playlist attributes
+
+      const codecsList = getCodecs(playlist) || []; // unwrap list
+
+      const codecsInfo = unwrapCodecList(codecsList);
+      return Boolean(codecsInfo.video);
+    };
+    if (playlists.some(hasVideo)) {
+      playlists.forEach(playlist => {
+        if (!hasVideo(playlist)) {
+          playlist.excludeUntil = Infinity;
+        }
+      });
+    }
+  }
+
   /**
    * Update the playlist loader's state in response to a new or updated playlist.
    *
@@ -28322,14 +30492,24 @@ class PlaylistLoader extends EventTarget$1 {
    */
 
   haveMetadata({
-    playlistString,
-    playlistObject,
-    url,
-    id
-  }) {
+                 playlistString,
+                 playlistObject,
+                 url,
+                 id
+               }) {
     // any in-flight request is now finished
     this.request = null;
     this.state = 'HAVE_METADATA';
+    const metadata = {
+      playlistInfo: {
+        type: 'media',
+        uri: url
+      }
+    };
+    this.trigger({
+      type: 'playlistparsestart',
+      metadata
+    });
     const playlist = playlistObject || this.parseManifest_({
       url,
       manifestString: playlistString
@@ -28351,11 +30531,17 @@ class PlaylistLoader extends EventTarget$1 {
       this.trigger('playlistunchanged');
     }
     this.updateMediaUpdateTimeout_(refreshDelay(this.media(), !!update));
+    metadata.parsedPlaylist = playlistMetadataPayload(this.main.playlists, metadata.playlistInfo.type, !this.media_.endList);
+    this.trigger({
+      type: 'playlistparsecomplete',
+      metadata
+    });
     this.trigger('loadedplaylist');
   }
+
   /**
-    * Abort any outstanding work and clean up.
-    */
+   * Abort any outstanding work and clean up.
+   */
 
   dispose() {
     this.trigger('dispose');
@@ -28365,6 +30551,7 @@ class PlaylistLoader extends EventTarget$1 {
     this.dateRangesStorage_ = new DateRangesStorage();
     this.off();
   }
+
   stopRequest() {
     if (this.request) {
       const oldRequest = this.request;
@@ -28373,20 +30560,21 @@ class PlaylistLoader extends EventTarget$1 {
       oldRequest.abort();
     }
   }
+
   /**
-    * When called without any arguments, returns the currently
-    * active media playlist. When called with a single argument,
-    * triggers the playlist loader to asynchronously switch to the
-    * specified media playlist. Calling this method while the
-    * loader is in the HAVE_NOTHING causes an error to be emitted
-    * but otherwise has no effect.
-    *
-    * @param {Object=} playlist the parsed media playlist
-    * object to switch to
-    * @param {boolean=} shouldDelay whether we should delay the request by half target duration
-    *
-    * @return {Playlist} the current loaded media
-    */
+   * When called without any arguments, returns the currently
+   * active media playlist. When called with a single argument,
+   * triggers the playlist loader to asynchronously switch to the
+   * specified media playlist. Calling this method while the
+   * loader is in the HAVE_NOTHING causes an error to be emitted
+   * but otherwise has no effect.
+   *
+   * @param {Object=} playlist the parsed media playlist
+   * object to switch to
+   * @param {boolean=} shouldDelay whether we should delay the request by half target duration
+   *
+   * @return {Playlist} the current loaded media
+   */
 
   media(playlist, shouldDelay) {
     // getter
@@ -28416,9 +30604,9 @@ class PlaylistLoader extends EventTarget$1 {
     const mainPlaylistRef = this.main.playlists[playlist.id]; // switch to fully loaded playlists immediately
 
     if (mainPlaylistRef && mainPlaylistRef.endList ||
-    // handle the case of a playlist object (e.g., if using vhs-json with a resolved
-    // media playlist or, for the case of demuxed audio, a resolved audio media group)
-    playlist.endList && playlist.segments.length) {
+      // handle the case of a playlist object (e.g., if using vhs-json with a resolved
+      // media playlist or, for the case of demuxed audio, a resolved audio media group)
+      playlist.endList && playlist.segments.length) {
       // abort outstanding playlist requests
       if (this.request) {
         this.request.onreadystatechange = null;
@@ -28470,9 +30658,20 @@ class PlaylistLoader extends EventTarget$1 {
       this.trigger('mediachanging');
     }
     this.pendingMedia_ = playlist;
+    const metadata = {
+      playlistInfo: {
+        type: 'media',
+        uri: playlist.uri
+      }
+    };
+    this.trigger({
+      type: 'playlistrequeststart',
+      metadata
+    });
     this.request = this.vhs_.xhr({
       uri: playlist.resolvedUri,
-      withCredentials: this.withCredentials
+      withCredentials: this.withCredentials,
+      requestType: 'hls-playlist'
     }, (error, req) => {
       // disposed
       if (!this.request) {
@@ -28483,6 +30682,10 @@ class PlaylistLoader extends EventTarget$1 {
       if (error) {
         return this.playlistRequestError(this.request, playlist, startingState);
       }
+      this.trigger({
+        type: 'playlistrequestcomplete',
+        metadata
+      });
       this.haveMetadata({
         playlistString: req.responseText,
         url: playlist.uri,
@@ -28496,6 +30699,7 @@ class PlaylistLoader extends EventTarget$1 {
       }
     });
   }
+
   /**
    * pause loading of the playlist
    */
@@ -28525,6 +30729,7 @@ class PlaylistLoader extends EventTarget$1 {
       this.state = 'HAVE_METADATA';
     }
   }
+
   /**
    * start loading of the playlist
    */
@@ -28553,6 +30758,7 @@ class PlaylistLoader extends EventTarget$1 {
       this.trigger('loadedplaylist');
     }
   }
+
   updateMediaUpdateTimeout_(delay) {
     if (this.mediaUpdateTimeout) {
       window$1.clearTimeout(this.mediaUpdateTimeout);
@@ -28568,6 +30774,7 @@ class PlaylistLoader extends EventTarget$1 {
       this.updateMediaUpdateTimeout_(delay);
     }, delay);
   }
+
   /**
    * start loading of the playlist
    */
@@ -28596,11 +30803,22 @@ class PlaylistLoader extends EventTarget$1 {
         this.setupInitialPlaylist(this.src);
       }, 0);
       return;
-    } // request the specified URL
+    }
+    const metadata = {
+      playlistInfo: {
+        type: 'multivariant',
+        uri: this.src
+      }
+    };
+    this.trigger({
+      type: 'playlistrequeststart',
+      metadata
+    }); // request the specified URL
 
     this.request = this.vhs_.xhr({
       uri: this.src,
-      withCredentials: this.withCredentials
+      withCredentials: this.withCredentials,
+      requestType: 'hls-playlist'
     }, (error, req) => {
       // disposed
       if (!this.request) {
@@ -28614,24 +30832,45 @@ class PlaylistLoader extends EventTarget$1 {
           message: `HLS playlist request error at URL: ${this.src}.`,
           responseText: req.responseText,
           // MEDIA_ERR_NETWORK
-          code: 2
+          code: 2,
+          metadata: getStreamingNetworkErrorMetadata({
+            requestType: req.requestType,
+            request: req,
+            error
+          })
         };
         if (this.state === 'HAVE_NOTHING') {
           this.started = false;
         }
         return this.trigger('error');
       }
+      this.trigger({
+        type: 'playlistrequestcomplete',
+        metadata
+      });
       this.src = resolveManifestRedirect(this.src, req);
+      this.trigger({
+        type: 'playlistparsestart',
+        metadata
+      });
       const manifest = this.parseManifest_({
         manifestString: req.responseText,
         url: this.src
+      }); // we haven't loaded any variant playlists here so we default to false for isLive.
+
+      metadata.parsedPlaylist = playlistMetadataPayload(manifest.playlists, metadata.playlistInfo.type, false);
+      this.trigger({
+        type: 'playlistparsecomplete',
+        metadata
       });
       this.setupInitialPlaylist(manifest);
     });
   }
+
   srcUri() {
     return typeof this.src === 'string' ? this.src : this.src.uri;
   }
+
   /**
    * Given a manifest object that's either a main or media playlist, trigger the proper
    * events and set the state of the playlist loader.
@@ -28685,6 +30924,7 @@ class PlaylistLoader extends EventTarget$1 {
     });
     this.trigger('loadedmetadata');
   }
+
   /**
    * Updates or deletes a preexisting pathway clone.
    * Ensures that all playlists related to the old pathway clone are
@@ -28726,6 +30966,7 @@ class PlaylistLoader extends EventTarget$1 {
     }
     this.updateOrDeleteCloneMedia(clone, isUpdate);
   }
+
   /**
    * Updates or deletes media data based on the pathway clone object.
    * Due to the complexity of the media groups and playlists, in all cases
@@ -28768,6 +31009,7 @@ class PlaylistLoader extends EventTarget$1 {
       this.createClonedMediaGroups_(clone);
     }
   }
+
   /**
    * Given a pathway clone object, clones all necessary playlists.
    *
@@ -28788,6 +31030,7 @@ class PlaylistLoader extends EventTarget$1 {
     main.playlists[uri] = playlist;
     this.createClonedMediaGroups_(clone);
   }
+
   /**
    * Given a pathway clone object we create clones of all media.
    * In this function, all necessary information and updated playlists
@@ -28844,6 +31087,7 @@ class PlaylistLoader extends EventTarget$1 {
       }
     });
   }
+
   /**
    * Using the original playlist to be cloned, and the pathway clone object
    * information, we create a new playlist.
@@ -28872,6 +31116,7 @@ class PlaylistLoader extends EventTarget$1 {
     }
     return merge(basePlaylist, newProps);
   }
+
   /**
    * Generates an updated URI for a cloned pathway based on the original
    * pathway's URI and the paramaters from the pathway clone object in the
@@ -28893,6 +31138,7 @@ class PlaylistLoader extends EventTarget$1 {
     }
     return uri.href;
   }
+
   /**
    * Helper function to create the attributes needed for the new clone.
    * This mainly adds the necessary media attributes.
@@ -28913,6 +31159,7 @@ class PlaylistLoader extends EventTarget$1 {
     });
     return attributes;
   }
+
   /**
    * Returns the key ID set from a playlist
    *
@@ -28937,9 +31184,7 @@ class PlaylistLoader extends EventTarget$1 {
 /**
  * @file xhr.js
  */
-const {
-  xhr: videojsXHR
-} = videojs;
+
 const callbackWrapper = function (request, error, response, callback) {
   const reqResponse = request.responseType === 'arraybuffer' ? request.response : request.responseText;
   if (!error && reqResponse) {
@@ -29022,7 +31267,7 @@ const xhrFactory = function () {
     } // Use the standard videojs.xhr() method unless `videojs.Vhs.xhr` has been overriden
     // TODO: switch back to videojs.Vhs.xhr.name === 'XhrFunction' when we drop IE11
 
-    const xhrMethod = videojs.Vhs.xhr.original === true ? videojsXHR : videojs.Vhs.xhr; // call all registered onRequest hooks, assign new options.
+    const xhrMethod = videojs.Vhs.xhr.original === true ? videojs.xhr : videojs.Vhs.xhr; // call all registered onRequest hooks, assign new options.
 
     const beforeRequestOptions = callAllRequestHooks(_requestCallbackSet, options); // Remove the beforeRequest function from the hooks set so stale beforeRequest functions are not called.
 
@@ -29039,6 +31284,7 @@ const xhrFactory = function () {
       return originalAbort.apply(request, arguments);
     };
     request.uri = options.uri;
+    request.requestType = options.requestType;
     request.requestTime = Date.now();
     return request;
   };
@@ -29190,8 +31436,8 @@ const hexDump = data => {
   return result;
 };
 const tagDump = ({
-  bytes
-}) => hexDump(bytes);
+                   bytes
+                 }) => hexDump(bytes);
 const textRanges = ranges => {
   let result = '';
   let i;
@@ -29413,10 +31659,10 @@ const verifyProgramDateTimeTags = playlist => {
  */
 
 const getProgramTime = ({
-  playlist,
-  time = undefined,
-  callback
-}) => {
+                          playlist,
+                          time = undefined,
+                          callback
+                        }) => {
   if (!callback) {
     throw new Error('getProgramTime: callback must be provided');
   }
@@ -29462,14 +31708,14 @@ const getProgramTime = ({
  */
 
 const seekToProgramTime = ({
-  programTime,
-  playlist,
-  retryCount = 2,
-  seekTo,
-  pauseAfterSeek = true,
-  tech,
-  callback
-}) => {
+                             programTime,
+                             playlist,
+                             retryCount = 2,
+                             seekTo,
+                             pauseAfterSeek = true,
+                             tech,
+                             callback
+                           }) => {
   if (!callback) {
     throw new Error('seekToProgramTime: callback must be provided');
   }
@@ -29542,7 +31788,7 @@ const callbackOnCompleted = (request, cb) => {
   }
   return;
 };
-const containerRequest = (uri, xhr, cb) => {
+const containerRequest = (uri, xhr, cb, requestType) => {
   let bytes = [];
   let id3Offset;
   let finished = false;
@@ -29556,6 +31802,11 @@ const containerRequest = (uri, xhr, cb) => {
       return;
     }
     if (error) {
+      error.metadata = getStreamingNetworkErrorMetadata({
+        requestType,
+        request,
+        error
+      });
       return endRequestAndCallback(error, request, '', bytes);
     } // grap the new part of content that was just downloaded
 
@@ -29588,9 +31839,9 @@ const containerRequest = (uri, xhr, cb) => {
       // this forces the browser to pass the bytes to us unprocessed
       request.overrideMimeType('text/plain; charset=x-user-defined');
       request.addEventListener('progress', function ({
-        total,
-        loaded
-      }) {
+                                                       total,
+                                                       loaded
+                                                     }) {
         return callbackWrapper(request, null, {
           statusCode: request.status
         }, progressListener);
@@ -29685,12 +31936,12 @@ const dashGroupId = (type, group, label, playlist) => {
  */
 
 const parseMainXml = ({
-  mainXml,
-  srcUrl,
-  clientOffset,
-  sidxMapping,
-  previousManifest
-}) => {
+                        mainXml,
+                        srcUrl,
+                        clientOffset,
+                        sidxMapping,
+                        previousManifest
+                      }) => {
   const manifest = parse(mainXml, {
     manifestUri: srcUrl,
     clientOffset,
@@ -29711,7 +31962,7 @@ const parseMainXml = ({
 
 const removeOldMediaGroupLabels = (update, newMain) => {
   forEachMediaGroup(update, (properties, type, group, label) => {
-    if (!(label in newMain.mediaGroups[type][group])) {
+    if (!newMain.mediaGroups[type][group] || !(label in newMain.mediaGroups[type][group])) {
       delete update.mediaGroups[type][group][label];
     }
   });
@@ -29828,12 +32079,14 @@ const filterChangedSidxMappings = (main, oldSidxMapping) => {
   });
   return mediaGroupSidx;
 };
+
 class DashPlaylistLoader extends EventTarget {
   // DashPlaylistLoader must accept either a src url or a playlist because subsequent
   // playlist loader setups from media groups will expect to be able to pass a playlist
   // (since there aren't external URLs to media playlists with DASH)
   constructor(srcUrlOrPlaylist, vhs, options = {}, mainPlaylistLoader) {
     super();
+    this.isPaused_ = true;
     this.mainPlaylistLoader_ = mainPlaylistLoader || this;
     if (!mainPlaylistLoader) {
       this.isMain_ = true;
@@ -29869,6 +32122,11 @@ class DashPlaylistLoader extends EventTarget {
       this.childPlaylist_ = srcUrlOrPlaylist;
     }
   }
+
+  get isPaused() {
+    return this.isPaused_;
+  }
+
   requestErrored_(err, request, startingState) {
     // disposed
     if (!this.request) {
@@ -29884,7 +32142,8 @@ class DashPlaylistLoader extends EventTarget {
         message: 'DASH request error at URL: ' + request.uri,
         response: request.response,
         // MEDIA_ERR_NETWORK
-        code: 2
+        code: 2,
+        metadata: err.metadata
       };
       if (startingState) {
         this.state = startingState;
@@ -29893,6 +32152,7 @@ class DashPlaylistLoader extends EventTarget {
       return true;
     }
   }
+
   /**
    * Verify that the container of the sidx segment can be parsed
    * and if it can, get and parse that segment.
@@ -29903,6 +32163,7 @@ class DashPlaylistLoader extends EventTarget {
 
     if (!playlist.sidx || !sidxKey || this.mainPlaylistLoader_.sidxMapping_[sidxKey]) {
       // keep this function async
+      window$1.clearTimeout(this.mediaRequest_);
       this.mediaRequest_ = window$1.setTimeout(() => cb(false), 0);
       return;
     } // resolve the segment URL relative to the playlist
@@ -29913,11 +32174,19 @@ class DashPlaylistLoader extends EventTarget {
         return;
       }
       const sidxMapping = this.mainPlaylistLoader_.sidxMapping_;
+      const {
+        requestType
+      } = request;
       let sidx;
       try {
         sidx = parseSidx(toUint8(request.response).subarray(8));
       } catch (e) {
-        // sidx parsing failed.
+        e.metadata = getStreamingNetworkErrorMetadata({
+          requestType,
+          request,
+          parseFailure: true
+        }); // sidx parsing failed.
+
         this.requestErrored_(e, request, startingState);
         return;
       }
@@ -29928,14 +32197,16 @@ class DashPlaylistLoader extends EventTarget {
       addSidxSegmentsToPlaylist(playlist, sidx, playlist.sidx.resolvedUri);
       return cb(true);
     };
+    const REQUEST_TYPE = 'dash-sidx';
     this.request = containerRequest(uri, this.vhs_.xhr, (err, request, container, bytes) => {
       if (err) {
         return fin(err, request);
       }
       if (!container || container !== 'mp4') {
+        const sidxContainer = container || 'unknown';
         return fin({
           status: request.status,
-          message: `Unsupported ${container || 'unknown'} container type for sidx segment at URL: ${uri}`,
+          message: `Unsupported ${sidxContainer} container type for sidx segment at URL: ${uri}`,
           // response is just bytes in this case
           // but we really don't want to return that.
           response: '',
@@ -29962,13 +32233,16 @@ class DashPlaylistLoader extends EventTarget {
       this.request = this.vhs_.xhr({
         uri,
         responseType: 'arraybuffer',
+        requestType: 'dash-sidx',
         headers: segmentXhrHeaders({
           byterange: playlist.sidx.byterange
         })
       }, fin);
-    });
+    }, REQUEST_TYPE);
   }
+
   dispose() {
+    this.isPaused_ = true;
     this.trigger('dispose');
     this.stopRequest();
     this.loadedPlaylists_ = {};
@@ -29984,9 +32258,11 @@ class DashPlaylistLoader extends EventTarget {
     }
     this.off();
   }
+
   hasPendingRequest() {
     return this.request || this.mediaRequest_;
   }
+
   stopRequest() {
     if (this.request) {
       const oldRequest = this.request;
@@ -29995,6 +32271,7 @@ class DashPlaylistLoader extends EventTarget {
       oldRequest.abort();
     }
   }
+
   media(playlist) {
     // getter
     if (!playlist) {
@@ -30040,12 +32317,14 @@ class DashPlaylistLoader extends EventTarget {
       });
     });
   }
+
   haveMetadata({
-    startingState,
-    playlist
-  }) {
+                 startingState,
+                 playlist
+               }) {
     this.state = 'HAVE_METADATA';
     this.loadedPlaylists_[playlist.id] = playlist;
+    window$1.clearTimeout(this.mediaRequest_);
     this.mediaRequest_ = null; // This will trigger loadedplaylist
 
     this.refreshMedia_(playlist.id); // fire loadedmetadata the first time a media playlist is loaded
@@ -30058,7 +32337,9 @@ class DashPlaylistLoader extends EventTarget {
       this.trigger('mediachange');
     }
   }
+
   pause() {
+    this.isPaused_ = true;
     if (this.mainPlaylistLoader_.createMupOnMedia_) {
       this.off('loadedmetadata', this.mainPlaylistLoader_.createMupOnMedia_);
       this.mainPlaylistLoader_.createMupOnMedia_ = null;
@@ -30076,7 +32357,9 @@ class DashPlaylistLoader extends EventTarget {
       this.started = false;
     }
   }
+
   load(isFinalRendition) {
+    this.isPaused_ = false;
     window$1.clearTimeout(this.mediaUpdateTimeout);
     this.mediaUpdateTimeout = null;
     const media = this.media();
@@ -30106,11 +32389,13 @@ class DashPlaylistLoader extends EventTarget {
       this.trigger('loadedplaylist');
     }
   }
+
   start() {
     this.started = true; // We don't need to request the main manifest again
     // Call this asynchronously to match the xhr request behavior below
 
     if (!this.isMain_) {
+      window$1.clearTimeout(this.mediaRequest_);
       this.mediaRequest_ = window$1.setTimeout(() => this.haveMain_(), 0);
       return;
     }
@@ -30121,17 +32406,42 @@ class DashPlaylistLoader extends EventTarget {
       }
     });
   }
+
   requestMain_(cb) {
+    const metadata = {
+      manifestInfo: {
+        uri: this.mainPlaylistLoader_.srcUrl
+      }
+    };
+    this.trigger({
+      type: 'manifestrequeststart',
+      metadata
+    });
     this.request = this.vhs_.xhr({
       uri: this.mainPlaylistLoader_.srcUrl,
-      withCredentials: this.withCredentials
+      withCredentials: this.withCredentials,
+      requestType: 'dash-manifest'
     }, (error, req) => {
+      if (error) {
+        const {
+          requestType
+        } = req;
+        error.metadata = getStreamingNetworkErrorMetadata({
+          requestType,
+          request: req,
+          error
+        });
+      }
       if (this.requestErrored_(error, req)) {
         if (this.state === 'HAVE_NOTHING') {
           this.started = false;
         }
         return;
       }
+      this.trigger({
+        type: 'manifestrequestcomplete',
+        metadata
+      });
       const mainChanged = req.responseText !== this.mainPlaylistLoader_.mainXml_;
       this.mainPlaylistLoader_.mainXml_ = req.responseText;
       if (req.responseHeaders && req.responseHeaders.date) {
@@ -30150,6 +32460,7 @@ class DashPlaylistLoader extends EventTarget {
       return cb(req, mainChanged);
     });
   }
+
   /**
    * Parses the main xml for UTCTiming node to sync the client clock to the server
    * clock. If the UTCTiming node requires a HEAD or GET request, that request is made.
@@ -30173,15 +32484,24 @@ class DashPlaylistLoader extends EventTarget {
     this.request = this.vhs_.xhr({
       uri: resolveUrl(this.mainPlaylistLoader_.srcUrl, utcTiming.value),
       method: utcTiming.method,
-      withCredentials: this.withCredentials
+      withCredentials: this.withCredentials,
+      requestType: 'dash-clock-sync'
     }, (error, req) => {
       // disposed
       if (!this.request) {
         return;
       }
       if (error) {
-        // sync request failed, fall back to using date header from mpd
+        const {
+          requestType
+        } = req;
+        this.error.metadata = getStreamingNetworkErrorMetadata({
+          requestType,
+          request: req,
+          error
+        }); // sync request failed, fall back to using date header from mpd
         // TODO: log warning
+
         this.mainPlaylistLoader_.clientOffset_ = this.mainLoaded_ - Date.now();
         return done();
       }
@@ -30201,6 +32521,7 @@ class DashPlaylistLoader extends EventTarget {
       done();
     });
   }
+
   haveMain_() {
     this.state = 'HAVE_MAIN_MANIFEST';
     if (this.isMain_) {
@@ -30214,17 +32535,38 @@ class DashPlaylistLoader extends EventTarget {
       this.media(this.childPlaylist_);
     }
   }
+
   handleMain_() {
     // clear media request
+    window$1.clearTimeout(this.mediaRequest_);
     this.mediaRequest_ = null;
     const oldMain = this.mainPlaylistLoader_.main;
-    let newMain = parseMainXml({
-      mainXml: this.mainPlaylistLoader_.mainXml_,
-      srcUrl: this.mainPlaylistLoader_.srcUrl,
-      clientOffset: this.mainPlaylistLoader_.clientOffset_,
-      sidxMapping: this.mainPlaylistLoader_.sidxMapping_,
-      previousManifest: oldMain
-    }); // if we have an old main to compare the new main against
+    const metadata = {
+      manifestInfo: {
+        uri: this.mainPlaylistLoader_.srcUrl
+      }
+    };
+    this.trigger({
+      type: 'manifestparsestart',
+      metadata
+    });
+    let newMain;
+    try {
+      newMain = parseMainXml({
+        mainXml: this.mainPlaylistLoader_.mainXml_,
+        srcUrl: this.mainPlaylistLoader_.srcUrl,
+        clientOffset: this.mainPlaylistLoader_.clientOffset_,
+        sidxMapping: this.mainPlaylistLoader_.sidxMapping_,
+        previousManifest: oldMain
+      });
+    } catch (error) {
+      this.error = error;
+      this.error.metadata = {
+        errorType: videojs.Error.StreamingDashManifestParserError,
+        error
+      };
+      this.trigger('error');
+    } // if we have an old main to compare the new main against
 
     if (oldMain) {
       newMain = updateMain(oldMain, newMain, this.mainPlaylistLoader_.sidxMapping_);
@@ -30239,8 +32581,34 @@ class DashPlaylistLoader extends EventTarget {
       this.updateMinimumUpdatePeriodTimeout_();
     }
     this.addEventStreamToMetadataTrack_(newMain);
+    if (newMain) {
+      const {
+        duration,
+        endList
+      } = newMain;
+      const renditions = [];
+      newMain.playlists.forEach(playlist => {
+        renditions.push({
+          id: playlist.id,
+          bandwidth: playlist.attributes.BANDWIDTH,
+          resolution: playlist.attributes.RESOLUTION,
+          codecs: playlist.attributes.CODECS
+        });
+      });
+      const parsedManifest = {
+        duration,
+        isLive: !endList,
+        renditions
+      };
+      metadata.parsedManifest = parsedManifest;
+      this.trigger({
+        type: 'manifestparsecomplete',
+        metadata
+      });
+    }
     return Boolean(newMain);
   }
+
   updateMinimumUpdatePeriodTimeout_() {
     const mpl = this.mainPlaylistLoader_; // cancel any pending creation of mup on media
     // a new one will be added if needed.
@@ -30278,6 +32646,7 @@ class DashPlaylistLoader extends EventTarget {
     }
     this.createMUPTimeout_(mup);
   }
+
   createMUPTimeout_(mup) {
     const mpl = this.mainPlaylistLoader_;
     mpl.minimumUpdatePeriodTimeout_ = window$1.setTimeout(() => {
@@ -30286,6 +32655,7 @@ class DashPlaylistLoader extends EventTarget {
       mpl.createMUPTimeout_(mup);
     }, mup);
   }
+
   /**
    * Sends request to refresh the main xml and updates the parsed main manifest
    */
@@ -30306,6 +32676,7 @@ class DashPlaylistLoader extends EventTarget {
       });
     });
   }
+
   /**
    * Refreshes the media playlist by re-parsing the main xml and updating playlist
    * references. If this is an alternate loader, the updated parsed manifest is retrieved
@@ -30345,6 +32716,7 @@ class DashPlaylistLoader extends EventTarget {
     }
     this.trigger('loadedplaylist');
   }
+
   /**
    * Takes eventstream data from a parsed DASH manifest and adds it to the metadata text track.
    *
@@ -30366,6 +32738,7 @@ class DashPlaylistLoader extends EventTarget {
       this.addMetadataToTextTrack('EventStream', metadataArray, this.mainPlaylistLoader_.main.duration);
     }
   }
+
   /**
    * Returns the key ID set from a playlist
    *
@@ -30387,6 +32760,7 @@ class DashPlaylistLoader extends EventTarget {
     }
   }
 }
+
 var Config = {
   GOAL_BUFFER_LENGTH: 30,
   MAX_GOAL_BUFFER_LENGTH: 60,
@@ -30592,7 +32966,7 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   var stream = Stream$8;
   var MAX_UINT32$1 = Math.pow(2, 32);
-  var getUint64$3 = function (uint8) {
+  var getUint64$5 = function (uint8) {
     var dv = new DataView(uint8.buffer, uint8.byteOffset, uint8.byteLength);
     var value;
     if (dv.getBigUint64) {
@@ -30605,7 +32979,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     return dv.getUint32(0) * MAX_UINT32$1 + dv.getUint32(4);
   };
   var numbers = {
-    getUint64: getUint64$3,
+    getUint64: getUint64$5,
     MAX_UINT32: MAX_UINT32$1
   };
   /**
@@ -30619,7 +32993,9 @@ const workerCode$1 = transform(getWorkerString(function () {
    */
 
   var MAX_UINT32 = numbers.MAX_UINT32;
-  var box, dinf, esds, ftyp, mdat, mfhd, minf, moof, moov, mvex, mvhd, trak, tkhd, mdia, mdhd, hdlr, sdtp, stbl, stsd, traf, trex, trun$1, types, MAJOR_BRAND, MINOR_VERSION, AVC1_BRAND, VIDEO_HDLR, AUDIO_HDLR, HDLR_TYPES, VMHD, SMHD, DREF, STCO, STSC, STSZ, STTS; // pre-calculate constants
+  var box, dinf, esds, ftyp, mdat, mfhd, minf, moof, moov, mvex, mvhd, trak, tkhd, mdia, mdhd, hdlr, sdtp, stbl, stsd,
+    traf, trex, trun$1, types, MAJOR_BRAND, MINOR_VERSION, AVC1_BRAND, VIDEO_HDLR, AUDIO_HDLR, HDLR_TYPES, VMHD, SMHD,
+    DREF, STCO, STSC, STSZ, STTS; // pre-calculate constants
 
   (function () {
     var i;
@@ -30677,95 +33053,88 @@ const workerCode$1 = transform(getWorkerString(function () {
     AVC1_BRAND = new Uint8Array(['a'.charCodeAt(0), 'v'.charCodeAt(0), 'c'.charCodeAt(0), '1'.charCodeAt(0)]);
     MINOR_VERSION = new Uint8Array([0, 0, 0, 1]);
     VIDEO_HDLR = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x00,
-    // pre_defined
-    0x76, 0x69, 0x64, 0x65,
-    // handler_type: 'vide'
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x56, 0x69, 0x64, 0x65, 0x6f, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x00 // name: 'VideoHandler'
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x00,
+      // pre_defined
+      0x76, 0x69, 0x64, 0x65,
+      // handler_type: 'vide'
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x56, 0x69, 0x64, 0x65, 0x6f, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x00 // name: 'VideoHandler'
     ]);
-
     AUDIO_HDLR = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x00,
-    // pre_defined
-    0x73, 0x6f, 0x75, 0x6e,
-    // handler_type: 'soun'
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x53, 0x6f, 0x75, 0x6e, 0x64, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x00 // name: 'SoundHandler'
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x00,
+      // pre_defined
+      0x73, 0x6f, 0x75, 0x6e,
+      // handler_type: 'soun'
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x53, 0x6f, 0x75, 0x6e, 0x64, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x00 // name: 'SoundHandler'
     ]);
-
     HDLR_TYPES = {
       video: VIDEO_HDLR,
       audio: AUDIO_HDLR
     };
     DREF = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x01,
-    // entry_count
-    0x00, 0x00, 0x00, 0x0c,
-    // entry_size
-    0x75, 0x72, 0x6c, 0x20,
-    // 'url' type
-    0x00,
-    // version 0
-    0x00, 0x00, 0x01 // entry_flags
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x01,
+      // entry_count
+      0x00, 0x00, 0x00, 0x0c,
+      // entry_size
+      0x75, 0x72, 0x6c, 0x20,
+      // 'url' type
+      0x00,
+      // version 0
+      0x00, 0x00, 0x01 // entry_flags
     ]);
-
     SMHD = new Uint8Array([0x00,
-    // version
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00,
-    // balance, 0 means centered
-    0x00, 0x00 // reserved
+      // version
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00,
+      // balance, 0 means centered
+      0x00, 0x00 // reserved
     ]);
-
     STCO = new Uint8Array([0x00,
-    // version
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x00 // entry_count
+      // version
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x00 // entry_count
     ]);
-
     STSC = STCO;
     STSZ = new Uint8Array([0x00,
-    // version
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x00,
-    // sample_size
-    0x00, 0x00, 0x00, 0x00 // sample_count
+      // version
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x00,
+      // sample_size
+      0x00, 0x00, 0x00, 0x00 // sample_count
     ]);
-
     STTS = STCO;
     VMHD = new Uint8Array([0x00,
-    // version
-    0x00, 0x00, 0x01,
-    // flags
-    0x00, 0x00,
-    // graphicsmode
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // opcolor
+      // version
+      0x00, 0x00, 0x01,
+      // flags
+      0x00, 0x00,
+      // graphicsmode
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // opcolor
     ]);
   })();
-
   box = function (type) {
     var payload = [],
       size = 0,
@@ -30796,44 +33165,43 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   esds = function (track) {
     return box(types.esds, new Uint8Array([0x00,
-    // version
-    0x00, 0x00, 0x00,
-    // flags
-    // ES_Descriptor
-    0x03,
-    // tag, ES_DescrTag
-    0x19,
-    // length
-    0x00, 0x00,
-    // ES_ID
-    0x00,
-    // streamDependenceFlag, URL_flag, reserved, streamPriority
-    // DecoderConfigDescriptor
-    0x04,
-    // tag, DecoderConfigDescrTag
-    0x11,
-    // length
-    0x40,
-    // object type
-    0x15,
-    // streamType
-    0x00, 0x06, 0x00,
-    // bufferSizeDB
-    0x00, 0x00, 0xda, 0xc0,
-    // maxBitrate
-    0x00, 0x00, 0xda, 0xc0,
-    // avgBitrate
-    // DecoderSpecificInfo
-    0x05,
-    // tag, DecoderSpecificInfoTag
-    0x02,
-    // length
-    // ISO/IEC 14496-3, AudioSpecificConfig
-    // for samplingFrequencyIndex see ISO/IEC 13818-7:2006, 8.1.3.2.2, Table 35
-    track.audioobjecttype << 3 | track.samplingfrequencyindex >>> 1, track.samplingfrequencyindex << 7 | track.channelcount << 3, 0x06, 0x01, 0x02 // GASpecificConfig
+      // version
+      0x00, 0x00, 0x00,
+      // flags
+      // ES_Descriptor
+      0x03,
+      // tag, ES_DescrTag
+      0x19,
+      // length
+      0x00, 0x00,
+      // ES_ID
+      0x00,
+      // streamDependenceFlag, URL_flag, reserved, streamPriority
+      // DecoderConfigDescriptor
+      0x04,
+      // tag, DecoderConfigDescrTag
+      0x11,
+      // length
+      0x40,
+      // object type
+      0x15,
+      // streamType
+      0x00, 0x06, 0x00,
+      // bufferSizeDB
+      0x00, 0x00, 0xda, 0xc0,
+      // maxBitrate
+      0x00, 0x00, 0xda, 0xc0,
+      // avgBitrate
+      // DecoderSpecificInfo
+      0x05,
+      // tag, DecoderSpecificInfoTag
+      0x02,
+      // length
+      // ISO/IEC 14496-3, AudioSpecificConfig
+      // for samplingFrequencyIndex see ISO/IEC 13818-7:2006, 8.1.3.2.2, Table 35
+      track.audioobjecttype << 3 | track.samplingfrequencyindex >>> 1, track.samplingfrequencyindex << 7 | track.channelcount << 3, 0x06, 0x01, 0x02 // GASpecificConfig
     ]));
   };
-
   ftyp = function () {
     return box(types.ftyp, MAJOR_BRAND, MINOR_VERSION, MAJOR_BRAND, AVC1_BRAND);
   };
@@ -30845,20 +33213,20 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   mdhd = function (track) {
     var result = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x02,
-    // creation_time
-    0x00, 0x00, 0x00, 0x03,
-    // modification_time
-    0x00, 0x01, 0x5f, 0x90,
-    // timescale, 90,000 "ticks" per second
-    track.duration >>> 24 & 0xFF, track.duration >>> 16 & 0xFF, track.duration >>> 8 & 0xFF, track.duration & 0xFF,
-    // duration
-    0x55, 0xc4,
-    // 'und' language (undetermined)
-    0x00, 0x00]); // Use the sample rate from the track metadata, when it is
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x02,
+      // creation_time
+      0x00, 0x00, 0x00, 0x03,
+      // modification_time
+      0x00, 0x01, 0x5f, 0x90,
+      // timescale, 90,000 "ticks" per second
+      track.duration >>> 24 & 0xFF, track.duration >>> 16 & 0xFF, track.duration >>> 8 & 0xFF, track.duration & 0xFF,
+      // duration
+      0x55, 0xc4,
+      // 'und' language (undetermined)
+      0x00, 0x00]); // Use the sample rate from the track metadata, when it is
     // defined. The sample rate can be parsed out of an ADTS header, for
     // instance.
 
@@ -30875,11 +33243,10 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   mfhd = function (sequenceNumber) {
     return box(types.mfhd, new Uint8Array([0x00, 0x00, 0x00, 0x00,
-    // flags
-    (sequenceNumber & 0xFF000000) >> 24, (sequenceNumber & 0xFF0000) >> 16, (sequenceNumber & 0xFF00) >> 8, sequenceNumber & 0xFF // sequence_number
+      // flags
+      (sequenceNumber & 0xFF000000) >> 24, (sequenceNumber & 0xFF0000) >> 16, (sequenceNumber & 0xFF00) >> 8, sequenceNumber & 0xFF // sequence_number
     ]));
   };
-
   minf = function (track) {
     return box(types.minf, track.type === 'video' ? box(types.vmhd, VMHD) : box(types.smhd, SMHD), dinf(), stbl(track));
   };
@@ -30916,34 +33283,33 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   mvhd = function (duration) {
     var bytes = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    0x00, 0x00, 0x00, 0x01,
-    // creation_time
-    0x00, 0x00, 0x00, 0x02,
-    // modification_time
-    0x00, 0x01, 0x5f, 0x90,
-    // timescale, 90,000 "ticks" per second
-    (duration & 0xFF000000) >> 24, (duration & 0xFF0000) >> 16, (duration & 0xFF00) >> 8, duration & 0xFF,
-    // duration
-    0x00, 0x01, 0x00, 0x00,
-    // 1.0 rate
-    0x01, 0x00,
-    // 1.0 volume
-    0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
-    // transformation: unity matrix
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // pre_defined
-    0xff, 0xff, 0xff, 0xff // next_track_ID
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      0x00, 0x00, 0x00, 0x01,
+      // creation_time
+      0x00, 0x00, 0x00, 0x02,
+      // modification_time
+      0x00, 0x01, 0x5f, 0x90,
+      // timescale, 90,000 "ticks" per second
+      (duration & 0xFF000000) >> 24, (duration & 0xFF0000) >> 16, (duration & 0xFF00) >> 8, duration & 0xFF,
+      // duration
+      0x00, 0x01, 0x00, 0x00,
+      // 1.0 rate
+      0x01, 0x00,
+      // 1.0 volume
+      0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
+      // transformation: unity matrix
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      // pre_defined
+      0xff, 0xff, 0xff, 0xff // next_track_ID
     ]);
-
     return box(types.mvhd, bytes);
   };
   sdtp = function (track) {
@@ -30966,10 +33332,10 @@ const workerCode$1 = transform(getWorkerString(function () {
     var videoSample, audioSample;
     stsd = function (track) {
       return box(types.stsd, new Uint8Array([0x00,
-      // version 0
-      0x00, 0x00, 0x00,
-      // flags
-      0x00, 0x00, 0x00, 0x01]), track.type === 'video' ? videoSample(track) : audioSample(track));
+        // version 0
+        0x00, 0x00, 0x00,
+        // flags
+        0x00, 0x00, 0x00, 0x01]), track.type === 'video' ? videoSample(track) : audioSample(track));
     };
     videoSample = function (track) {
       var sps = track.sps || [],
@@ -30992,55 +33358,54 @@ const workerCode$1 = transform(getWorkerString(function () {
         pictureParameterSets = pictureParameterSets.concat(Array.prototype.slice.call(pps[i]));
       }
       avc1Box = [types.avc1, new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      // reserved
-      0x00, 0x01,
-      // data_reference_index
-      0x00, 0x00,
-      // pre_defined
-      0x00, 0x00,
-      // reserved
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      // pre_defined
-      (track.width & 0xff00) >> 8, track.width & 0xff,
-      // width
-      (track.height & 0xff00) >> 8, track.height & 0xff,
-      // height
-      0x00, 0x48, 0x00, 0x00,
-      // horizresolution
-      0x00, 0x48, 0x00, 0x00,
-      // vertresolution
-      0x00, 0x00, 0x00, 0x00,
-      // reserved
-      0x00, 0x01,
-      // frame_count
-      0x13, 0x76, 0x69, 0x64, 0x65, 0x6f, 0x6a, 0x73, 0x2d, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x69, 0x62, 0x2d, 0x68, 0x6c, 0x73, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      // compressorname
-      0x00, 0x18,
-      // depth = 24
-      0x11, 0x11 // pre_defined = -1
+        // reserved
+        0x00, 0x01,
+        // data_reference_index
+        0x00, 0x00,
+        // pre_defined
+        0x00, 0x00,
+        // reserved
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        // pre_defined
+        (track.width & 0xff00) >> 8, track.width & 0xff,
+        // width
+        (track.height & 0xff00) >> 8, track.height & 0xff,
+        // height
+        0x00, 0x48, 0x00, 0x00,
+        // horizresolution
+        0x00, 0x48, 0x00, 0x00,
+        // vertresolution
+        0x00, 0x00, 0x00, 0x00,
+        // reserved
+        0x00, 0x01,
+        // frame_count
+        0x13, 0x76, 0x69, 0x64, 0x65, 0x6f, 0x6a, 0x73, 0x2d, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x69, 0x62, 0x2d, 0x68, 0x6c, 0x73, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        // compressorname
+        0x00, 0x18,
+        // depth = 24
+        0x11, 0x11 // pre_defined = -1
       ]), box(types.avcC, new Uint8Array([0x01,
-      // configurationVersion
-      track.profileIdc,
-      // AVCProfileIndication
-      track.profileCompatibility,
-      // profile_compatibility
-      track.levelIdc,
-      // AVCLevelIndication
-      0xff // lengthSizeMinusOne, hard-coded to 4 bytes
+        // configurationVersion
+        track.profileIdc,
+        // AVCProfileIndication
+        track.profileCompatibility,
+        // profile_compatibility
+        track.levelIdc,
+        // AVCLevelIndication
+        0xff // lengthSizeMinusOne, hard-coded to 4 bytes
       ].concat([sps.length],
-      // numOfSequenceParameterSets
-      sequenceParameterSets,
-      // "SPS"
-      [pps.length],
-      // numOfPictureParameterSets
-      pictureParameterSets // "PPS"
+        // numOfSequenceParameterSets
+        sequenceParameterSets,
+        // "SPS"
+        [pps.length],
+        // numOfPictureParameterSets
+        pictureParameterSets // "PPS"
       ))), box(types.btrt, new Uint8Array([0x00, 0x1c, 0x9c, 0x80,
-      // bufferSizeDB
-      0x00, 0x2d, 0xc6, 0xc0,
-      // maxBitrate
-      0x00, 0x2d, 0xc6, 0xc0 // avgBitrate
+        // bufferSizeDB
+        0x00, 0x2d, 0xc6, 0xc0,
+        // maxBitrate
+        0x00, 0x2d, 0xc6, 0xc0 // avgBitrate
       ]))];
-
       if (track.sarRatio) {
         var hSpacing = track.sarRatio[0],
           vSpacing = track.sarRatio[1];
@@ -31050,61 +33415,60 @@ const workerCode$1 = transform(getWorkerString(function () {
     };
     audioSample = function (track) {
       return box(types.mp4a, new Uint8Array([
-      // SampleEntry, ISO/IEC 14496-12
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      // reserved
-      0x00, 0x01,
-      // data_reference_index
-      // AudioSampleEntry, ISO/IEC 14496-12
-      0x00, 0x00, 0x00, 0x00,
-      // reserved
-      0x00, 0x00, 0x00, 0x00,
-      // reserved
-      (track.channelcount & 0xff00) >> 8, track.channelcount & 0xff,
-      // channelcount
-      (track.samplesize & 0xff00) >> 8, track.samplesize & 0xff,
-      // samplesize
-      0x00, 0x00,
-      // pre_defined
-      0x00, 0x00,
-      // reserved
-      (track.samplerate & 0xff00) >> 8, track.samplerate & 0xff, 0x00, 0x00 // samplerate, 16.16
-      // MP4AudioSampleEntry, ISO/IEC 14496-14
+        // SampleEntry, ISO/IEC 14496-12
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        // reserved
+        0x00, 0x01,
+        // data_reference_index
+        // AudioSampleEntry, ISO/IEC 14496-12
+        0x00, 0x00, 0x00, 0x00,
+        // reserved
+        0x00, 0x00, 0x00, 0x00,
+        // reserved
+        (track.channelcount & 0xff00) >> 8, track.channelcount & 0xff,
+        // channelcount
+        (track.samplesize & 0xff00) >> 8, track.samplesize & 0xff,
+        // samplesize
+        0x00, 0x00,
+        // pre_defined
+        0x00, 0x00,
+        // reserved
+        (track.samplerate & 0xff00) >> 8, track.samplerate & 0xff, 0x00, 0x00 // samplerate, 16.16
+        // MP4AudioSampleEntry, ISO/IEC 14496-14
       ]), esds(track));
     };
   })();
   tkhd = function (track) {
     var result = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x07,
-    // flags
-    0x00, 0x00, 0x00, 0x00,
-    // creation_time
-    0x00, 0x00, 0x00, 0x00,
-    // modification_time
-    (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
-    // track_ID
-    0x00, 0x00, 0x00, 0x00,
-    // reserved
-    (track.duration & 0xFF000000) >> 24, (track.duration & 0xFF0000) >> 16, (track.duration & 0xFF00) >> 8, track.duration & 0xFF,
-    // duration
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // reserved
-    0x00, 0x00,
-    // layer
-    0x00, 0x00,
-    // alternate_group
-    0x01, 0x00,
-    // non-audio track volume
-    0x00, 0x00,
-    // reserved
-    0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
-    // transformation: unity matrix
-    (track.width & 0xFF00) >> 8, track.width & 0xFF, 0x00, 0x00,
-    // width
-    (track.height & 0xFF00) >> 8, track.height & 0xFF, 0x00, 0x00 // height
+      // version 0
+      0x00, 0x00, 0x07,
+      // flags
+      0x00, 0x00, 0x00, 0x00,
+      // creation_time
+      0x00, 0x00, 0x00, 0x00,
+      // modification_time
+      (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
+      // track_ID
+      0x00, 0x00, 0x00, 0x00,
+      // reserved
+      (track.duration & 0xFF000000) >> 24, (track.duration & 0xFF0000) >> 16, (track.duration & 0xFF00) >> 8, track.duration & 0xFF,
+      // duration
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      // reserved
+      0x00, 0x00,
+      // layer
+      0x00, 0x00,
+      // alternate_group
+      0x01, 0x00,
+      // non-audio track volume
+      0x00, 0x00,
+      // reserved
+      0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
+      // transformation: unity matrix
+      (track.width & 0xFF00) >> 8, track.width & 0xFF, 0x00, 0x00,
+      // width
+      (track.height & 0xFF00) >> 8, track.height & 0xFF, 0x00, 0x00 // height
     ]);
-
     return box(types.tkhd, result);
   };
   /**
@@ -31113,44 +33477,44 @@ const workerCode$1 = transform(getWorkerString(function () {
    */
 
   traf = function (track) {
-    var trackFragmentHeader, trackFragmentDecodeTime, trackFragmentRun, sampleDependencyTable, dataOffset, upperWordBaseMediaDecodeTime, lowerWordBaseMediaDecodeTime;
+    var trackFragmentHeader, trackFragmentDecodeTime, trackFragmentRun, sampleDependencyTable, dataOffset,
+      upperWordBaseMediaDecodeTime, lowerWordBaseMediaDecodeTime;
     trackFragmentHeader = box(types.tfhd, new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x3a,
-    // flags
-    (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
-    // track_ID
-    0x00, 0x00, 0x00, 0x01,
-    // sample_description_index
-    0x00, 0x00, 0x00, 0x00,
-    // default_sample_duration
-    0x00, 0x00, 0x00, 0x00,
-    // default_sample_size
-    0x00, 0x00, 0x00, 0x00 // default_sample_flags
+      // version 0
+      0x00, 0x00, 0x3a,
+      // flags
+      (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
+      // track_ID
+      0x00, 0x00, 0x00, 0x01,
+      // sample_description_index
+      0x00, 0x00, 0x00, 0x00,
+      // default_sample_duration
+      0x00, 0x00, 0x00, 0x00,
+      // default_sample_size
+      0x00, 0x00, 0x00, 0x00 // default_sample_flags
     ]));
-
     upperWordBaseMediaDecodeTime = Math.floor(track.baseMediaDecodeTime / MAX_UINT32);
     lowerWordBaseMediaDecodeTime = Math.floor(track.baseMediaDecodeTime % MAX_UINT32);
     trackFragmentDecodeTime = box(types.tfdt, new Uint8Array([0x01,
-    // version 1
-    0x00, 0x00, 0x00,
-    // flags
-    // baseMediaDecodeTime
-    upperWordBaseMediaDecodeTime >>> 24 & 0xFF, upperWordBaseMediaDecodeTime >>> 16 & 0xFF, upperWordBaseMediaDecodeTime >>> 8 & 0xFF, upperWordBaseMediaDecodeTime & 0xFF, lowerWordBaseMediaDecodeTime >>> 24 & 0xFF, lowerWordBaseMediaDecodeTime >>> 16 & 0xFF, lowerWordBaseMediaDecodeTime >>> 8 & 0xFF, lowerWordBaseMediaDecodeTime & 0xFF])); // the data offset specifies the number of bytes from the start of
+      // version 1
+      0x00, 0x00, 0x00,
+      // flags
+      // baseMediaDecodeTime
+      upperWordBaseMediaDecodeTime >>> 24 & 0xFF, upperWordBaseMediaDecodeTime >>> 16 & 0xFF, upperWordBaseMediaDecodeTime >>> 8 & 0xFF, upperWordBaseMediaDecodeTime & 0xFF, lowerWordBaseMediaDecodeTime >>> 24 & 0xFF, lowerWordBaseMediaDecodeTime >>> 16 & 0xFF, lowerWordBaseMediaDecodeTime >>> 8 & 0xFF, lowerWordBaseMediaDecodeTime & 0xFF])); // the data offset specifies the number of bytes from the start of
     // the containing moof to the first payload byte of the associated
     // mdat
 
     dataOffset = 32 +
-    // tfhd
-    20 +
-    // tfdt
-    8 +
-    // traf header
-    16 +
-    // mfhd
-    8 +
-    // moof header
-    8; // mdat header
+      // tfhd
+      20 +
+      // tfdt
+      8 +
+      // traf header
+      16 +
+      // mfhd
+      8 +
+      // moof header
+      8; // mdat header
     // audio tracks require less metadata
 
     if (track.type === 'audio') {
@@ -31176,18 +33540,18 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   trex = function (track) {
     var result = new Uint8Array([0x00,
-    // version 0
-    0x00, 0x00, 0x00,
-    // flags
-    (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
-    // track_ID
-    0x00, 0x00, 0x00, 0x01,
-    // default_sample_description_index
-    0x00, 0x00, 0x00, 0x00,
-    // default_sample_duration
-    0x00, 0x00, 0x00, 0x00,
-    // default_sample_size
-    0x00, 0x01, 0x00, 0x01 // default_sample_flags
+      // version 0
+      0x00, 0x00, 0x00,
+      // flags
+      (track.id & 0xFF000000) >> 24, (track.id & 0xFF0000) >> 16, (track.id & 0xFF00) >> 8, track.id & 0xFF,
+      // track_ID
+      0x00, 0x00, 0x00, 0x01,
+      // default_sample_description_index
+      0x00, 0x00, 0x00, 0x00,
+      // default_sample_duration
+      0x00, 0x00, 0x00, 0x00,
+      // default_sample_size
+      0x00, 0x01, 0x00, 0x01 // default_sample_flags
     ]); // the last two bytes of default_sample_flags is the sample
     // degradation priority, a hint about the importance of this sample
     // relative to others. Lower the degradation priority for all sample
@@ -31225,15 +33589,14 @@ const workerCode$1 = transform(getWorkerString(function () {
         }
       }
       return [0x00,
-      // version 0
-      0x00, durationPresent | sizePresent | flagsPresent | compositionTimeOffset, 0x01,
-      // flags
-      (samples.length & 0xFF000000) >>> 24, (samples.length & 0xFF0000) >>> 16, (samples.length & 0xFF00) >>> 8, samples.length & 0xFF,
-      // sample_count
-      (offset & 0xFF000000) >>> 24, (offset & 0xFF0000) >>> 16, (offset & 0xFF00) >>> 8, offset & 0xFF // data_offset
+        // version 0
+        0x00, durationPresent | sizePresent | flagsPresent | compositionTimeOffset, 0x01,
+        // flags
+        (samples.length & 0xFF000000) >>> 24, (samples.length & 0xFF0000) >>> 16, (samples.length & 0xFF00) >>> 8, samples.length & 0xFF,
+        // sample_count
+        (offset & 0xFF000000) >>> 24, (offset & 0xFF0000) >>> 16, (offset & 0xFF00) >>> 8, offset & 0xFF // data_offset
       ];
     };
-
     videoTrun = function (track, offset) {
       var bytesOffest, bytes, header, samples, sample, i;
       samples = track.samples || [];
@@ -31264,7 +33627,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         bytes[bytesOffest++] = (sample.compositionTimeOffset & 0xFF00) >>> 8;
         bytes[bytesOffest++] = sample.compositionTimeOffset & 0xFF; // sample_composition_time_offset
       }
-
       return box(types.trun, bytes);
     };
     audioTrun = function (track, offset) {
@@ -31287,7 +33649,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         bytes[bytesOffest++] = (sample.size & 0xFF00) >>> 8;
         bytes[bytesOffest++] = sample.size & 0xFF; // sample_size
       }
-
       return box(types.trun, bytes);
     };
     trun$1 = function (track, offset) {
@@ -31318,61 +33679,61 @@ const workerCode$1 = transform(getWorkerString(function () {
    * Copyright (c) Brightcove
    * Licensed Apache-2.0 https://github.com/videojs/mux.js/blob/master/LICENSE
    */
-  // composed of the nal units that make up that frame
-  // Also keep track of cummulative data about the frame from the nal units such
-  // as the frame duration, starting pts, etc.
+    // composed of the nal units that make up that frame
+    // Also keep track of cummulative data about the frame from the nal units such
+    // as the frame duration, starting pts, etc.
 
   var groupNalsIntoFrames = function (nalUnits) {
-    var i,
-      currentNal,
-      currentFrame = [],
-      frames = []; // TODO added for LHLS, make sure this is OK
+      var i,
+        currentNal,
+        currentFrame = [],
+        frames = []; // TODO added for LHLS, make sure this is OK
 
-    frames.byteLength = 0;
-    frames.nalCount = 0;
-    frames.duration = 0;
-    currentFrame.byteLength = 0;
-    for (i = 0; i < nalUnits.length; i++) {
-      currentNal = nalUnits[i]; // Split on 'aud'-type nal units
+      frames.byteLength = 0;
+      frames.nalCount = 0;
+      frames.duration = 0;
+      currentFrame.byteLength = 0;
+      for (i = 0; i < nalUnits.length; i++) {
+        currentNal = nalUnits[i]; // Split on 'aud'-type nal units
 
-      if (currentNal.nalUnitType === 'access_unit_delimiter_rbsp') {
-        // Since the very first nal unit is expected to be an AUD
-        // only push to the frames array when currentFrame is not empty
-        if (currentFrame.length) {
-          currentFrame.duration = currentNal.dts - currentFrame.dts; // TODO added for LHLS, make sure this is OK
+        if (currentNal.nalUnitType === 'access_unit_delimiter_rbsp') {
+          // Since the very first nal unit is expected to be an AUD
+          // only push to the frames array when currentFrame is not empty
+          if (currentFrame.length) {
+            currentFrame.duration = currentNal.dts - currentFrame.dts; // TODO added for LHLS, make sure this is OK
 
-          frames.byteLength += currentFrame.byteLength;
-          frames.nalCount += currentFrame.length;
-          frames.duration += currentFrame.duration;
-          frames.push(currentFrame);
+            frames.byteLength += currentFrame.byteLength;
+            frames.nalCount += currentFrame.length;
+            frames.duration += currentFrame.duration;
+            frames.push(currentFrame);
+          }
+          currentFrame = [currentNal];
+          currentFrame.byteLength = currentNal.data.byteLength;
+          currentFrame.pts = currentNal.pts;
+          currentFrame.dts = currentNal.dts;
+        } else {
+          // Specifically flag key frames for ease of use later
+          if (currentNal.nalUnitType === 'slice_layer_without_partitioning_rbsp_idr') {
+            currentFrame.keyFrame = true;
+          }
+          currentFrame.duration = currentNal.dts - currentFrame.dts;
+          currentFrame.byteLength += currentNal.data.byteLength;
+          currentFrame.push(currentNal);
         }
-        currentFrame = [currentNal];
-        currentFrame.byteLength = currentNal.data.byteLength;
-        currentFrame.pts = currentNal.pts;
-        currentFrame.dts = currentNal.dts;
-      } else {
-        // Specifically flag key frames for ease of use later
-        if (currentNal.nalUnitType === 'slice_layer_without_partitioning_rbsp_idr') {
-          currentFrame.keyFrame = true;
-        }
-        currentFrame.duration = currentNal.dts - currentFrame.dts;
-        currentFrame.byteLength += currentNal.data.byteLength;
-        currentFrame.push(currentNal);
-      }
-    } // For the last frame, use the duration of the previous frame if we
-    // have nothing better to go on
+      } // For the last frame, use the duration of the previous frame if we
+      // have nothing better to go on
 
-    if (frames.length && (!currentFrame.duration || currentFrame.duration <= 0)) {
-      currentFrame.duration = frames[frames.length - 1].duration;
-    } // Push the final frame
-    // TODO added for LHLS, make sure this is OK
+      if (frames.length && (!currentFrame.duration || currentFrame.duration <= 0)) {
+        currentFrame.duration = frames[frames.length - 1].duration;
+      } // Push the final frame
+      // TODO added for LHLS, make sure this is OK
 
-    frames.byteLength += currentFrame.byteLength;
-    frames.nalCount += currentFrame.length;
-    frames.duration += currentFrame.duration;
-    frames.push(currentFrame);
-    return frames;
-  }; // Convert an array of frames into an array of Gop with each Gop being composed
+      frames.byteLength += currentFrame.byteLength;
+      frames.nalCount += currentFrame.length;
+      frames.duration += currentFrame.duration;
+      frames.push(currentFrame);
+      return frames;
+    }; // Convert an array of frames into an array of Gop with each Gop being composed
   // of the frames that make up that Gop
   // Also keep track of cummulative data about the Gop from the frames such as the
   // Gop duration, starting pts, etc.
@@ -31786,7 +34147,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         duration: 1024 // For AAC audio, all samples contain 1024 samples
       });
     }
-
     return samples;
   }; // generate the track's sample table from an array of frames
 
@@ -31915,20 +34275,20 @@ const workerCode$1 = transform(getWorkerString(function () {
    * @see https://en.wikipedia.org/wiki/CEA-708
    * @see https://www.gpo.gov/fdsys/pkg/CFR-2007-title47-vol1/pdf/CFR-2007-title47-vol1-sec15-119.pdf
    */
-  // payload type field to indicate how they are to be
-  // interpreted. CEAS-708 caption content is always transmitted with
-  // payload type 0x04.
+    // payload type field to indicate how they are to be
+    // interpreted. CEAS-708 caption content is always transmitted with
+    // payload type 0x04.
 
   var USER_DATA_REGISTERED_ITU_T_T35 = 4,
     RBSP_TRAILING_BITS = 128;
   /**
-    * Parse a supplemental enhancement information (SEI) NAL unit.
-    * Stops parsing once a message of type ITU T T35 has been found.
-    *
-    * @param bytes {Uint8Array} the bytes of a SEI NAL unit
-    * @return {object} the parsed SEI payload
-    * @see Rec. ITU-T H.264, 7.3.2.3.1
-    */
+   * Parse a supplemental enhancement information (SEI) NAL unit.
+   * Stops parsing once a message of type ITU T T35 has been found.
+   *
+   * @param bytes {Uint8Array} the bytes of a SEI NAL unit
+   * @return {object} the parsed SEI payload
+   * @see Rec. ITU-T H.264, 7.3.2.3.1
+   */
 
   var parseSei = function (bytes) {
     var i = 0,
@@ -32081,8 +34441,8 @@ const workerCode$1 = transform(getWorkerString(function () {
    * @see https://en.wikipedia.org/wiki/CEA-708
    * @see https://www.gpo.gov/fdsys/pkg/CFR-2007-title47-vol1/pdf/CFR-2007-title47-vol1-sec15-119.pdf
    */
-  // Link To Transport
-  // -----------------
+    // Link To Transport
+    // -----------------
 
   var Stream$7 = stream;
   var cea708Parser = captionPacketParser;
@@ -32093,20 +34453,18 @@ const workerCode$1 = transform(getWorkerString(function () {
     this.parse708captions_ = typeof options.parse708captions === 'boolean' ? options.parse708captions : true;
     this.captionPackets_ = [];
     this.ccStreams_ = [new Cea608Stream(0, 0),
-    // eslint-disable-line no-use-before-define
-    new Cea608Stream(0, 1),
-    // eslint-disable-line no-use-before-define
-    new Cea608Stream(1, 0),
-    // eslint-disable-line no-use-before-define
-    new Cea608Stream(1, 1) // eslint-disable-line no-use-before-define
+      // eslint-disable-line no-use-before-define
+      new Cea608Stream(0, 1),
+      // eslint-disable-line no-use-before-define
+      new Cea608Stream(1, 0),
+      // eslint-disable-line no-use-before-define
+      new Cea608Stream(1, 1) // eslint-disable-line no-use-before-define
     ];
-
     if (this.parse708captions_) {
       this.cc708Stream_ = new Cea708Stream({
         captionServices: options.captionServices
       }); // eslint-disable-line no-use-before-define
     }
-
     this.reset(); // forward data and done events from CCs to this CaptionStream
 
     this.ccStreams_.forEach(function (cc) {
@@ -32341,7 +34699,6 @@ const workerCode$1 = transform(getWorkerString(function () {
     // ⎡
     0x10a0: 0x3138 // ㄸ (CC char)
   };
-
   var get708CharFromCode = function (code) {
     var newCode = CHARACTER_TRANSLATION_708[code] || code;
     if (code & 0x1000 && code === newCode) {
@@ -32710,6 +35067,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
       }).join('');
     }
+
     if (isMultiByte) {
       charCodeArray = [currentByte, nextByte];
       i++;
@@ -33323,7 +35681,6 @@ const workerCode$1 = transform(getWorkerString(function () {
     // └
     0x033f: 0x2518 // ┘
   };
-
   var getCharFromCode = function (code) {
     if (code === null) {
       return '';
@@ -33493,8 +35850,10 @@ const workerCode$1 = transform(getWorkerString(function () {
             row = this.rollUpRows_ - 1;
           }
           this.setRollUp(packet.pts, row);
-        }
-        if (row !== this.row_) {
+        } // Ensure the row is between 0 and 14, otherwise use the most
+        // recent or default row.
+
+        if (row !== this.row_ && row >= 0 && row <= 14) {
           // formatting is only persistent for current row
           this.clearFormatting(packet.pts);
           this.row_ = row;
@@ -33534,7 +35893,6 @@ const workerCode$1 = transform(getWorkerString(function () {
       } // finish data processing
     };
   };
-
   Cea608Stream.prototype = new Stream$7(); // Trigger a cue point that captures the current state of the
   // display buffer
 
@@ -34382,7 +36740,7 @@ const workerCode$1 = transform(getWorkerString(function () {
 
     /**
      * Split a stream of data into M2TS packets
-    **/
+     **/
 
     this.push = function (bytes) {
       var startIndex = 0,
@@ -34425,7 +36783,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     };
     /**
      * Passes identified M2TS packets to the TransportParseStream to be parsed
-    **/
+     **/
 
     this.flush = function () {
       // If the buffer contains a whole packet when we are being flushed, emit it
@@ -34676,7 +37034,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         pes.data = payload.subarray(9 + payload[8]);
       },
       /**
-        * Pass completely parsed PES packets to the next stream in the pipeline
+       * Pass completely parsed PES packets to the next stream in the pipeline
        **/
       flushStream = function (stream, type, forceFlush) {
         var packetData = new Uint8Array(stream.size),
@@ -35113,7 +37471,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         // the number is odd if the low order bit is set
         return 1 + valu >>> 1; // add 1 to make it even, and divide by 2
       }
-
       return -1 * (valu >>> 1); // divide by two then make it negative
     }; // Some convenience functions
     // :Boolean
@@ -35482,7 +37839,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         if (chromaFormatIdc === 3) {
           expGolombDecoder.skipBits(1); // separate_colour_plane_flag
         }
-
         expGolombDecoder.skipUnsignedExpGolomb(); // bit_depth_luma_minus8
 
         expGolombDecoder.skipUnsignedExpGolomb(); // bit_depth_chroma_minus8
@@ -35521,7 +37877,6 @@ const workerCode$1 = transform(getWorkerString(function () {
           expGolombDecoder.skipExpGolomb(); // offset_for_ref_frame[ i ]
         }
       }
-
       expGolombDecoder.skipUnsignedExpGolomb(); // max_num_ref_frames
 
       expGolombDecoder.skipBits(1); // gaps_in_frame_num_value_allowed_flag
@@ -35532,7 +37887,6 @@ const workerCode$1 = transform(getWorkerString(function () {
       if (frameMbsOnlyFlag === 0) {
         expGolombDecoder.skipBits(1); // mb_adaptive_frame_field_flag
       }
-
       expGolombDecoder.skipBits(1); // direct_8x8_inference_flag
 
       if (expGolombDecoder.readBoolean()) {
@@ -35596,11 +37950,10 @@ const workerCode$1 = transform(getWorkerString(function () {
             case 16:
               sarRatio = [2, 1];
               break;
-            case 255:
-              {
-                sarRatio = [expGolombDecoder.readUnsignedByte() << 8 | expGolombDecoder.readUnsignedByte(), expGolombDecoder.readUnsignedByte() << 8 | expGolombDecoder.readUnsignedByte()];
-                break;
-              }
+            case 255: {
+              sarRatio = [expGolombDecoder.readUnsignedByte() << 8 | expGolombDecoder.readUnsignedByte(), expGolombDecoder.readUnsignedByte() << 8 | expGolombDecoder.readUnsignedByte()];
+              break;
+            }
           }
           if (sarRatio) {
             sarRatio[0] / sarRatio[1];
@@ -35655,9 +38008,9 @@ const workerCode$1 = transform(getWorkerString(function () {
   var isLikelyAacData$1 = function (data) {
     var offset = getId3Offset(data, 0);
     return data.length >= offset + 2 && (data[offset] & 0xFF) === 0xFF && (data[offset + 1] & 0xF0) === 0xF0 &&
-    // verify that the 2 layer bits are 0, aka this
-    // is not mp3 data but aac data.
-    (data[offset + 1] & 0x16) === 0x10;
+      // verify that the 2 layer bits are 0, aka this
+      // is not mp3 data but aac data.
+      (data[offset + 1] & 0x16) === 0x10;
   };
   var parseSyncSafeInteger = function (data) {
     return data[0] << 21 | data[1] << 14 | data[2] << 7 | data[3];
@@ -35677,14 +38030,13 @@ const workerCode$1 = transform(getWorkerString(function () {
   var parseIso88591 = function (bytes, start, end) {
     return unescape(percentEncode(bytes, start, end)); // jshint ignore:line
   };
-
   var parseAdtsSize = function (header, byteIndex) {
     var lowThree = (header[byteIndex + 5] & 0xE0) >> 5,
       middle = header[byteIndex + 4] << 3,
       highTwo = header[byteIndex + 3] & 0x3 << 11;
     return highTwo | middle | lowThree;
   };
-  var parseType$4 = function (header, byteIndex) {
+  var parseType$5 = function (header, byteIndex) {
     if (header[byteIndex] === 'I'.charCodeAt(0) && header[byteIndex + 1] === 'D'.charCodeAt(0) && header[byteIndex + 2] === '3'.charCodeAt(0)) {
       return 'timed-metadata';
     } else if (header[byteIndex] & 0xff === 0xff && (header[byteIndex + 1] & 0xf0) === 0xf0) {
@@ -35750,7 +38102,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     isLikelyAacData: isLikelyAacData$1,
     parseId3TagSize: parseId3TagSize,
     parseAdtsSize: parseAdtsSize,
-    parseType: parseType$4,
+    parseType: parseType$5,
     parseSampleRate: parseSampleRate,
     parseAacTimestamp: parseAacTimestamp
   };
@@ -36016,12 +38368,12 @@ const workerCode$1 = transform(getWorkerString(function () {
       if (frames.length) {
         segmentDuration = frames.length * frameDuration;
         this.trigger('segmentTimingInfo', generateSegmentTimingInfo(
-        // The audio track's baseMediaDecodeTime is in audio clock cycles, but the
-        // frame info is in video clock cycles. Convert to match expectation of
-        // listeners (that all timestamps will be based on video clock cycles).
-        clock.audioTsToVideoTs(track.baseMediaDecodeTime, track.samplerate),
-        // frame times are already in video clock, as is segment duration
-        frames[0].dts, frames[0].pts, frames[0].dts + segmentDuration, frames[0].pts + segmentDuration, videoClockCyclesOfSilencePrefixed || 0));
+          // The audio track's baseMediaDecodeTime is in audio clock cycles, but the
+          // frame info is in video clock cycles. Convert to match expectation of
+          // listeners (that all timestamps will be based on video clock cycles).
+          clock.audioTsToVideoTs(track.baseMediaDecodeTime, track.samplerate),
+          // frame times are already in video clock, as is segment duration
+          frames[0].dts, frames[0].pts, frames[0].dts + segmentDuration, frames[0].pts + segmentDuration, videoClockCyclesOfSilencePrefixed || 0));
         this.trigger('timingInfo', {
           start: frames[0].pts,
           end: frames[0].pts + segmentDuration
@@ -36064,12 +38416,12 @@ const workerCode$1 = transform(getWorkerString(function () {
     delete track.minPTS;
     this.gopCache_ = [];
     /**
-      * Constructs a ISO BMFF segment given H264 nalUnits
-      * @param {Object} nalUnit A data event representing a nalUnit
-      * @param {String} nalUnit.nalUnitType
-      * @param {Object} nalUnit.config Properties for a mp4 track
-      * @param {Uint8Array} nalUnit.data The nalUnit bytes
-      * @see lib/codecs/h264.js
+     * Constructs a ISO BMFF segment given H264 nalUnits
+     * @param {Object} nalUnit A data event representing a nalUnit
+     * @param {String} nalUnit.nalUnitType
+     * @param {Object} nalUnit.config Properties for a mp4 track
+     * @param {Uint8Array} nalUnit.data The nalUnit bytes
+     * @see lib/codecs/h264.js
      **/
 
     this.push = function (nalUnit) {
@@ -36090,8 +38442,8 @@ const workerCode$1 = transform(getWorkerString(function () {
       nalUnits.push(nalUnit);
     };
     /**
-      * Pass constructed ISO BMFF track and boxes on to the
-      * next stream in the pipeline
+     * Pass constructed ISO BMFF track and boxes on to the
+     * next stream in the pipeline
      **/
 
     this.flush = function () {
@@ -36864,7 +39216,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     toUnsigned: toUnsigned$3,
     toHexString: toHexString$1
   };
-  var parseType$3 = function (buffer) {
+  var parseType$4 = function (buffer) {
     var result = '';
     result += String.fromCharCode(buffer[0]);
     result += String.fromCharCode(buffer[1]);
@@ -36872,10 +39224,10 @@ const workerCode$1 = transform(getWorkerString(function () {
     result += String.fromCharCode(buffer[3]);
     return result;
   };
-  var parseType_1 = parseType$3;
+  var parseType_1 = parseType$4;
   var toUnsigned$2 = bin.toUnsigned;
-  var parseType$2 = parseType_1;
-  var findBox$2 = function (data, path) {
+  var parseType$3 = parseType_1;
+  var findBox$5 = function (data, path) {
     var results = [],
       i,
       size,
@@ -36888,7 +39240,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     }
     for (i = 0; i < data.byteLength;) {
       size = toUnsigned$2(data[i] << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[i + 3]);
-      type = parseType$2(data.subarray(i + 4, i + 8));
+      type = parseType$3(data.subarray(i + 4, i + 8));
       end = size > 1 ? i + size : data.byteLength;
       if (type === path[0]) {
         if (path.length === 1) {
@@ -36897,7 +39249,7 @@ const workerCode$1 = transform(getWorkerString(function () {
           results.push(data.subarray(i + 8, end));
         } else {
           // recursively search for the next box along the path
-          subresults = findBox$2(data.subarray(i + 8, end), path.slice(1));
+          subresults = findBox$5(data.subarray(i + 8, end), path.slice(1));
           if (subresults.length) {
             results = results.concat(subresults);
           }
@@ -36908,22 +39260,108 @@ const workerCode$1 = transform(getWorkerString(function () {
 
     return results;
   };
-  var findBox_1 = findBox$2;
+  var findBox_1 = findBox$5;
   var toUnsigned$1 = bin.toUnsigned;
-  var getUint64$2 = numbers.getUint64;
+  var getUint64$4 = numbers.getUint64;
   var tfdt = function (data) {
     var result = {
       version: data[0],
       flags: new Uint8Array(data.subarray(1, 4))
     };
     if (result.version === 1) {
-      result.baseMediaDecodeTime = getUint64$2(data.subarray(4));
+      result.baseMediaDecodeTime = getUint64$4(data.subarray(4));
     } else {
       result.baseMediaDecodeTime = toUnsigned$1(data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7]);
     }
     return result;
   };
-  var parseTfdt$2 = tfdt;
+  var parseTfdt$3 = tfdt;
+  var tfhd = function (data) {
+    var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+      result = {
+        version: data[0],
+        flags: new Uint8Array(data.subarray(1, 4)),
+        trackId: view.getUint32(4)
+      },
+      baseDataOffsetPresent = result.flags[2] & 0x01,
+      sampleDescriptionIndexPresent = result.flags[2] & 0x02,
+      defaultSampleDurationPresent = result.flags[2] & 0x08,
+      defaultSampleSizePresent = result.flags[2] & 0x10,
+      defaultSampleFlagsPresent = result.flags[2] & 0x20,
+      durationIsEmpty = result.flags[0] & 0x010000,
+      defaultBaseIsMoof = result.flags[0] & 0x020000,
+      i;
+    i = 8;
+    if (baseDataOffsetPresent) {
+      i += 4; // truncate top 4 bytes
+      // FIXME: should we read the full 64 bits?
+
+      result.baseDataOffset = view.getUint32(12);
+      i += 4;
+    }
+    if (sampleDescriptionIndexPresent) {
+      result.sampleDescriptionIndex = view.getUint32(i);
+      i += 4;
+    }
+    if (defaultSampleDurationPresent) {
+      result.defaultSampleDuration = view.getUint32(i);
+      i += 4;
+    }
+    if (defaultSampleSizePresent) {
+      result.defaultSampleSize = view.getUint32(i);
+      i += 4;
+    }
+    if (defaultSampleFlagsPresent) {
+      result.defaultSampleFlags = view.getUint32(i);
+    }
+    if (durationIsEmpty) {
+      result.durationIsEmpty = true;
+    }
+    if (!baseDataOffsetPresent && defaultBaseIsMoof) {
+      result.baseDataOffsetIsMoof = true;
+    }
+    return result;
+  };
+  var parseTfhd$2 = tfhd;
+  var getUint64$3 = numbers.getUint64;
+  var parseSidx = function (data) {
+    var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+      result = {
+        version: data[0],
+        flags: new Uint8Array(data.subarray(1, 4)),
+        references: [],
+        referenceId: view.getUint32(4),
+        timescale: view.getUint32(8)
+      },
+      i = 12;
+    if (result.version === 0) {
+      result.earliestPresentationTime = view.getUint32(i);
+      result.firstOffset = view.getUint32(i + 4);
+      i += 8;
+    } else {
+      // read 64 bits
+      result.earliestPresentationTime = getUint64$3(data.subarray(i));
+      result.firstOffset = getUint64$3(data.subarray(i + 8));
+      i += 16;
+    }
+    i += 2; // reserved
+
+    var referenceCount = view.getUint16(i);
+    i += 2; // start of references
+
+    for (; referenceCount > 0; i += 12, referenceCount--) {
+      result.references.push({
+        referenceType: (data[i] & 0x80) >>> 7,
+        referencedSize: view.getUint32(i) & 0x7FFFFFFF,
+        subsegmentDuration: view.getUint32(i + 4),
+        startsWithSap: !!(data[i + 8] & 0x80),
+        sapType: (data[i + 8] & 0x70) >>> 4,
+        sapDeltaTime: view.getUint32(i + 8) & 0x0FFFFFFF
+      });
+    }
+    return result;
+  };
+  var parseSidx_1 = parseSidx;
   var parseSampleFlags$1 = function (flags) {
     return {
       isLeading: (flags[0] & 0x0c) >>> 2,
@@ -37018,498 +39456,707 @@ const workerCode$1 = transform(getWorkerString(function () {
     return result;
   };
   var parseTrun$2 = trun;
-  var tfhd = function (data) {
-    var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
-      result = {
-        version: data[0],
-        flags: new Uint8Array(data.subarray(1, 4)),
-        trackId: view.getUint32(4)
-      },
-      baseDataOffsetPresent = result.flags[2] & 0x01,
-      sampleDescriptionIndexPresent = result.flags[2] & 0x02,
-      defaultSampleDurationPresent = result.flags[2] & 0x08,
-      defaultSampleSizePresent = result.flags[2] & 0x10,
-      defaultSampleFlagsPresent = result.flags[2] & 0x20,
-      durationIsEmpty = result.flags[0] & 0x010000,
-      defaultBaseIsMoof = result.flags[0] & 0x020000,
-      i;
-    i = 8;
-    if (baseDataOffsetPresent) {
-      i += 4; // truncate top 4 bytes
-      // FIXME: should we read the full 64 bits?
-
-      result.baseDataOffset = view.getUint32(12);
-      i += 4;
-    }
-    if (sampleDescriptionIndexPresent) {
-      result.sampleDescriptionIndex = view.getUint32(i);
-      i += 4;
-    }
-    if (defaultSampleDurationPresent) {
-      result.defaultSampleDuration = view.getUint32(i);
-      i += 4;
-    }
-    if (defaultSampleSizePresent) {
-      result.defaultSampleSize = view.getUint32(i);
-      i += 4;
-    }
-    if (defaultSampleFlagsPresent) {
-      result.defaultSampleFlags = view.getUint32(i);
-    }
-    if (durationIsEmpty) {
-      result.durationIsEmpty = true;
-    }
-    if (!baseDataOffsetPresent && defaultBaseIsMoof) {
-      result.baseDataOffsetIsMoof = true;
-    }
-    return result;
-  };
-  var parseTfhd$2 = tfhd;
-  var win;
-  if (typeof window !== "undefined") {
-    win = window;
-  } else if (typeof commonjsGlobal !== "undefined") {
-    win = commonjsGlobal;
-  } else if (typeof self !== "undefined") {
-    win = self;
-  } else {
-    win = {};
-  }
-  var window_1 = win;
   /**
    * mux.js
    *
    * Copyright (c) Brightcove
    * Licensed Apache-2.0 https://github.com/videojs/mux.js/blob/master/LICENSE
    *
-   * Reads in-band CEA-708 captions out of FMP4 segments.
-   * @see https://en.wikipedia.org/wiki/CEA-708
+   * Parse the internal MP4 structure into an equivalent javascript
+   * object.
    */
 
-  var discardEmulationPreventionBytes = captionPacketParser.discardEmulationPreventionBytes;
-  var CaptionStream = captionStream.CaptionStream;
-  var findBox$1 = findBox_1;
-  var parseTfdt$1 = parseTfdt$2;
-  var parseTrun$1 = parseTrun$2;
-  var parseTfhd$1 = parseTfhd$2;
-  var window$2 = window_1;
-  /**
-    * Maps an offset in the mdat to a sample based on the the size of the samples.
-    * Assumes that `parseSamples` has been called first.
-    *
-    * @param {Number} offset - The offset into the mdat
-    * @param {Object[]} samples - An array of samples, parsed using `parseSamples`
-    * @return {?Object} The matching sample, or null if no match was found.
-    *
-    * @see ISO-BMFF-12/2015, Section 8.8.8
-   **/
+  var numberHelpers = numbers;
+  var getUint64$2 = numberHelpers.getUint64;
+  var inspectMp4,
+    textifyMp4,
+    parseMp4Date = function (seconds) {
+      return new Date(seconds * 1000 - 2082844800000);
+    },
+    parseType$2 = parseType_1,
+    findBox$4 = findBox_1,
+    nalParse = function (avcStream) {
+      var avcView = new DataView(avcStream.buffer, avcStream.byteOffset, avcStream.byteLength),
+        result = [],
+        i,
+        length;
+      for (i = 0; i + 4 < avcStream.length; i += length) {
+        length = avcView.getUint32(i);
+        i += 4; // bail if this doesn't appear to be an H264 stream
 
-  var mapToSample = function (offset, samples) {
-    var approximateOffset = offset;
-    for (var i = 0; i < samples.length; i++) {
-      var sample = samples[i];
-      if (approximateOffset < sample.size) {
-        return sample;
+        if (length <= 0) {
+          result.push('<span style=\'color:red;\'>MALFORMED DATA</span>');
+          continue;
+        }
+        switch (avcStream[i] & 0x1F) {
+          case 0x01:
+            result.push('slice_layer_without_partitioning_rbsp');
+            break;
+          case 0x05:
+            result.push('slice_layer_without_partitioning_rbsp_idr');
+            break;
+          case 0x06:
+            result.push('sei_rbsp');
+            break;
+          case 0x07:
+            result.push('seq_parameter_set_rbsp');
+            break;
+          case 0x08:
+            result.push('pic_parameter_set_rbsp');
+            break;
+          case 0x09:
+            result.push('access_unit_delimiter_rbsp');
+            break;
+          default:
+            result.push('UNKNOWN NAL - ' + avcStream[i] & 0x1F);
+            break;
+        }
       }
-      approximateOffset -= sample.size;
-    }
-    return null;
-  };
-  /**
-    * Finds SEI nal units contained in a Media Data Box.
-    * Assumes that `parseSamples` has been called first.
-    *
-    * @param {Uint8Array} avcStream - The bytes of the mdat
-    * @param {Object[]} samples - The samples parsed out by `parseSamples`
-    * @param {Number} trackId - The trackId of this video track
-    * @return {Object[]} seiNals - the parsed SEI NALUs found.
-    *   The contents of the seiNal should match what is expected by
-    *   CaptionStream.push (nalUnitType, size, data, escapedRBSP, pts, dts)
-    *
-    * @see ISO-BMFF-12/2015, Section 8.1.1
-    * @see Rec. ITU-T H.264, 7.3.2.3.1
-   **/
-
-  var findSeiNals = function (avcStream, samples, trackId) {
-    var avcView = new DataView(avcStream.buffer, avcStream.byteOffset, avcStream.byteLength),
-      result = {
-        logs: [],
-        seiNals: []
+      return result;
+    },
+    // registry of handlers for individual mp4 box types
+    parse = {
+      // codingname, not a first-class box type. stsd entries share the
+      // same format as real boxes so the parsing infrastructure can be
+      // shared
+      avc1: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        return {
+          dataReferenceIndex: view.getUint16(6),
+          width: view.getUint16(24),
+          height: view.getUint16(26),
+          horizresolution: view.getUint16(28) + view.getUint16(30) / 16,
+          vertresolution: view.getUint16(32) + view.getUint16(34) / 16,
+          frameCount: view.getUint16(40),
+          depth: view.getUint16(74),
+          config: inspectMp4(data.subarray(78, data.byteLength))
+        };
       },
-      seiNal,
-      i,
-      length,
-      lastMatchedSample;
-    for (i = 0; i + 4 < avcStream.length; i += length) {
-      length = avcView.getUint32(i);
-      i += 4; // Bail if this doesn't appear to be an H264 stream
+      avcC: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            configurationVersion: data[0],
+            avcProfileIndication: data[1],
+            profileCompatibility: data[2],
+            avcLevelIndication: data[3],
+            lengthSizeMinusOne: data[4] & 0x03,
+            sps: [],
+            pps: []
+          },
+          numOfSequenceParameterSets = data[5] & 0x1f,
+          numOfPictureParameterSets,
+          nalSize,
+          offset,
+          i; // iterate past any SPSs
 
-      if (length <= 0) {
-        continue;
-      }
-      switch (avcStream[i] & 0x1F) {
-        case 0x06:
-          var data = avcStream.subarray(i + 1, i + 1 + length);
-          var matchingSample = mapToSample(i, samples);
-          seiNal = {
-            nalUnitType: 'sei_rbsp',
-            size: length,
-            data: data,
-            escapedRBSP: discardEmulationPreventionBytes(data),
-            trackId: trackId
-          };
-          if (matchingSample) {
-            seiNal.pts = matchingSample.pts;
-            seiNal.dts = matchingSample.dts;
-            lastMatchedSample = matchingSample;
-          } else if (lastMatchedSample) {
-            // If a matching sample cannot be found, use the last
-            // sample's values as they should be as close as possible
-            seiNal.pts = lastMatchedSample.pts;
-            seiNal.dts = lastMatchedSample.dts;
-          } else {
-            result.logs.push({
-              level: 'warn',
-              message: 'We\'ve encountered a nal unit without data at ' + i + ' for trackId ' + trackId + '. See mux.js#223.'
+        offset = 6;
+        for (i = 0; i < numOfSequenceParameterSets; i++) {
+          nalSize = view.getUint16(offset);
+          offset += 2;
+          result.sps.push(new Uint8Array(data.subarray(offset, offset + nalSize)));
+          offset += nalSize;
+        } // iterate past any PPSs
+
+        numOfPictureParameterSets = data[offset];
+        offset++;
+        for (i = 0; i < numOfPictureParameterSets; i++) {
+          nalSize = view.getUint16(offset);
+          offset += 2;
+          result.pps.push(new Uint8Array(data.subarray(offset, offset + nalSize)));
+          offset += nalSize;
+        }
+        return result;
+      },
+      btrt: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        return {
+          bufferSizeDB: view.getUint32(0),
+          maxBitrate: view.getUint32(4),
+          avgBitrate: view.getUint32(8)
+        };
+      },
+      edts: function edts(data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      elst: function elst(data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4)),
+            edits: []
+          },
+          entryCount = view.getUint32(4),
+          i;
+        for (i = 8; entryCount; entryCount--) {
+          if (result.version === 0) {
+            result.edits.push({
+              segmentDuration: view.getUint32(i),
+              mediaTime: view.getInt32(i + 4),
+              mediaRate: view.getUint16(i + 8) + view.getUint16(i + 10) / (256 * 256)
             });
+            i += 12;
+          } else {
+            result.edits.push({
+              segmentDuration: getUint64$2(data.subarray(i)),
+              mediaTime: getUint64$2(data.subarray(i + 8)),
+              mediaRate: view.getUint16(i + 16) + view.getUint16(i + 18) / (256 * 256)
+            });
+            i += 20;
+          }
+        }
+        return result;
+      },
+      esds: function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          esId: data[6] << 8 | data[7],
+          streamPriority: data[8] & 0x1f,
+          decoderConfig: {
+            objectProfileIndication: data[11],
+            streamType: data[12] >>> 2 & 0x3f,
+            bufferSize: data[13] << 16 | data[14] << 8 | data[15],
+            maxBitrate: data[16] << 24 | data[17] << 16 | data[18] << 8 | data[19],
+            avgBitrate: data[20] << 24 | data[21] << 16 | data[22] << 8 | data[23],
+            decoderConfigDescriptor: {
+              tag: data[24],
+              length: data[25],
+              audioObjectType: data[26] >>> 3 & 0x1f,
+              samplingFrequencyIndex: (data[26] & 0x07) << 1 | data[27] >>> 7 & 0x01,
+              channelConfiguration: data[27] >>> 3 & 0x0f
+            }
+          }
+        };
+      },
+      ftyp: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            majorBrand: parseType$2(data.subarray(0, 4)),
+            minorVersion: view.getUint32(4),
+            compatibleBrands: []
+          },
+          i = 8;
+        while (i < data.byteLength) {
+          result.compatibleBrands.push(parseType$2(data.subarray(i, i + 4)));
+          i += 4;
+        }
+        return result;
+      },
+      dinf: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      dref: function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          dataReferences: inspectMp4(data.subarray(8))
+        };
+      },
+      hdlr: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4)),
+            handlerType: parseType$2(data.subarray(8, 12)),
+            name: ''
+          },
+          i = 8; // parse out the name field
+
+        for (i = 24; i < data.byteLength; i++) {
+          if (data[i] === 0x00) {
+            // the name field is null-terminated
+            i++;
             break;
           }
-          result.seiNals.push(seiNal);
-          break;
+          result.name += String.fromCharCode(data[i]);
+        } // decode UTF-8 to javascript's internal representation
+        // see http://ecmanaut.blogspot.com/2006/07/encoding-decoding-utf8-in-javascript.html
+
+        result.name = decodeURIComponent(escape(result.name));
+        return result;
+      },
+      mdat: function (data) {
+        return {
+          byteLength: data.byteLength,
+          nals: nalParse(data)
+        };
+      },
+      mdhd: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          i = 4,
+          language,
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4)),
+            language: ''
+          };
+        if (result.version === 1) {
+          i += 4;
+          result.creationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 8;
+          result.modificationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 4;
+          result.timescale = view.getUint32(i);
+          i += 8;
+          result.duration = view.getUint32(i); // truncating top 4 bytes
+        } else {
+          result.creationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.modificationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.timescale = view.getUint32(i);
+          i += 4;
+          result.duration = view.getUint32(i);
+        }
+        i += 4; // language is stored as an ISO-639-2/T code in an array of three 5-bit fields
+        // each field is the packed difference between its ASCII value and 0x60
+
+        language = view.getUint16(i);
+        result.language += String.fromCharCode((language >> 10) + 0x60);
+        result.language += String.fromCharCode(((language & 0x03e0) >> 5) + 0x60);
+        result.language += String.fromCharCode((language & 0x1f) + 0x60);
+        return result;
+      },
+      mdia: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      mfhd: function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          sequenceNumber: data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7]
+        };
+      },
+      minf: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      // codingname, not a first-class box type. stsd entries share the
+      // same format as real boxes so the parsing infrastructure can be
+      // shared
+      mp4a: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            // 6 bytes reserved
+            dataReferenceIndex: view.getUint16(6),
+            // 4 + 4 bytes reserved
+            channelcount: view.getUint16(16),
+            samplesize: view.getUint16(18),
+            // 2 bytes pre_defined
+            // 2 bytes reserved
+            samplerate: view.getUint16(24) + view.getUint16(26) / 65536
+          }; // if there are more bytes to process, assume this is an ISO/IEC
+        // 14496-14 MP4AudioSampleEntry and parse the ESDBox
+
+        if (data.byteLength > 28) {
+          result.streamDescriptor = inspectMp4(data.subarray(28))[0];
+        }
+        return result;
+      },
+      moof: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      moov: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      mvex: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      mvhd: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          i = 4,
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4))
+          };
+        if (result.version === 1) {
+          i += 4;
+          result.creationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 8;
+          result.modificationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 4;
+          result.timescale = view.getUint32(i);
+          i += 8;
+          result.duration = view.getUint32(i); // truncating top 4 bytes
+        } else {
+          result.creationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.modificationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.timescale = view.getUint32(i);
+          i += 4;
+          result.duration = view.getUint32(i);
+        }
+        i += 4; // convert fixed-point, base 16 back to a number
+
+        result.rate = view.getUint16(i) + view.getUint16(i + 2) / 16;
+        i += 4;
+        result.volume = view.getUint8(i) + view.getUint8(i + 1) / 8;
+        i += 2;
+        i += 2;
+        i += 2 * 4;
+        result.matrix = new Uint32Array(data.subarray(i, i + 9 * 4));
+        i += 9 * 4;
+        i += 6 * 4;
+        result.nextTrackId = view.getUint32(i);
+        return result;
+      },
+      pdin: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        return {
+          version: view.getUint8(0),
+          flags: new Uint8Array(data.subarray(1, 4)),
+          rate: view.getUint32(4),
+          initialDelay: view.getUint32(8)
+        };
+      },
+      sdtp: function (data) {
+        var result = {
+            version: data[0],
+            flags: new Uint8Array(data.subarray(1, 4)),
+            samples: []
+          },
+          i;
+        for (i = 4; i < data.byteLength; i++) {
+          result.samples.push({
+            dependsOn: (data[i] & 0x30) >> 4,
+            isDependedOn: (data[i] & 0x0c) >> 2,
+            hasRedundancy: data[i] & 0x03
+          });
+        }
+        return result;
+      },
+      sidx: parseSidx_1,
+      smhd: function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          balance: data[4] + data[5] / 256
+        };
+      },
+      stbl: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      ctts: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4)),
+            compositionOffsets: []
+          },
+          entryCount = view.getUint32(4),
+          i;
+        for (i = 8; entryCount; i += 8, entryCount--) {
+          result.compositionOffsets.push({
+            sampleCount: view.getUint32(i),
+            sampleOffset: view[result.version === 0 ? 'getUint32' : 'getInt32'](i + 4)
+          });
+        }
+        return result;
+      },
+      stss: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4)),
+            syncSamples: []
+          },
+          entryCount = view.getUint32(4),
+          i;
+        for (i = 8; entryCount; i += 4, entryCount--) {
+          result.syncSamples.push(view.getUint32(i));
+        }
+        return result;
+      },
+      stco: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: data[0],
+            flags: new Uint8Array(data.subarray(1, 4)),
+            chunkOffsets: []
+          },
+          entryCount = view.getUint32(4),
+          i;
+        for (i = 8; entryCount; i += 4, entryCount--) {
+          result.chunkOffsets.push(view.getUint32(i));
+        }
+        return result;
+      },
+      stsc: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          entryCount = view.getUint32(4),
+          result = {
+            version: data[0],
+            flags: new Uint8Array(data.subarray(1, 4)),
+            sampleToChunks: []
+          },
+          i;
+        for (i = 8; entryCount; i += 12, entryCount--) {
+          result.sampleToChunks.push({
+            firstChunk: view.getUint32(i),
+            samplesPerChunk: view.getUint32(i + 4),
+            sampleDescriptionIndex: view.getUint32(i + 8)
+          });
+        }
+        return result;
+      },
+      stsd: function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          sampleDescriptions: inspectMp4(data.subarray(8))
+        };
+      },
+      stsz: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: data[0],
+            flags: new Uint8Array(data.subarray(1, 4)),
+            sampleSize: view.getUint32(4),
+            entries: []
+          },
+          i;
+        for (i = 12; i < data.byteLength; i += 4) {
+          result.entries.push(view.getUint32(i));
+        }
+        return result;
+      },
+      stts: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          result = {
+            version: data[0],
+            flags: new Uint8Array(data.subarray(1, 4)),
+            timeToSamples: []
+          },
+          entryCount = view.getUint32(4),
+          i;
+        for (i = 8; entryCount; i += 8, entryCount--) {
+          result.timeToSamples.push({
+            sampleCount: view.getUint32(i),
+            sampleDelta: view.getUint32(i + 4)
+          });
+        }
+        return result;
+      },
+      styp: function (data) {
+        return parse.ftyp(data);
+      },
+      tfdt: parseTfdt$3,
+      tfhd: parseTfhd$2,
+      tkhd: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength),
+          i = 4,
+          result = {
+            version: view.getUint8(0),
+            flags: new Uint8Array(data.subarray(1, 4))
+          };
+        if (result.version === 1) {
+          i += 4;
+          result.creationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 8;
+          result.modificationTime = parseMp4Date(view.getUint32(i)); // truncating top 4 bytes
+
+          i += 4;
+          result.trackId = view.getUint32(i);
+          i += 4;
+          i += 8;
+          result.duration = view.getUint32(i); // truncating top 4 bytes
+        } else {
+          result.creationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.modificationTime = parseMp4Date(view.getUint32(i));
+          i += 4;
+          result.trackId = view.getUint32(i);
+          i += 4;
+          i += 4;
+          result.duration = view.getUint32(i);
+        }
+        i += 4;
+        i += 2 * 4;
+        result.layer = view.getUint16(i);
+        i += 2;
+        result.alternateGroup = view.getUint16(i);
+        i += 2; // convert fixed-point, base 16 back to a number
+
+        result.volume = view.getUint8(i) + view.getUint8(i + 1) / 8;
+        i += 2;
+        i += 2;
+        result.matrix = new Uint32Array(data.subarray(i, i + 9 * 4));
+        i += 9 * 4;
+        result.width = view.getUint16(i) + view.getUint16(i + 2) / 65536;
+        i += 4;
+        result.height = view.getUint16(i) + view.getUint16(i + 2) / 65536;
+        return result;
+      },
+      traf: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      trak: function (data) {
+        return {
+          boxes: inspectMp4(data)
+        };
+      },
+      trex: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          trackId: view.getUint32(4),
+          defaultSampleDescriptionIndex: view.getUint32(8),
+          defaultSampleDuration: view.getUint32(12),
+          defaultSampleSize: view.getUint32(16),
+          sampleDependsOn: data[20] & 0x03,
+          sampleIsDependedOn: (data[21] & 0xc0) >> 6,
+          sampleHasRedundancy: (data[21] & 0x30) >> 4,
+          samplePaddingValue: (data[21] & 0x0e) >> 1,
+          sampleIsDifferenceSample: !!(data[21] & 0x01),
+          sampleDegradationPriority: view.getUint16(22)
+        };
+      },
+      trun: parseTrun$2,
+      'url ': function (data) {
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4))
+        };
+      },
+      vmhd: function (data) {
+        var view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        return {
+          version: data[0],
+          flags: new Uint8Array(data.subarray(1, 4)),
+          graphicsmode: view.getUint16(4),
+          opcolor: new Uint16Array([view.getUint16(6), view.getUint16(8), view.getUint16(10)])
+        };
       }
+    };
+  /**
+   * Return a javascript array of box objects parsed from an ISO base
+   * media file.
+   * @param data {Uint8Array} the binary data of the media to be inspected
+   * @return {array} a javascript array of potentially nested box objects
+   */
+
+  inspectMp4 = function (data) {
+    var i = 0,
+      result = [],
+      view,
+      size,
+      type,
+      end,
+      box; // Convert data from Uint8Array to ArrayBuffer, to follow Dataview API
+
+    var ab = new ArrayBuffer(data.length);
+    var v = new Uint8Array(ab);
+    for (var z = 0; z < data.length; ++z) {
+      v[z] = data[z];
+    }
+    view = new DataView(ab);
+    while (i < data.byteLength) {
+      // parse box data
+      size = view.getUint32(i);
+      type = parseType$2(data.subarray(i + 4, i + 8));
+      end = size > 1 ? i + size : data.byteLength; // parse type-specific data
+
+      box = (parse[type] || function (data) {
+        return {
+          data: data
+        };
+      })(data.subarray(i + 8, end));
+      box.size = size;
+      box.type = type; // store this box and move to the next
+
+      result.push(box);
+      i = end;
     }
     return result;
   };
   /**
-    * Parses sample information out of Track Run Boxes and calculates
-    * the absolute presentation and decode timestamps of each sample.
-    *
-    * @param {Array<Uint8Array>} truns - The Trun Run boxes to be parsed
-    * @param {Number|BigInt} baseMediaDecodeTime - base media decode time from tfdt
-        @see ISO-BMFF-12/2015, Section 8.8.12
-    * @param {Object} tfhd - The parsed Track Fragment Header
-    *   @see inspect.parseTfhd
-    * @return {Object[]} the parsed samples
-    *
-    * @see ISO-BMFF-12/2015, Section 8.8.8
-   **/
+   * Returns a textual representation of the javascript represtentation
+   * of an MP4 file. You can use it as an alternative to
+   * JSON.stringify() to compare inspected MP4s.
+   * @param inspectedMp4 {array} the parsed array of boxes in an MP4
+   * file
+   * @param depth {number} (optional) the number of ancestor boxes of
+   * the elements of inspectedMp4. Assumed to be zero if unspecified.
+   * @return {string} a text representation of the parsed MP4
+   */
 
-  var parseSamples = function (truns, baseMediaDecodeTime, tfhd) {
-    var currentDts = baseMediaDecodeTime;
-    var defaultSampleDuration = tfhd.defaultSampleDuration || 0;
-    var defaultSampleSize = tfhd.defaultSampleSize || 0;
-    var trackId = tfhd.trackId;
-    var allSamples = [];
-    truns.forEach(function (trun) {
-      // Note: We currently do not parse the sample table as well
-      // as the trun. It's possible some sources will require this.
-      // moov > trak > mdia > minf > stbl
-      var trackRun = parseTrun$1(trun);
-      var samples = trackRun.samples;
-      samples.forEach(function (sample) {
-        if (sample.duration === undefined) {
-          sample.duration = defaultSampleDuration;
-        }
-        if (sample.size === undefined) {
-          sample.size = defaultSampleSize;
-        }
-        sample.trackId = trackId;
-        sample.dts = currentDts;
-        if (sample.compositionTimeOffset === undefined) {
-          sample.compositionTimeOffset = 0;
-        }
-        if (typeof currentDts === 'bigint') {
-          sample.pts = currentDts + window$2.BigInt(sample.compositionTimeOffset);
-          currentDts += window$2.BigInt(sample.duration);
-        } else {
-          sample.pts = currentDts + sample.compositionTimeOffset;
-          currentDts += sample.duration;
-        }
-      });
-      allSamples = allSamples.concat(samples);
-    });
-    return allSamples;
+  textifyMp4 = function (inspectedMp4, depth) {
+    var indent;
+    depth = depth || 0;
+    indent = new Array(depth * 2 + 1).join(' '); // iterate over all the boxes
+
+    return inspectedMp4.map(function (box, index) {
+      // list the box type first at the current indentation level
+      return indent + box.type + '\n' +
+        // the type is already included and handle child boxes separately
+        Object.keys(box).filter(function (key) {
+          return key !== 'type' && key !== 'boxes'; // output all the box properties
+        }).map(function (key) {
+          var prefix = indent + '  ' + key + ': ',
+            value = box[key]; // print out raw bytes as hexademical
+
+          if (value instanceof Uint8Array || value instanceof Uint32Array) {
+            var bytes = Array.prototype.slice.call(new Uint8Array(value.buffer, value.byteOffset, value.byteLength)).map(function (byte) {
+              return ' ' + ('00' + byte.toString(16)).slice(-2);
+            }).join('').match(/.{1,24}/g);
+            if (!bytes) {
+              return prefix + '<>';
+            }
+            if (bytes.length === 1) {
+              return prefix + '<' + bytes.join('').slice(1) + '>';
+            }
+            return prefix + '<\n' + bytes.map(function (line) {
+              return indent + '  ' + line;
+            }).join('\n') + '\n' + indent + '  >';
+          } // stringify generic objects
+
+          return prefix + JSON.stringify(value, null, 2).split('\n').map(function (line, index) {
+            if (index === 0) {
+              return line;
+            }
+            return indent + '  ' + line;
+          }).join('\n');
+        }).join('\n') + (
+          // recursively textify the child boxes
+          box.boxes ? '\n' + textifyMp4(box.boxes, depth + 1) : '');
+    }).join('\n');
   };
-  /**
-    * Parses out caption nals from an FMP4 segment's video tracks.
-    *
-    * @param {Uint8Array} segment - The bytes of a single segment
-    * @param {Number} videoTrackId - The trackId of a video track in the segment
-    * @return {Object.<Number, Object[]>} A mapping of video trackId to
-    *   a list of seiNals found in that track
-   **/
-
-  var parseCaptionNals = function (segment, videoTrackId) {
-    // To get the samples
-    var trafs = findBox$1(segment, ['moof', 'traf']); // To get SEI NAL units
-
-    var mdats = findBox$1(segment, ['mdat']);
-    var captionNals = {};
-    var mdatTrafPairs = []; // Pair up each traf with a mdat as moofs and mdats are in pairs
-
-    mdats.forEach(function (mdat, index) {
-      var matchingTraf = trafs[index];
-      mdatTrafPairs.push({
-        mdat: mdat,
-        traf: matchingTraf
-      });
-    });
-    mdatTrafPairs.forEach(function (pair) {
-      var mdat = pair.mdat;
-      var traf = pair.traf;
-      var tfhd = findBox$1(traf, ['tfhd']); // Exactly 1 tfhd per traf
-
-      var headerInfo = parseTfhd$1(tfhd[0]);
-      var trackId = headerInfo.trackId;
-      var tfdt = findBox$1(traf, ['tfdt']); // Either 0 or 1 tfdt per traf
-
-      var baseMediaDecodeTime = tfdt.length > 0 ? parseTfdt$1(tfdt[0]).baseMediaDecodeTime : 0;
-      var truns = findBox$1(traf, ['trun']);
-      var samples;
-      var result; // Only parse video data for the chosen video track
-
-      if (videoTrackId === trackId && truns.length > 0) {
-        samples = parseSamples(truns, baseMediaDecodeTime, headerInfo);
-        result = findSeiNals(mdat, samples, trackId);
-        if (!captionNals[trackId]) {
-          captionNals[trackId] = {
-            seiNals: [],
-            logs: []
-          };
-        }
-        captionNals[trackId].seiNals = captionNals[trackId].seiNals.concat(result.seiNals);
-        captionNals[trackId].logs = captionNals[trackId].logs.concat(result.logs);
-      }
-    });
-    return captionNals;
+  var mp4Inspector = {
+    inspect: inspectMp4,
+    textify: textifyMp4,
+    parseType: parseType$2,
+    findBox: findBox$4,
+    parseTraf: parse.traf,
+    parseTfdt: parse.tfdt,
+    parseHdlr: parse.hdlr,
+    parseTfhd: parse.tfhd,
+    parseTrun: parse.trun,
+    parseSidx: parse.sidx
   };
-  /**
-    * Parses out inband captions from an MP4 container and returns
-    * caption objects that can be used by WebVTT and the TextTrack API.
-    * @see https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
-    * @see https://developer.mozilla.org/en-US/docs/Web/API/TextTrack
-    * Assumes that `probe.getVideoTrackIds` and `probe.timescale` have been called first
-    *
-    * @param {Uint8Array} segment - The fmp4 segment containing embedded captions
-    * @param {Number} trackId - The id of the video track to parse
-    * @param {Number} timescale - The timescale for the video track from the init segment
-    *
-    * @return {?Object[]} parsedCaptions - A list of captions or null if no video tracks
-    * @return {Number} parsedCaptions[].startTime - The time to show the caption in seconds
-    * @return {Number} parsedCaptions[].endTime - The time to stop showing the caption in seconds
-    * @return {Object[]} parsedCaptions[].content - A list of individual caption segments
-    * @return {String} parsedCaptions[].content.text - The visible content of the caption segment
-    * @return {Number} parsedCaptions[].content.line - The line height from 1-15 for positioning of the caption segment
-    * @return {Number} parsedCaptions[].content.position - The column indent percentage for cue positioning from 10-80
-   **/
-
-  var parseEmbeddedCaptions = function (segment, trackId, timescale) {
-    var captionNals; // the ISO-BMFF spec says that trackId can't be zero, but there's some broken content out there
-
-    if (trackId === null) {
-      return null;
-    }
-    captionNals = parseCaptionNals(segment, trackId);
-    var trackNals = captionNals[trackId] || {};
-    return {
-      seiNals: trackNals.seiNals,
-      logs: trackNals.logs,
-      timescale: timescale
-    };
-  };
-  /**
-    * Converts SEI NALUs into captions that can be used by video.js
-   **/
-
-  var CaptionParser = function () {
-    var isInitialized = false;
-    var captionStream; // Stores segments seen before trackId and timescale are set
-
-    var segmentCache; // Stores video track ID of the track being parsed
-
-    var trackId; // Stores the timescale of the track being parsed
-
-    var timescale; // Stores captions parsed so far
-
-    var parsedCaptions; // Stores whether we are receiving partial data or not
-
-    var parsingPartial;
-    /**
-      * A method to indicate whether a CaptionParser has been initalized
-      * @returns {Boolean}
-     **/
-
-    this.isInitialized = function () {
-      return isInitialized;
-    };
-    /**
-      * Initializes the underlying CaptionStream, SEI NAL parsing
-      * and management, and caption collection
-     **/
-
-    this.init = function (options) {
-      captionStream = new CaptionStream();
-      isInitialized = true;
-      parsingPartial = options ? options.isPartial : false; // Collect dispatched captions
-
-      captionStream.on('data', function (event) {
-        // Convert to seconds in the source's timescale
-        event.startTime = event.startPts / timescale;
-        event.endTime = event.endPts / timescale;
-        parsedCaptions.captions.push(event);
-        parsedCaptions.captionStreams[event.stream] = true;
-      });
-      captionStream.on('log', function (log) {
-        parsedCaptions.logs.push(log);
-      });
-    };
-    /**
-      * Determines if a new video track will be selected
-      * or if the timescale changed
-      * @return {Boolean}
-     **/
-
-    this.isNewInit = function (videoTrackIds, timescales) {
-      if (videoTrackIds && videoTrackIds.length === 0 || timescales && typeof timescales === 'object' && Object.keys(timescales).length === 0) {
-        return false;
-      }
-      return trackId !== videoTrackIds[0] || timescale !== timescales[trackId];
-    };
-    /**
-      * Parses out SEI captions and interacts with underlying
-      * CaptionStream to return dispatched captions
-      *
-      * @param {Uint8Array} segment - The fmp4 segment containing embedded captions
-      * @param {Number[]} videoTrackIds - A list of video tracks found in the init segment
-      * @param {Object.<Number, Number>} timescales - The timescales found in the init segment
-      * @see parseEmbeddedCaptions
-      * @see m2ts/caption-stream.js
-     **/
-
-    this.parse = function (segment, videoTrackIds, timescales) {
-      var parsedData;
-      if (!this.isInitialized()) {
-        return null; // This is not likely to be a video segment
-      } else if (!videoTrackIds || !timescales) {
-        return null;
-      } else if (this.isNewInit(videoTrackIds, timescales)) {
-        // Use the first video track only as there is no
-        // mechanism to switch to other video tracks
-        trackId = videoTrackIds[0];
-        timescale = timescales[trackId]; // If an init segment has not been seen yet, hold onto segment
-        // data until we have one.
-        // the ISO-BMFF spec says that trackId can't be zero, but there's some broken content out there
-      } else if (trackId === null || !timescale) {
-        segmentCache.push(segment);
-        return null;
-      } // Now that a timescale and trackId is set, parse cached segments
-
-      while (segmentCache.length > 0) {
-        var cachedSegment = segmentCache.shift();
-        this.parse(cachedSegment, videoTrackIds, timescales);
-      }
-      parsedData = parseEmbeddedCaptions(segment, trackId, timescale);
-      if (parsedData && parsedData.logs) {
-        parsedCaptions.logs = parsedCaptions.logs.concat(parsedData.logs);
-      }
-      if (parsedData === null || !parsedData.seiNals) {
-        if (parsedCaptions.logs.length) {
-          return {
-            logs: parsedCaptions.logs,
-            captions: [],
-            captionStreams: []
-          };
-        }
-        return null;
-      }
-      this.pushNals(parsedData.seiNals); // Force the parsed captions to be dispatched
-
-      this.flushStream();
-      return parsedCaptions;
-    };
-    /**
-      * Pushes SEI NALUs onto CaptionStream
-      * @param {Object[]} nals - A list of SEI nals parsed using `parseCaptionNals`
-      * Assumes that `parseCaptionNals` has been called first
-      * @see m2ts/caption-stream.js
-      **/
-
-    this.pushNals = function (nals) {
-      if (!this.isInitialized() || !nals || nals.length === 0) {
-        return null;
-      }
-      nals.forEach(function (nal) {
-        captionStream.push(nal);
-      });
-    };
-    /**
-      * Flushes underlying CaptionStream to dispatch processed, displayable captions
-      * @see m2ts/caption-stream.js
-     **/
-
-    this.flushStream = function () {
-      if (!this.isInitialized()) {
-        return null;
-      }
-      if (!parsingPartial) {
-        captionStream.flush();
-      } else {
-        captionStream.partialFlush();
-      }
-    };
-    /**
-      * Reset caption buckets for new data
-     **/
-
-    this.clearParsedCaptions = function () {
-      parsedCaptions.captions = [];
-      parsedCaptions.captionStreams = {};
-      parsedCaptions.logs = [];
-    };
-    /**
-      * Resets underlying CaptionStream
-      * @see m2ts/caption-stream.js
-     **/
-
-    this.resetCaptionStream = function () {
-      if (!this.isInitialized()) {
-        return null;
-      }
-      captionStream.reset();
-    };
-    /**
-      * Convenience method to clear all captions flushed from the
-      * CaptionStream and still being parsed
-      * @see m2ts/caption-stream.js
-     **/
-
-    this.clearAllCaptions = function () {
-      this.clearParsedCaptions();
-      this.resetCaptionStream();
-    };
-    /**
-      * Reset caption parser
-     **/
-
-    this.reset = function () {
-      segmentCache = [];
-      trackId = null;
-      timescale = null;
-      if (!parsedCaptions) {
-        parsedCaptions = {
-          captions: [],
-          // CC1, CC2, CC3, CC4
-          captionStreams: {},
-          logs: []
-        };
-      } else {
-        this.clearParsedCaptions();
-      }
-      this.resetCaptionStream();
-    };
-    this.reset();
-  };
-  var captionParser = CaptionParser;
   /**
    * Returns the first string in the data array ending with a null char '\0'
    * @param {UInt8} data
@@ -37627,6 +40274,17 @@ const workerCode$1 = transform(getWorkerString(function () {
     parseEmsgBox: parseEmsgBox,
     scaleTime: scaleTime
   };
+  var win;
+  if (typeof window !== "undefined") {
+    win = window;
+  } else if (typeof commonjsGlobal !== "undefined") {
+    win = commonjsGlobal;
+  } else if (typeof self !== "undefined") {
+    win = self;
+  } else {
+    win = {};
+  }
+  var window_1 = win;
   /**
    * mux.js
    *
@@ -37638,15 +40296,16 @@ const workerCode$1 = transform(getWorkerString(function () {
 
   var toUnsigned = bin.toUnsigned;
   var toHexString = bin.toHexString;
-  var findBox = findBox_1;
+  var findBox$3 = findBox_1;
   var parseType$1 = parseType_1;
   var emsg = emsg$1;
-  var parseTfhd = parseTfhd$2;
-  var parseTrun = parseTrun$2;
-  var parseTfdt = parseTfdt$2;
+  var parseTfhd$1 = parseTfhd$2;
+  var parseTrun$1 = parseTrun$2;
+  var parseTfdt$2 = parseTfdt$3;
   var getUint64 = numbers.getUint64;
-  var timescale, startTime, compositionStartTime, getVideoTrackIds, getTracks, getTimescaleFromMediaHeader, getEmsgID3;
-  var window$1 = window_1;
+  var timescale, startTime, compositionStartTime, getVideoTrackIds, getTracks, getTimescaleFromMediaHeader$1,
+    getEmsgID3;
+  var window$2 = window_1;
   var parseId3Frames = parseId3.parseId3Frames;
   /**
    * Parses an MP4 initialization segment and extracts the timescale
@@ -37669,18 +40328,18 @@ const workerCode$1 = transform(getWorkerString(function () {
 
   timescale = function (init) {
     var result = {},
-      traks = findBox(init, ['moov', 'trak']); // mdhd timescale
+      traks = findBox$3(init, ['moov', 'trak']); // mdhd timescale
 
     return traks.reduce(function (result, trak) {
       var tkhd, version, index, id, mdhd;
-      tkhd = findBox(trak, ['tkhd'])[0];
+      tkhd = findBox$3(trak, ['tkhd'])[0];
       if (!tkhd) {
         return null;
       }
       version = tkhd[0];
       index = version === 0 ? 12 : 20;
       id = toUnsigned(tkhd[index] << 24 | tkhd[index + 1] << 16 | tkhd[index + 2] << 8 | tkhd[index + 3]);
-      mdhd = findBox(trak, ['mdia', 'mdhd'])[0];
+      mdhd = findBox$3(trak, ['mdia', 'mdhd'])[0];
       if (!mdhd) {
         return null;
       }
@@ -37710,16 +40369,16 @@ const workerCode$1 = transform(getWorkerString(function () {
   startTime = function (timescale, fragment) {
     var trafs; // we need info from two childrend of each track fragment box
 
-    trafs = findBox(fragment, ['moof', 'traf']); // determine the start times for each track
+    trafs = findBox$3(fragment, ['moof', 'traf']); // determine the start times for each track
 
     var lowestTime = trafs.reduce(function (acc, traf) {
-      var tfhd = findBox(traf, ['tfhd'])[0]; // get the track id from the tfhd
+      var tfhd = findBox$3(traf, ['tfhd'])[0]; // get the track id from the tfhd
 
       var id = toUnsigned(tfhd[4] << 24 | tfhd[5] << 16 | tfhd[6] << 8 | tfhd[7]); // assume a 90kHz clock if no timescale was specified
 
       var scale = timescale[id] || 90e3; // get the base media decode time from the tfdt
 
-      var tfdt = findBox(traf, ['tfdt'])[0];
+      var tfdt = findBox$3(traf, ['tfdt'])[0];
       var dv = new DataView(tfdt.buffer, tfdt.byteOffset, tfdt.byteLength);
       var baseTime; // version 1 is 64 bit
 
@@ -37731,7 +40390,7 @@ const workerCode$1 = transform(getWorkerString(function () {
 
       let seconds;
       if (typeof baseTime === 'bigint') {
-        seconds = baseTime / window$1.BigInt(scale);
+        seconds = baseTime / window$2.BigInt(scale);
       } else if (typeof baseTime === 'number' && !isNaN(baseTime)) {
         seconds = baseTime / scale;
       }
@@ -37766,7 +40425,7 @@ const workerCode$1 = transform(getWorkerString(function () {
    **/
 
   compositionStartTime = function (timescales, fragment) {
-    var trafBoxes = findBox(fragment, ['moof', 'traf']);
+    var trafBoxes = findBox$3(fragment, ['moof', 'traf']);
     var baseMediaDecodeTime = 0;
     var compositionTimeOffset = 0;
     var trackId;
@@ -37774,19 +40433,19 @@ const workerCode$1 = transform(getWorkerString(function () {
       // The spec states that track run samples contained within a `traf` box are contiguous, but
       // it does not explicitly state whether the `traf` boxes themselves are contiguous.
       // We will assume that they are, so we only need the first to calculate start time.
-      var tfhd = findBox(trafBoxes[0], ['tfhd'])[0];
-      var trun = findBox(trafBoxes[0], ['trun'])[0];
-      var tfdt = findBox(trafBoxes[0], ['tfdt'])[0];
+      var tfhd = findBox$3(trafBoxes[0], ['tfhd'])[0];
+      var trun = findBox$3(trafBoxes[0], ['trun'])[0];
+      var tfdt = findBox$3(trafBoxes[0], ['tfdt'])[0];
       if (tfhd) {
-        var parsedTfhd = parseTfhd(tfhd);
+        var parsedTfhd = parseTfhd$1(tfhd);
         trackId = parsedTfhd.trackId;
       }
       if (tfdt) {
-        var parsedTfdt = parseTfdt(tfdt);
+        var parsedTfdt = parseTfdt$2(tfdt);
         baseMediaDecodeTime = parsedTfdt.baseMediaDecodeTime;
       }
       if (trun) {
-        var parsedTrun = parseTrun(trun);
+        var parsedTrun = parseTrun$1(trun);
         if (parsedTrun.samples && parsedTrun.samples.length) {
           compositionTimeOffset = parsedTrun.samples[0].compositionTimeOffset || 0;
         }
@@ -37797,8 +40456,8 @@ const workerCode$1 = transform(getWorkerString(function () {
     var timescale = timescales[trackId] || 90e3; // return the composition start time, in seconds
 
     if (typeof baseMediaDecodeTime === 'bigint') {
-      compositionTimeOffset = window$1.BigInt(compositionTimeOffset);
-      timescale = window$1.BigInt(timescale);
+      compositionTimeOffset = window$2.BigInt(compositionTimeOffset);
+      timescale = window$2.BigInt(timescale);
     }
     var result = (baseMediaDecodeTime + compositionTimeOffset) / timescale;
     if (typeof result === 'bigint' && result < Number.MAX_SAFE_INTEGER) {
@@ -37807,23 +40466,23 @@ const workerCode$1 = transform(getWorkerString(function () {
     return result;
   };
   /**
-    * Find the trackIds of the video tracks in this source.
-    * Found by parsing the Handler Reference and Track Header Boxes:
-    *   moov > trak > mdia > hdlr
-    *   moov > trak > tkhd
-    *
-    * @param {Uint8Array} init - The bytes of the init segment for this source
-    * @return {Number[]} A list of trackIds
-    *
-    * @see ISO-BMFF-12/2015, Section 8.4.3
+   * Find the trackIds of the video tracks in this source.
+   * Found by parsing the Handler Reference and Track Header Boxes:
+   *   moov > trak > mdia > hdlr
+   *   moov > trak > tkhd
+   *
+   * @param {Uint8Array} init - The bytes of the init segment for this source
+   * @return {Number[]} A list of trackIds
+   *
+   * @see ISO-BMFF-12/2015, Section 8.4.3
    **/
 
   getVideoTrackIds = function (init) {
-    var traks = findBox(init, ['moov', 'trak']);
+    var traks = findBox$3(init, ['moov', 'trak']);
     var videoTrackIds = [];
     traks.forEach(function (trak) {
-      var hdlrs = findBox(trak, ['mdia', 'hdlr']);
-      var tkhds = findBox(trak, ['tkhd']);
+      var hdlrs = findBox$3(trak, ['mdia', 'hdlr']);
+      var tkhds = findBox$3(trak, ['tkhd']);
       hdlrs.forEach(function (hdlr, index) {
         var handlerType = parseType$1(hdlr.subarray(8, 12));
         var tkhd = tkhds[index];
@@ -37840,7 +40499,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     });
     return videoTrackIds;
   };
-  getTimescaleFromMediaHeader = function (mdhd) {
+  getTimescaleFromMediaHeader$1 = function (mdhd) {
     // mdhd is a FullBox, meaning it will have its own version as the first byte
     var version = mdhd[0];
     var index = version === 0 ? 12 : 20;
@@ -37852,11 +40511,11 @@ const workerCode$1 = transform(getWorkerString(function () {
    */
 
   getTracks = function (init) {
-    var traks = findBox(init, ['moov', 'trak']);
+    var traks = findBox$3(init, ['moov', 'trak']);
     var tracks = [];
     traks.forEach(function (trak) {
       var track = {};
-      var tkhd = findBox(trak, ['tkhd'])[0];
+      var tkhd = findBox$3(trak, ['tkhd'])[0];
       var view, tkhdVersion; // id
 
       if (tkhd) {
@@ -37864,7 +40523,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         tkhdVersion = view.getUint8(0);
         track.id = tkhdVersion === 0 ? view.getUint32(12) : view.getUint32(20);
       }
-      var hdlr = findBox(trak, ['mdia', 'hdlr'])[0]; // type
+      var hdlr = findBox$3(trak, ['mdia', 'hdlr'])[0]; // type
 
       if (hdlr) {
         var type = parseType$1(hdlr.subarray(8, 12));
@@ -37877,12 +40536,12 @@ const workerCode$1 = transform(getWorkerString(function () {
         }
       } // codec
 
-      var stsd = findBox(trak, ['mdia', 'minf', 'stbl', 'stsd'])[0];
+      var stsd = findBox$3(trak, ['mdia', 'minf', 'stbl', 'stsd'])[0];
       if (stsd) {
         var sampleDescriptions = stsd.subarray(8); // gives the codec type string
 
         track.codec = parseType$1(sampleDescriptions.subarray(4, 8));
-        var codecBox = findBox(sampleDescriptions, [track.codec])[0];
+        var codecBox = findBox$3(sampleDescriptions, [track.codec])[0];
         var codecConfig, codecConfigType;
         if (codecBox) {
           // https://tools.ietf.org/html/rfc6381#section-3.3
@@ -37924,9 +40583,9 @@ const workerCode$1 = transform(getWorkerString(function () {
           }
         }
       }
-      var mdhd = findBox(trak, ['mdia', 'mdhd'])[0];
+      var mdhd = findBox$3(trak, ['mdia', 'mdhd'])[0];
       if (mdhd) {
-        track.timescale = getTimescaleFromMediaHeader(mdhd);
+        track.timescale = getTimescaleFromMediaHeader$1(mdhd);
       }
       tracks.push(track);
     });
@@ -37944,7 +40603,7 @@ const workerCode$1 = transform(getWorkerString(function () {
    */
 
   getEmsgID3 = function (segmentData, offset = 0) {
-    var emsgBoxes = findBox(segmentData, ['emsg']);
+    var emsgBoxes = findBox$3(segmentData, ['emsg']);
     return emsgBoxes.map(data => {
       var parsedBox = emsg.parseEmsgBox(new Uint8Array(data));
       var parsedId3Frames = parseId3Frames(parsedBox.message_data);
@@ -37957,16 +40616,588 @@ const workerCode$1 = transform(getWorkerString(function () {
   };
   var probe$2 = {
     // export mp4 inspector's findBox and parseType for backwards compatibility
-    findBox: findBox,
+    findBox: findBox$3,
     parseType: parseType$1,
     timescale: timescale,
     startTime: startTime,
     compositionStartTime: compositionStartTime,
     videoTrackIds: getVideoTrackIds,
     tracks: getTracks,
-    getTimescaleFromMediaHeader: getTimescaleFromMediaHeader,
+    getTimescaleFromMediaHeader: getTimescaleFromMediaHeader$1,
     getEmsgID3: getEmsgID3
   };
+  const {
+    parseTrun
+  } = mp4Inspector;
+  const {
+    findBox: findBox$2
+  } = probe$2;
+  var window$1 = window_1;
+  /**
+   * Utility function for parsing data from mdat boxes.
+   * @param {Array<Uint8Array>} segment the segment data to create mdat/traf pairs from.
+   * @returns mdat and traf boxes paired up for easier parsing.
+   */
+
+  var getMdatTrafPairs$2 = function (segment) {
+    var trafs = findBox$2(segment, ['moof', 'traf']);
+    var mdats = findBox$2(segment, ['mdat']);
+    var mdatTrafPairs = []; // Pair up each traf with a mdat as moofs and mdats are in pairs
+
+    mdats.forEach(function (mdat, index) {
+      var matchingTraf = trafs[index];
+      mdatTrafPairs.push({
+        mdat: mdat,
+        traf: matchingTraf
+      });
+    });
+    return mdatTrafPairs;
+  };
+  /**
+   * Parses sample information out of Track Run Boxes and calculates
+   * the absolute presentation and decode timestamps of each sample.
+   *
+   * @param {Array<Uint8Array>} truns - The Trun Run boxes to be parsed
+   * @param {Number|BigInt} baseMediaDecodeTime - base media decode time from tfdt
+   @see ISO-BMFF-12/2015, Section 8.8.12
+   * @param {Object} tfhd - The parsed Track Fragment Header
+   *   @see inspect.parseTfhd
+   * @return {Object[]} the parsed samples
+   *
+   * @see ISO-BMFF-12/2015, Section 8.8.8
+   **/
+
+  var parseSamples$2 = function (truns, baseMediaDecodeTime, tfhd) {
+    var currentDts = baseMediaDecodeTime;
+    var defaultSampleDuration = tfhd.defaultSampleDuration || 0;
+    var defaultSampleSize = tfhd.defaultSampleSize || 0;
+    var trackId = tfhd.trackId;
+    var allSamples = [];
+    truns.forEach(function (trun) {
+      // Note: We currently do not parse the sample table as well
+      // as the trun. It's possible some sources will require this.
+      // moov > trak > mdia > minf > stbl
+      var trackRun = parseTrun(trun);
+      var samples = trackRun.samples;
+      samples.forEach(function (sample) {
+        if (sample.duration === undefined) {
+          sample.duration = defaultSampleDuration;
+        }
+        if (sample.size === undefined) {
+          sample.size = defaultSampleSize;
+        }
+        sample.trackId = trackId;
+        sample.dts = currentDts;
+        if (sample.compositionTimeOffset === undefined) {
+          sample.compositionTimeOffset = 0;
+        }
+        if (typeof currentDts === 'bigint') {
+          sample.pts = currentDts + window$1.BigInt(sample.compositionTimeOffset);
+          currentDts += window$1.BigInt(sample.duration);
+        } else {
+          sample.pts = currentDts + sample.compositionTimeOffset;
+          currentDts += sample.duration;
+        }
+      });
+      allSamples = allSamples.concat(samples);
+    });
+    return allSamples;
+  };
+  var samples = {
+    getMdatTrafPairs: getMdatTrafPairs$2,
+    parseSamples: parseSamples$2
+  };
+  /**
+   * mux.js
+   *
+   * Copyright (c) Brightcove
+   * Licensed Apache-2.0 https://github.com/videojs/mux.js/blob/master/LICENSE
+   *
+   * Reads in-band CEA-708 captions out of FMP4 segments.
+   * @see https://en.wikipedia.org/wiki/CEA-708
+   */
+
+  var discardEmulationPreventionBytes = captionPacketParser.discardEmulationPreventionBytes;
+  var CaptionStream = captionStream.CaptionStream;
+  var findBox$1 = findBox_1;
+  var parseTfdt$1 = parseTfdt$3;
+  var parseTfhd = parseTfhd$2;
+  var {
+    getMdatTrafPairs: getMdatTrafPairs$1,
+    parseSamples: parseSamples$1
+  } = samples;
+  /**
+   * Maps an offset in the mdat to a sample based on the the size of the samples.
+   * Assumes that `parseSamples` has been called first.
+   *
+   * @param {Number} offset - The offset into the mdat
+   * @param {Object[]} samples - An array of samples, parsed using `parseSamples`
+   * @return {?Object} The matching sample, or null if no match was found.
+   *
+   * @see ISO-BMFF-12/2015, Section 8.8.8
+   **/
+
+  var mapToSample = function (offset, samples) {
+    var approximateOffset = offset;
+    for (var i = 0; i < samples.length; i++) {
+      var sample = samples[i];
+      if (approximateOffset < sample.size) {
+        return sample;
+      }
+      approximateOffset -= sample.size;
+    }
+    return null;
+  };
+  /**
+   * Finds SEI nal units contained in a Media Data Box.
+   * Assumes that `parseSamples` has been called first.
+   *
+   * @param {Uint8Array} avcStream - The bytes of the mdat
+   * @param {Object[]} samples - The samples parsed out by `parseSamples`
+   * @param {Number} trackId - The trackId of this video track
+   * @return {Object[]} seiNals - the parsed SEI NALUs found.
+   *   The contents of the seiNal should match what is expected by
+   *   CaptionStream.push (nalUnitType, size, data, escapedRBSP, pts, dts)
+   *
+   * @see ISO-BMFF-12/2015, Section 8.1.1
+   * @see Rec. ITU-T H.264, 7.3.2.3.1
+   **/
+
+  var findSeiNals = function (avcStream, samples, trackId) {
+    var avcView = new DataView(avcStream.buffer, avcStream.byteOffset, avcStream.byteLength),
+      result = {
+        logs: [],
+        seiNals: []
+      },
+      seiNal,
+      i,
+      length,
+      lastMatchedSample;
+    for (i = 0; i + 4 < avcStream.length; i += length) {
+      length = avcView.getUint32(i);
+      i += 4; // Bail if this doesn't appear to be an H264 stream
+
+      if (length <= 0) {
+        continue;
+      }
+      switch (avcStream[i] & 0x1F) {
+        case 0x06:
+          var data = avcStream.subarray(i + 1, i + 1 + length);
+          var matchingSample = mapToSample(i, samples);
+          seiNal = {
+            nalUnitType: 'sei_rbsp',
+            size: length,
+            data: data,
+            escapedRBSP: discardEmulationPreventionBytes(data),
+            trackId: trackId
+          };
+          if (matchingSample) {
+            seiNal.pts = matchingSample.pts;
+            seiNal.dts = matchingSample.dts;
+            lastMatchedSample = matchingSample;
+          } else if (lastMatchedSample) {
+            // If a matching sample cannot be found, use the last
+            // sample's values as they should be as close as possible
+            seiNal.pts = lastMatchedSample.pts;
+            seiNal.dts = lastMatchedSample.dts;
+          } else {
+            result.logs.push({
+              level: 'warn',
+              message: 'We\'ve encountered a nal unit without data at ' + i + ' for trackId ' + trackId + '. See mux.js#223.'
+            });
+            break;
+          }
+          result.seiNals.push(seiNal);
+          break;
+      }
+    }
+    return result;
+  };
+  /**
+   * Parses out caption nals from an FMP4 segment's video tracks.
+   *
+   * @param {Uint8Array} segment - The bytes of a single segment
+   * @param {Number} videoTrackId - The trackId of a video track in the segment
+   * @return {Object.<Number, Object[]>} A mapping of video trackId to
+   *   a list of seiNals found in that track
+   **/
+
+  var parseCaptionNals = function (segment, videoTrackId) {
+    var captionNals = {};
+    var mdatTrafPairs = getMdatTrafPairs$1(segment);
+    mdatTrafPairs.forEach(function (pair) {
+      var mdat = pair.mdat;
+      var traf = pair.traf;
+      var tfhd = findBox$1(traf, ['tfhd']); // Exactly 1 tfhd per traf
+
+      var headerInfo = parseTfhd(tfhd[0]);
+      var trackId = headerInfo.trackId;
+      var tfdt = findBox$1(traf, ['tfdt']); // Either 0 or 1 tfdt per traf
+
+      var baseMediaDecodeTime = tfdt.length > 0 ? parseTfdt$1(tfdt[0]).baseMediaDecodeTime : 0;
+      var truns = findBox$1(traf, ['trun']);
+      var samples;
+      var result; // Only parse video data for the chosen video track
+
+      if (videoTrackId === trackId && truns.length > 0) {
+        samples = parseSamples$1(truns, baseMediaDecodeTime, headerInfo);
+        result = findSeiNals(mdat, samples, trackId);
+        if (!captionNals[trackId]) {
+          captionNals[trackId] = {
+            seiNals: [],
+            logs: []
+          };
+        }
+        captionNals[trackId].seiNals = captionNals[trackId].seiNals.concat(result.seiNals);
+        captionNals[trackId].logs = captionNals[trackId].logs.concat(result.logs);
+      }
+    });
+    return captionNals;
+  };
+  /**
+   * Parses out inband captions from an MP4 container and returns
+   * caption objects that can be used by WebVTT and the TextTrack API.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/VTTCue
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/TextTrack
+   * Assumes that `probe.getVideoTrackIds` and `probe.timescale` have been called first
+   *
+   * @param {Uint8Array} segment - The fmp4 segment containing embedded captions
+   * @param {Number} trackId - The id of the video track to parse
+   * @param {Number} timescale - The timescale for the video track from the init segment
+   *
+   * @return {?Object[]} parsedCaptions - A list of captions or null if no video tracks
+   * @return {Number} parsedCaptions[].startTime - The time to show the caption in seconds
+   * @return {Number} parsedCaptions[].endTime - The time to stop showing the caption in seconds
+   * @return {Object[]} parsedCaptions[].content - A list of individual caption segments
+   * @return {String} parsedCaptions[].content.text - The visible content of the caption segment
+   * @return {Number} parsedCaptions[].content.line - The line height from 1-15 for positioning of the caption segment
+   * @return {Number} parsedCaptions[].content.position - The column indent percentage for cue positioning from 10-80
+   **/
+
+  var parseEmbeddedCaptions = function (segment, trackId, timescale) {
+    var captionNals; // the ISO-BMFF spec says that trackId can't be zero, but there's some broken content out there
+
+    if (trackId === null) {
+      return null;
+    }
+    captionNals = parseCaptionNals(segment, trackId);
+    var trackNals = captionNals[trackId] || {};
+    return {
+      seiNals: trackNals.seiNals,
+      logs: trackNals.logs,
+      timescale: timescale
+    };
+  };
+  /**
+   * Converts SEI NALUs into captions that can be used by video.js
+   **/
+
+  var CaptionParser = function () {
+    var isInitialized = false;
+    var captionStream; // Stores segments seen before trackId and timescale are set
+
+    var segmentCache; // Stores video track ID of the track being parsed
+
+    var trackId; // Stores the timescale of the track being parsed
+
+    var timescale; // Stores captions parsed so far
+
+    var parsedCaptions; // Stores whether we are receiving partial data or not
+
+    var parsingPartial;
+    /**
+     * A method to indicate whether a CaptionParser has been initalized
+     * @returns {Boolean}
+     **/
+
+    this.isInitialized = function () {
+      return isInitialized;
+    };
+    /**
+     * Initializes the underlying CaptionStream, SEI NAL parsing
+     * and management, and caption collection
+     **/
+
+    this.init = function (options) {
+      captionStream = new CaptionStream();
+      isInitialized = true;
+      parsingPartial = options ? options.isPartial : false; // Collect dispatched captions
+
+      captionStream.on('data', function (event) {
+        // Convert to seconds in the source's timescale
+        event.startTime = event.startPts / timescale;
+        event.endTime = event.endPts / timescale;
+        parsedCaptions.captions.push(event);
+        parsedCaptions.captionStreams[event.stream] = true;
+      });
+      captionStream.on('log', function (log) {
+        parsedCaptions.logs.push(log);
+      });
+    };
+    /**
+     * Determines if a new video track will be selected
+     * or if the timescale changed
+     * @return {Boolean}
+     **/
+
+    this.isNewInit = function (videoTrackIds, timescales) {
+      if (videoTrackIds && videoTrackIds.length === 0 || timescales && typeof timescales === 'object' && Object.keys(timescales).length === 0) {
+        return false;
+      }
+      return trackId !== videoTrackIds[0] || timescale !== timescales[trackId];
+    };
+    /**
+     * Parses out SEI captions and interacts with underlying
+     * CaptionStream to return dispatched captions
+     *
+     * @param {Uint8Array} segment - The fmp4 segment containing embedded captions
+     * @param {Number[]} videoTrackIds - A list of video tracks found in the init segment
+     * @param {Object.<Number, Number>} timescales - The timescales found in the init segment
+     * @see parseEmbeddedCaptions
+     * @see m2ts/caption-stream.js
+     **/
+
+    this.parse = function (segment, videoTrackIds, timescales) {
+      var parsedData;
+      if (!this.isInitialized()) {
+        return null; // This is not likely to be a video segment
+      } else if (!videoTrackIds || !timescales) {
+        return null;
+      } else if (this.isNewInit(videoTrackIds, timescales)) {
+        // Use the first video track only as there is no
+        // mechanism to switch to other video tracks
+        trackId = videoTrackIds[0];
+        timescale = timescales[trackId]; // If an init segment has not been seen yet, hold onto segment
+        // data until we have one.
+        // the ISO-BMFF spec says that trackId can't be zero, but there's some broken content out there
+      } else if (trackId === null || !timescale) {
+        segmentCache.push(segment);
+        return null;
+      } // Now that a timescale and trackId is set, parse cached segments
+
+      while (segmentCache.length > 0) {
+        var cachedSegment = segmentCache.shift();
+        this.parse(cachedSegment, videoTrackIds, timescales);
+      }
+      parsedData = parseEmbeddedCaptions(segment, trackId, timescale);
+      if (parsedData && parsedData.logs) {
+        parsedCaptions.logs = parsedCaptions.logs.concat(parsedData.logs);
+      }
+      if (parsedData === null || !parsedData.seiNals) {
+        if (parsedCaptions.logs.length) {
+          return {
+            logs: parsedCaptions.logs,
+            captions: [],
+            captionStreams: []
+          };
+        }
+        return null;
+      }
+      this.pushNals(parsedData.seiNals); // Force the parsed captions to be dispatched
+
+      this.flushStream();
+      return parsedCaptions;
+    };
+    /**
+     * Pushes SEI NALUs onto CaptionStream
+     * @param {Object[]} nals - A list of SEI nals parsed using `parseCaptionNals`
+     * Assumes that `parseCaptionNals` has been called first
+     * @see m2ts/caption-stream.js
+     **/
+
+    this.pushNals = function (nals) {
+      if (!this.isInitialized() || !nals || nals.length === 0) {
+        return null;
+      }
+      nals.forEach(function (nal) {
+        captionStream.push(nal);
+      });
+    };
+    /**
+     * Flushes underlying CaptionStream to dispatch processed, displayable captions
+     * @see m2ts/caption-stream.js
+     **/
+
+    this.flushStream = function () {
+      if (!this.isInitialized()) {
+        return null;
+      }
+      if (!parsingPartial) {
+        captionStream.flush();
+      } else {
+        captionStream.partialFlush();
+      }
+    };
+    /**
+     * Reset caption buckets for new data
+     **/
+
+    this.clearParsedCaptions = function () {
+      parsedCaptions.captions = [];
+      parsedCaptions.captionStreams = {};
+      parsedCaptions.logs = [];
+    };
+    /**
+     * Resets underlying CaptionStream
+     * @see m2ts/caption-stream.js
+     **/
+
+    this.resetCaptionStream = function () {
+      if (!this.isInitialized()) {
+        return null;
+      }
+      captionStream.reset();
+    };
+    /**
+     * Convenience method to clear all captions flushed from the
+     * CaptionStream and still being parsed
+     * @see m2ts/caption-stream.js
+     **/
+
+    this.clearAllCaptions = function () {
+      this.clearParsedCaptions();
+      this.resetCaptionStream();
+    };
+    /**
+     * Reset caption parser
+     **/
+
+    this.reset = function () {
+      segmentCache = [];
+      trackId = null;
+      timescale = null;
+      if (!parsedCaptions) {
+        parsedCaptions = {
+          captions: [],
+          // CC1, CC2, CC3, CC4
+          captionStreams: {},
+          logs: []
+        };
+      } else {
+        this.clearParsedCaptions();
+      }
+      this.resetCaptionStream();
+    };
+    this.reset();
+  };
+  var captionParser = CaptionParser;
+  const {
+    parseTfdt
+  } = mp4Inspector;
+  const findBox = findBox_1;
+  const {
+    getTimescaleFromMediaHeader
+  } = probe$2;
+  const {
+    parseSamples,
+    getMdatTrafPairs
+  } = samples;
+  /**
+   * Module for parsing WebVTT text and styles from FMP4 segments.
+   * Based on the ISO/IEC 14496-30.
+   */
+
+  const WebVttParser = function () {
+    // default timescale to 90k
+    let timescale = 90e3;
+    /**
+     * Parses the timescale from the init segment.
+     * @param {Array<Uint8Array>} segment The initialization segment to parse the timescale from.
+     */
+
+    this.init = function (segment) {
+      // We just need the timescale from the init segment.
+      const mdhd = findBox(segment, ['moov', 'trak', 'mdia', 'mdhd'])[0];
+      if (mdhd) {
+        timescale = getTimescaleFromMediaHeader(mdhd);
+      }
+    };
+    /**
+     * Parses a WebVTT FMP4 segment.
+     * @param {Array<Uint8Array>} segment The content segment to parse the WebVTT cues from.
+     * @returns The WebVTT cue text, styling, and timing info as an array of cue objects.
+     */
+
+    this.parseSegment = function (segment) {
+      const vttCues = [];
+      const mdatTrafPairs = getMdatTrafPairs(segment);
+      let baseMediaDecodeTime = 0;
+      mdatTrafPairs.forEach(function (pair) {
+        const mdatBox = pair.mdat;
+        const trafBox = pair.traf; // zero or one.
+
+        const tfdtBox = findBox(trafBox, ['tfdt'])[0]; // zero or one.
+
+        const tfhdBox = findBox(trafBox, ['tfhd'])[0]; // zero or more.
+
+        const trunBoxes = findBox(trafBox, ['trun']);
+        if (tfdtBox) {
+          const tfdt = parseTfdt(tfdtBox);
+          baseMediaDecodeTime = tfdt.baseMediaDecodeTime;
+        }
+        if (trunBoxes.length && tfhdBox) {
+          const samples = parseSamples(trunBoxes, baseMediaDecodeTime, tfhdBox);
+          let mdatOffset = 0;
+          samples.forEach(function (sample) {
+            // decode utf8 payload
+            const UTF_8 = 'utf-8';
+            const textDecoder = new TextDecoder(UTF_8); // extract sample data from the mdat box.
+            // WebVTT Sample format:
+            // Exactly one VTTEmptyCueBox box
+            // OR one or more VTTCueBox boxes.
+
+            const sampleData = mdatBox.slice(mdatOffset, mdatOffset + sample.size); // single vtte box.
+
+            const vtteBox = findBox(sampleData, ['vtte'])[0]; // empty box
+
+            if (vtteBox) {
+              mdatOffset += sample.size;
+              return;
+            } // TODO: Support 'vtta' boxes.
+            // VTTAdditionalTextBoxes can be interleaved between VTTCueBoxes.
+
+            const vttcBoxes = findBox(sampleData, ['vttc']);
+            vttcBoxes.forEach(function (vttcBox) {
+              // mandatory payload box.
+              const paylBox = findBox(vttcBox, ['payl'])[0]; // optional settings box
+
+              const sttgBox = findBox(vttcBox, ['sttg'])[0];
+              const start = sample.pts / timescale;
+              const end = (sample.pts + sample.duration) / timescale;
+              let cueText, settings; // contains cue text.
+
+              if (paylBox) {
+                try {
+                  cueText = textDecoder.decode(paylBox);
+                } catch (e) {
+                  console.error(e);
+                }
+              } // settings box contains styling.
+
+              if (sttgBox) {
+                try {
+                  settings = textDecoder.decode(sttgBox);
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+              if (sample.duration && cueText) {
+                vttCues.push({
+                  cueText,
+                  start,
+                  end,
+                  settings
+                });
+              }
+            });
+            mdatOffset += sample.size;
+          });
+        }
+      });
+      return vttCues;
+    };
+  };
+  var webvttParser = WebVttParser;
   /**
    * mux.js
    *
@@ -38116,7 +41347,6 @@ const workerCode$1 = transform(getWorkerString(function () {
         pes.dts += (packet[offset + 18] & 0x06) >>> 1; // OR by the two LSBs
       }
     }
-
     return pes;
   };
   var parseNalUnitType = function (type) {
@@ -38797,6 +42027,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       });
     });
   };
+
   /**
    * All incoming messages route through this hash. If no function exists
    * to handle an incoming message, then we ignore the message.
@@ -38811,6 +42042,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       this.self = self;
       this.init();
     }
+
     /**
      * initialize our web worker and wire all the events.
      */
@@ -38822,6 +42054,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       this.transmuxer = new transmuxer.Transmuxer(this.options);
       wireTransmuxerEvents(this.self, this.transmuxer);
     }
+
     pushMp4Captions(data) {
       if (!this.captionParser) {
         this.captionParser = new captionParser();
@@ -38836,10 +42069,49 @@ const workerCode$1 = transform(getWorkerString(function () {
         data: segment.buffer
       }, [segment.buffer]);
     }
+
+    /**
+     * Initializes the WebVttParser and passes the init segment.
+     *
+     * @param {Uint8Array} data mp4 boxed WebVTT init segment data
+     */
+
+    initMp4WebVttParser(data) {
+      if (!this.webVttParser) {
+        this.webVttParser = new webvttParser();
+      }
+      const segment = new Uint8Array(data.data, data.byteOffset, data.byteLength); // Set the timescale for the parser.
+      // This can be called repeatedly in order to set and re-set the timescale.
+
+      this.webVttParser.init(segment);
+    }
+
+    /**
+     * Parse an mp4 encapsulated WebVTT segment and return an array of cues.
+     *
+     * @param {Uint8Array} data a text/webvtt segment
+     * @return {Object[]} an array of parsed cue objects
+     */
+
+    getMp4WebVttText(data) {
+      if (!this.webVttParser) {
+        // timescale might not be set yet if the parser is created before an init segment is passed.
+        // default timescale is 90k.
+        this.webVttParser = new webvttParser();
+      }
+      const segment = new Uint8Array(data.data, data.byteOffset, data.byteLength);
+      const parsed = this.webVttParser.parseSegment(segment);
+      this.self.postMessage({
+        action: 'getMp4WebVttText',
+        mp4VttCues: parsed || [],
+        data: segment.buffer
+      }, [segment.buffer]);
+    }
+
     probeMp4StartTime({
-      timescales,
-      data
-    }) {
+                        timescales,
+                        data
+                      }) {
       const startTime = probe$2.startTime(timescales, data);
       this.self.postMessage({
         action: 'probeMp4StartTime',
@@ -38847,9 +42119,10 @@ const workerCode$1 = transform(getWorkerString(function () {
         data
       }, [data.buffer]);
     }
+
     probeMp4Tracks({
-      data
-    }) {
+                     data
+                   }) {
       const tracks = probe$2.tracks(data);
       this.self.postMessage({
         action: 'probeMp4Tracks',
@@ -38857,6 +42130,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         data
       }, [data.buffer]);
     }
+
     /**
      * Probes an mp4 segment for EMSG boxes containing ID3 data.
      * https://aomediacodec.github.io/id3-emsg/
@@ -38867,9 +42141,9 @@ const workerCode$1 = transform(getWorkerString(function () {
      */
 
     probeEmsgID3({
-      data,
-      offset
-    }) {
+                   data,
+                   offset
+                 }) {
       const id3Frames = probe$2.getEmsgID3(data, offset);
       this.self.postMessage({
         action: 'probeEmsgID3',
@@ -38877,6 +42151,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         emsgData: data
       }, [data.buffer]);
     }
+
     /**
      * Probe an mpeg2-ts segment to determine the start time of the segment in it's
      * internal "media time," as well as whether it contains video and/or audio.
@@ -38892,9 +42167,9 @@ const workerCode$1 = transform(getWorkerString(function () {
      */
 
     probeTs({
-      data,
-      baseStartTime
-    }) {
+              data,
+              baseStartTime
+            }) {
       const tsStartTime = typeof baseStartTime === 'number' && !isNaN(baseStartTime) ? baseStartTime * clock$2.ONE_SECOND_IN_TS : void 0;
       const timeInfo = tsInspector.inspect(data, tsStartTime);
       let result = null;
@@ -38917,16 +42192,19 @@ const workerCode$1 = transform(getWorkerString(function () {
         data
       }, [data.buffer]);
     }
+
     clearAllMp4Captions() {
       if (this.captionParser) {
         this.captionParser.clearAllCaptions();
       }
     }
+
     clearParsedMp4Captions() {
       if (this.captionParser) {
         this.captionParser.clearParsedCaptions();
       }
     }
+
     /**
      * Adds data (a ts segment) to the start of the transmuxer pipeline for
      * processing.
@@ -38939,6 +42217,7 @@ const workerCode$1 = transform(getWorkerString(function () {
       const segment = new Uint8Array(data.data, data.byteOffset, data.byteLength);
       this.transmuxer.push(segment);
     }
+
     /**
      * Recreate the transmuxer so that the next segment added via `push`
      * start with a fresh transmuxer.
@@ -38947,6 +42226,7 @@ const workerCode$1 = transform(getWorkerString(function () {
     reset() {
       this.transmuxer.reset();
     }
+
     /**
      * Set the value that will be used as the `baseMediaDecodeTime` time for the
      * next segment pushed in. Subsequent segments will have their `baseMediaDecodeTime`
@@ -38959,12 +42239,15 @@ const workerCode$1 = transform(getWorkerString(function () {
       const timestampOffset = data.timestampOffset || 0;
       this.transmuxer.setBaseMediaDecodeTime(Math.round(clock$2.secondsToVideoTs(timestampOffset)));
     }
+
     setAudioAppendStart(data) {
       this.transmuxer.setAudioAppendStart(Math.ceil(clock$2.secondsToVideoTs(data.appendStart)));
     }
+
     setRemux(data) {
       this.transmuxer.setRemux(data.remux);
     }
+
     /**
      * Forces the pipeline to finish processing the last segment and emit it's
      * results.
@@ -38980,6 +42263,7 @@ const workerCode$1 = transform(getWorkerString(function () {
         type: 'transmuxed'
       });
     }
+
     endTimeline() {
       this.transmuxer.endTimeline(); // transmuxed endedtimeline action is fired after both audio/video pipelines end their
       // timelines
@@ -38989,10 +42273,12 @@ const workerCode$1 = transform(getWorkerString(function () {
         type: 'transmuxed'
       });
     }
+
     alignGopsWith(data) {
       this.transmuxer.alignGopsWith(data.gopsToAlignWith.slice());
     }
   }
+
   /**
    * Our web worker interface so that things can talk to mux.js
    * that will be running in a web worker. the scope is passed to this by
@@ -39052,9 +42338,9 @@ const handleData_ = (event, transmuxedData, callback) => {
   callback(result);
 };
 const handleDone_ = ({
-  transmuxedData,
-  callback
-}) => {
+                       transmuxedData,
+                       callback
+                     }) => {
   // Previously we only returned data on data events,
   // not on done events. Clear out the buffer to keep that consistent.
   transmuxedData.buffer = []; // all buffers should have been flushed from the muxer, so start processing anything we
@@ -39083,7 +42369,9 @@ const processTransmux = options => {
     onDone,
     onEndedTimeline,
     onTransmuxerLog,
-    isEndOfTimeline
+    isEndOfTimeline,
+    segment,
+    triggerSegmentEventFn
   } = options;
   const transmuxedData = {
     buffer: []
@@ -39149,8 +42437,20 @@ const processTransmux = options => {
     dequeue(transmuxer);
     /* eslint-enable */
   };
-
+  const handleError = () => {
+    const error = {
+      message: 'Received an error message from the transmuxer worker',
+      metadata: {
+        errorType: videojs.Error.StreamingFailedToTransmuxSegment,
+        segmentInfo: segmentInfoPayload({
+          segment
+        })
+      }
+    };
+    onDone(null, error);
+  };
   transmuxer.onmessage = handleMessage;
+  transmuxer.onerror = handleError;
   if (audioAppendStart) {
     transmuxer.postMessage({
       action: 'setAudioAppendStart',
@@ -39173,6 +42473,10 @@ const processTransmux = options => {
   if (bytes.byteLength) {
     const buffer = bytes instanceof ArrayBuffer ? bytes : bytes.buffer;
     const byteOffset = bytes instanceof ArrayBuffer ? 0 : bytes.byteOffset;
+    triggerSegmentEventFn({
+      type: 'segmenttransmuxingstart',
+      segment
+    });
     transmuxer.postMessage({
       action: 'push',
       // Send the typed-array of data as an ArrayBuffer so that
@@ -39296,6 +42600,7 @@ const REQUEST_ERRORS = {
   TIMEOUT: -101,
   ABORTED: -102
 };
+const WEB_VTT_CODEC = 'wvtt';
 /**
  * Abort all requests
  *
@@ -39351,12 +42656,21 @@ const getProgressStats = progressEvent => {
  */
 
 const handleErrors = (error, request) => {
+  const {
+    requestType
+  } = request;
+  const metadata = getStreamingNetworkErrorMetadata({
+    requestType,
+    request,
+    error
+  });
   if (request.timedout) {
     return {
       status: request.status,
       message: 'HLS request timed-out at URL: ' + request.uri,
       code: REQUEST_ERRORS.TIMEOUT,
-      xhr: request
+      xhr: request,
+      metadata
     };
   }
   if (request.aborted) {
@@ -39364,7 +42678,8 @@ const handleErrors = (error, request) => {
       status: request.status,
       message: 'HLS request aborted at URL: ' + request.uri,
       code: REQUEST_ERRORS.ABORTED,
-      xhr: request
+      xhr: request,
+      metadata
     };
   }
   if (error) {
@@ -39372,7 +42687,8 @@ const handleErrors = (error, request) => {
       status: request.status,
       message: 'HLS request errored at URL: ' + request.uri,
       code: REQUEST_ERRORS.FAILURE,
-      xhr: request
+      xhr: request,
+      metadata
     };
   }
   if (request.responseType === 'arraybuffer' && request.response.byteLength === 0) {
@@ -39380,7 +42696,8 @@ const handleErrors = (error, request) => {
       status: request.status,
       message: 'Empty HLS response at URL: ' + request.uri,
       code: REQUEST_ERRORS.FAILURE,
-      xhr: request
+      xhr: request,
+      metadata
     };
   }
   return null;
@@ -39396,16 +42713,76 @@ const handleErrors = (error, request) => {
  *                                        this request
  */
 
-const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, request) => {
-
-  // console.log('handleKeyResponse', request.response)
+const handleKeyResponse = (segment, objects, finishProcessingFn, triggerSegmentEventFn) => (error, request) => {
+  const response = request.response;
   const errorObj = handleErrors(error, request);
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
   }
+  if (response.byteLength !== 16) {
+    return finishProcessingFn({
+      status: request.status,
+      message: 'Invalid HLS key at URL: ' + request.uri,
+      code: REQUEST_ERRORS.FAILURE,
+      xhr: request
+    }, segment);
+  }
+  const view = new DataView(response);
+  const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
+  for (let i = 0; i < objects.length; i++) {
+    objects[i].bytes = bytes;
+  }
+  const keyInfo = {
+    uri: request.uri
+  };
+  triggerSegmentEventFn({
+    type: 'segmentkeyloadcomplete',
+    segment,
+    keyInfo
+  });
+  return finishProcessingFn(null, segment);
+};
+/**
+ * Processes an mp4 init segment depending on the codec through the transmuxer.
+ *
+ * @param {Object} segment init segment to process
+ * @param {string} codec the codec of the text segments
+ */
 
-  return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
+const initMp4Text = (segment, codec) => {
+  if (codec === WEB_VTT_CODEC) {
+    segment.transmuxer.postMessage({
+      action: 'initMp4WebVttParser',
+      data: segment.map.bytes
+    });
+  }
+};
+/**
+ * Parses an mp4 text segment with the transmuxer and calls the doneFn from
+ * the segment loader.
+ *
+ * @param {Object} segment the text segment to parse
+ * @param {string} codec the codec of the text segment
+ * @param {Function} doneFn the doneFn passed from the segment loader
+ */
 
+const parseMp4TextSegment = (segment, codec, doneFn) => {
+  if (codec === WEB_VTT_CODEC) {
+    workerCallback({
+      action: 'getMp4WebVttText',
+      data: segment.bytes,
+      transmuxer: segment.transmuxer,
+      callback: ({
+                   data,
+                   mp4VttCues
+                 }) => {
+        segment.bytes = data;
+        doneFn(null, segment, {
+          mp4VttCues
+        });
+      }
+    });
+  }
 };
 const parseInitSegment = (segment, callback) => {
   const type = detectContainerForBytes(segment.map.bytes); // TODO: We should also handle ts init segments here, but we
@@ -39413,10 +42790,14 @@ const parseInitSegment = (segment, callback) => {
 
   if (type !== 'mp4') {
     const uri = segment.map.resolvedUri || segment.map.uri;
+    const mediaType = type || 'unknown';
     return callback({
       internal: true,
-      message: `Found unsupported ${type || 'unknown'} container for initialization segment at URL: ${uri}`,
-      code: REQUEST_ERRORS.FAILURE
+      message: `Found unsupported ${mediaType} container for initialization segment at URL: ${uri}`,
+      code: REQUEST_ERRORS.FAILURE,
+      metadata: {
+        mediaType
+      }
     });
   }
   workerCallback({
@@ -39424,9 +42805,9 @@ const parseInitSegment = (segment, callback) => {
     data: segment.map.bytes,
     transmuxer: segment.transmuxer,
     callback: ({
-      tracks,
-      data
-    }) => {
+                 tracks,
+                 data
+               }) => {
       // transfer bytes back to us
       segment.map.bytes = data;
       tracks.forEach(function (track) {
@@ -39439,6 +42820,9 @@ const parseInitSegment = (segment, callback) => {
         if (typeof track.id === 'number' && track.timescale) {
           segment.map.timescales = segment.map.timescales || {};
           segment.map.timescales[track.id] = track.timescale;
+        }
+        if (track.type === 'text') {
+          initMp4Text(segment, track.codec);
         }
       });
       return callback(null);
@@ -39455,14 +42839,19 @@ const parseInitSegment = (segment, callback) => {
  */
 
 const handleInitSegmentResponse = ({
-  segment,
-  finishProcessingFn
-}) => (error, request) => {
+                                     segment,
+                                     finishProcessingFn,
+                                     triggerSegmentEventFn
+                                   }) => (error, request) => {
   const errorObj = handleErrors(error, request);
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
   }
-  const bytes = new Uint8Array(request.response); // init segment is encypted, we will have to wait
+  const bytes = new Uint8Array(request.response);
+  triggerSegmentEventFn({
+    type: 'segmentloaded',
+    segment
+  }); // init segment is encypted, we will have to wait
   // until the key request is done to decrypt.
 
   if (segment.map.key) {
@@ -39491,21 +42880,26 @@ const handleInitSegmentResponse = ({
  */
 
 const handleSegmentResponse = ({
-  segment,
-  finishProcessingFn,
-  responseType
-}) => (error, request) => {
+                                 segment,
+                                 finishProcessingFn,
+                                 responseType,
+                                 triggerSegmentEventFn
+                               }) => (error, request) => {
   const errorObj = handleErrors(error, request);
   if (errorObj) {
     return finishProcessingFn(errorObj, segment);
   }
+  triggerSegmentEventFn({
+    type: 'segmentloaded',
+    segment
+  });
   const newBytes =
-  // although responseText "should" exist, this guard serves to prevent an error being
-  // thrown for two primary cases:
-  // 1. the mime type override stops working, or is not implemented for a specific
-  //    browser
-  // 2. when using mock XHR libraries like sinon that do not allow the override behavior
-  responseType === 'arraybuffer' || !request.responseText ? request.response : stringToArrayBuffer(request.responseText.substring(segment.lastReachedChar || 0));
+    // although responseText "should" exist, this guard serves to prevent an error being
+    // thrown for two primary cases:
+    // 1. the mime type override stops working, or is not implemented for a specific
+    //    browser
+    // 2. when using mock XHR libraries like sinon that do not allow the override behavior
+    responseType === 'arraybuffer' || !request.responseText ? request.response : stringToArrayBuffer(request.responseText.substring(segment.lastReachedChar || 0));
   segment.stats = getRequestStats(request);
   if (segment.key) {
     segment.encryptedBytes = new Uint8Array(newBytes);
@@ -39515,20 +42909,21 @@ const handleSegmentResponse = ({
   return finishProcessingFn(null, segment);
 };
 const transmuxAndNotify = ({
-  segment,
-  bytes,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn,
-  doneFn,
-  onTransmuxerLog
-}) => {
+                             segment,
+                             bytes,
+                             trackInfoFn,
+                             timingInfoFn,
+                             videoSegmentTimingInfoFn,
+                             audioSegmentTimingInfoFn,
+                             id3Fn,
+                             captionsFn,
+                             isEndOfTimeline,
+                             endedTimelineFn,
+                             dataFn,
+                             doneFn,
+                             onTransmuxerLog,
+                             triggerSegmentEventFn
+                           }) => {
   const fmp4Tracks = segment.map && segment.map.tracks || {};
   const isMuxed = Boolean(fmp4Tracks.audio && fmp4Tracks.video); // Keep references to each function so we can null them out after we're done with them.
   // One reason for this is that in the case of full segments, we want to trust start
@@ -39579,9 +42974,39 @@ const transmuxAndNotify = ({
       }
     },
     onVideoSegmentTimingInfo: videoSegmentTimingInfo => {
+      const timingInfo = {
+        pts: {
+          start: videoSegmentTimingInfo.start.presentation,
+          end: videoSegmentTimingInfo.end.presentation
+        },
+        dts: {
+          start: videoSegmentTimingInfo.start.decode,
+          end: videoSegmentTimingInfo.end.decode
+        }
+      };
+      triggerSegmentEventFn({
+        type: 'segmenttransmuxingtiminginfoavailable',
+        segment,
+        timingInfo
+      });
       videoSegmentTimingInfoFn(videoSegmentTimingInfo);
     },
     onAudioSegmentTimingInfo: audioSegmentTimingInfo => {
+      const timingInfo = {
+        pts: {
+          start: audioSegmentTimingInfo.start.pts,
+          end: audioSegmentTimingInfo.end.pts
+        },
+        dts: {
+          start: audioSegmentTimingInfo.start.dts,
+          end: audioSegmentTimingInfo.end.dts
+        }
+      };
+      triggerSegmentEventFn({
+        type: 'segmenttransmuxingtiminginfoavailable',
+        segment,
+        timingInfo
+      });
       audioSegmentTimingInfoFn(audioSegmentTimingInfo);
     },
     onId3: (id3Frames, dispatchType) => {
@@ -39595,13 +43020,19 @@ const transmuxAndNotify = ({
       endedTimelineFn();
     },
     onTransmuxerLog,
-    onDone: result => {
+    onDone: (result, error) => {
       if (!doneFn) {
         return;
       }
       result.type = result.type === 'combined' ? 'video' : result.type;
-      doneFn(null, segment, result);
-    }
+      triggerSegmentEventFn({
+        type: 'segmenttransmuxingcomplete',
+        segment
+      });
+      doneFn(error, segment, result);
+    },
+    segment,
+    triggerSegmentEventFn
   }); // In the transmuxer, we don't yet have the ability to extract a "proper" start time.
   // Meaning cached frame data may corrupt our notion of where this segment
   // really starts. To get around this, probe for the info needed.
@@ -39627,20 +43058,21 @@ const transmuxAndNotify = ({
   });
 };
 const handleSegmentBytes = ({
-  segment,
-  bytes,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn,
-  doneFn,
-  onTransmuxerLog
-}) => {
+                              segment,
+                              bytes,
+                              trackInfoFn,
+                              timingInfoFn,
+                              videoSegmentTimingInfoFn,
+                              audioSegmentTimingInfoFn,
+                              id3Fn,
+                              captionsFn,
+                              isEndOfTimeline,
+                              endedTimelineFn,
+                              dataFn,
+                              doneFn,
+                              onTransmuxerLog,
+                              triggerSegmentEventFn
+                            }) => {
   let bytesAsUint8Array = new Uint8Array(bytes); // TODO:
   // We should have a handler that fetches the number of bytes required
   // to check if something is fmp4. This will allow us to save bandwidth
@@ -39652,6 +43084,15 @@ const handleSegmentBytes = ({
     const {
       tracks
     } = segment.map;
+    const isMp4TextSegment = tracks.text && (!tracks.audio || !tracks.video);
+    if (isMp4TextSegment) {
+      dataFn(segment, {
+        data: bytesAsUint8Array,
+        type: 'text'
+      });
+      parseMp4TextSegment(segment, tracks.text.codec, doneFn);
+      return;
+    }
     const trackInfo = {
       isFmp4: true,
       hasVideo: !!tracks.video,
@@ -39702,9 +43143,9 @@ const handleSegmentBytes = ({
       data: bytesAsUint8Array,
       transmuxer: segment.transmuxer,
       callback: ({
-        data,
-        startTime
-      }) => {
+                   data,
+                   startTime
+                 }) => {
         // transfer bytes back to us
         bytes = data.buffer;
         segment.bytes = bytesAsUint8Array = data;
@@ -39720,9 +43161,9 @@ const handleSegmentBytes = ({
           transmuxer: segment.transmuxer,
           offset: startTime,
           callback: ({
-            emsgData,
-            id3Frames
-          }) => {
+                       emsgData,
+                       id3Frames
+                     }) => {
             // transfer bytes back to us
             bytes = emsgData.buffer;
             segment.bytes = bytesAsUint8Array = emsgData; // Run through the CaptionParser in case there are captions.
@@ -39787,21 +43228,42 @@ const handleSegmentBytes = ({
     endedTimelineFn,
     dataFn,
     doneFn,
-    onTransmuxerLog
+    onTransmuxerLog,
+    triggerSegmentEventFn
   });
 };
 const decrypt = function ({
-  id,
-  key,
-  encryptedBytes,
-  decryptionWorker
-}, callback) {
+                            id,
+                            key,
+                            encryptedBytes,
+                            decryptionWorker,
+                            segment,
+                            doneFn
+                          }, callback) {
   const decryptionHandler = event => {
     if (event.data.source === id) {
       decryptionWorker.removeEventListener('message', decryptionHandler);
       const decrypted = event.data.decrypted;
       callback(new Uint8Array(decrypted.bytes, decrypted.byteOffset, decrypted.byteLength));
     }
+  };
+  decryptionWorker.onerror = () => {
+    const message = 'An error occurred in the decryption worker';
+    const segmentInfo = segmentInfoPayload({
+      segment
+    });
+    const decryptError = {
+      message,
+      metadata: {
+        error: new Error(message),
+        errorType: videojs.Error.StreamingFailedToDecryptSegment,
+        segmentInfo,
+        keyInfo: {
+          uri: segment.key.resolvedUri || segment.map.key.resolvedUri
+        }
+      }
+    };
+    doneFn(decryptError, segment);
   };
   decryptionWorker.addEventListener('message', decryptionHandler);
   let keyBytes;
@@ -39844,27 +43306,37 @@ const decrypt = function ({
  */
 
 const decryptSegment = ({
-  decryptionWorker,
-  segment,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn,
-  doneFn,
-  onTransmuxerLog
-}) => {
+                          decryptionWorker,
+                          segment,
+                          trackInfoFn,
+                          timingInfoFn,
+                          videoSegmentTimingInfoFn,
+                          audioSegmentTimingInfoFn,
+                          id3Fn,
+                          captionsFn,
+                          isEndOfTimeline,
+                          endedTimelineFn,
+                          dataFn,
+                          doneFn,
+                          onTransmuxerLog,
+                          triggerSegmentEventFn
+                        }) => {
+  triggerSegmentEventFn({
+    type: 'segmentdecryptionstart'
+  });
   decrypt({
     id: segment.requestId,
     key: segment.key,
     encryptedBytes: segment.encryptedBytes,
-    decryptionWorker
+    decryptionWorker,
+    segment,
+    doneFn
   }, decryptedBytes => {
     segment.bytes = decryptedBytes;
+    triggerSegmentEventFn({
+      type: 'segmentdecryptioncomplete',
+      segment
+    });
     handleSegmentBytes({
       segment,
       bytes: segment.bytes,
@@ -39878,7 +43350,8 @@ const decryptSegment = ({
       endedTimelineFn,
       dataFn,
       doneFn,
-      onTransmuxerLog
+      onTransmuxerLog,
+      triggerSegmentEventFn
     });
   });
 };
@@ -39913,20 +43386,21 @@ const decryptSegment = ({
  */
 
 const waitForCompletion = ({
-  activeXhrs,
-  decryptionWorker,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn,
-  doneFn,
-  onTransmuxerLog
-}) => {
+                             activeXhrs,
+                             decryptionWorker,
+                             trackInfoFn,
+                             timingInfoFn,
+                             videoSegmentTimingInfoFn,
+                             audioSegmentTimingInfoFn,
+                             id3Fn,
+                             captionsFn,
+                             isEndOfTimeline,
+                             endedTimelineFn,
+                             dataFn,
+                             doneFn,
+                             onTransmuxerLog,
+                             triggerSegmentEventFn
+                           }) => {
   let count = 0;
   let didError = false;
   return (error, segment) => {
@@ -39967,7 +43441,8 @@ const waitForCompletion = ({
             endedTimelineFn,
             dataFn,
             doneFn,
-            onTransmuxerLog
+            onTransmuxerLog,
+            triggerSegmentEventFn
           });
         } // Otherwise, everything is ready just continue
 
@@ -39984,12 +43459,17 @@ const waitForCompletion = ({
           endedTimelineFn,
           dataFn,
           doneFn,
-          onTransmuxerLog
+          onTransmuxerLog,
+          triggerSegmentEventFn
         });
       }; // Keep track of when *all* of the requests have completed
 
       segment.endOfAllRequests = Date.now();
       if (segment.map && segment.map.encryptedBytes && !segment.map.bytes) {
+        triggerSegmentEventFn({
+          type: 'segmentdecryptionstart',
+          segment
+        });
         return decrypt({
           decryptionWorker,
           // add -init to the "id" to differentiate between segment
@@ -39997,9 +43477,15 @@ const waitForCompletion = ({
           // at the same time at some point in the future.
           id: segment.requestId + '-init',
           encryptedBytes: segment.map.encryptedBytes,
-          key: segment.map.key
+          key: segment.map.key,
+          segment,
+          doneFn
         }, decryptedBytes => {
           segment.map.bytes = decryptedBytes;
+          triggerSegmentEventFn({
+            type: 'segmentdecryptioncomplete',
+            segment
+          });
           parseInitSegment(segment, parseError => {
             if (parseError) {
               abortAll(activeXhrs);
@@ -40022,9 +43508,9 @@ const waitForCompletion = ({
  */
 
 const handleLoadEnd = ({
-  loadendState,
-  abortFn
-}) => event => {
+                         loadendState,
+                         abortFn
+                       }) => event => {
   const request = event.target;
   if (request.aborted && abortFn && !loadendState.calledAbortFn) {
     abortFn();
@@ -40058,18 +43544,18 @@ const handleLoadEnd = ({
  */
 
 const handleProgress = ({
-  segment,
-  progressFn,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn
-}) => event => {
+                          segment,
+                          progressFn,
+                          trackInfoFn,
+                          timingInfoFn,
+                          videoSegmentTimingInfoFn,
+                          audioSegmentTimingInfoFn,
+                          id3Fn,
+                          captionsFn,
+                          isEndOfTimeline,
+                          endedTimelineFn,
+                          dataFn
+                        }) => event => {
   const request = event.target;
   if (request.aborted) {
     return;
@@ -40151,24 +43637,25 @@ const handleProgress = ({
  */
 
 const mediaSegmentRequest = ({
-  xhr,
-  xhrOptions,
-  decryptionWorker,
-  segment,
-  abortFn,
-  progressFn,
-  trackInfoFn,
-  timingInfoFn,
-  videoSegmentTimingInfoFn,
-  audioSegmentTimingInfoFn,
-  id3Fn,
-  captionsFn,
-  isEndOfTimeline,
-  endedTimelineFn,
-  dataFn,
-  doneFn,
-  onTransmuxerLog
-}) => {
+                               xhr,
+                               xhrOptions,
+                               decryptionWorker,
+                               segment,
+                               abortFn,
+                               progressFn,
+                               trackInfoFn,
+                               timingInfoFn,
+                               videoSegmentTimingInfoFn,
+                               audioSegmentTimingInfoFn,
+                               id3Fn,
+                               captionsFn,
+                               isEndOfTimeline,
+                               endedTimelineFn,
+                               dataFn,
+                               doneFn,
+                               onTransmuxerLog,
+                               triggerSegmentEventFn
+                             }) => {
   const activeXhrs = [];
   const finishProcessingFn = waitForCompletion({
     activeXhrs,
@@ -40183,7 +43670,8 @@ const mediaSegmentRequest = ({
     endedTimelineFn,
     dataFn,
     doneFn,
-    onTransmuxerLog
+    onTransmuxerLog,
+    triggerSegmentEventFn
   }); // optionally, request the decryption key
 
   if (segment.key && !segment.key.bytes) {
@@ -40193,9 +43681,18 @@ const mediaSegmentRequest = ({
     }
     const keyRequestOptions = merge(xhrOptions, {
       uri: segment.key.resolvedUri,
-      responseType: 'arraybuffer'
+      responseType: 'arraybuffer',
+      requestType: 'segment-key'
     });
-    const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn);
+    const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
+    const keyInfo = {
+      uri: segment.key.resolvedUri
+    };
+    triggerSegmentEventFn({
+      type: 'segmentkeyloadstart',
+      segment,
+      keyInfo
+    });
     const keyXhr = xhr(keyRequestOptions, keyRequestCallback);
     activeXhrs.push(keyXhr);
   } // optionally, request the associated media init segment
@@ -40205,20 +43702,35 @@ const mediaSegmentRequest = ({
     if (differentMapKey) {
       const mapKeyRequestOptions = merge(xhrOptions, {
         uri: segment.map.key.resolvedUri,
-        responseType: 'arraybuffer'
+        responseType: 'arraybuffer',
+        requestType: 'segment-key'
       });
-      const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn);
+      const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
+      const keyInfo = {
+        uri: segment.map.key.resolvedUri
+      };
+      triggerSegmentEventFn({
+        type: 'segmentkeyloadstart',
+        segment,
+        keyInfo
+      });
       const mapKeyXhr = xhr(mapKeyRequestOptions, mapKeyRequestCallback);
       activeXhrs.push(mapKeyXhr);
     }
     const initSegmentOptions = merge(xhrOptions, {
       uri: segment.map.resolvedUri,
       responseType: 'arraybuffer',
-      headers: segmentXhrHeaders(segment.map)
+      headers: segmentXhrHeaders(segment.map),
+      requestType: 'segment-media-initialization'
     });
     const initSegmentRequestCallback = handleInitSegmentResponse({
       segment,
-      finishProcessingFn
+      finishProcessingFn,
+      triggerSegmentEventFn
+    });
+    triggerSegmentEventFn({
+      type: 'segmentloadstart',
+      segment
     });
     const initSegmentXhr = xhr(initSegmentOptions, initSegmentRequestCallback);
     activeXhrs.push(initSegmentXhr);
@@ -40226,12 +43738,18 @@ const mediaSegmentRequest = ({
   const segmentRequestOptions = merge(xhrOptions, {
     uri: segment.part && segment.part.resolvedUri || segment.resolvedUri,
     responseType: 'arraybuffer',
-    headers: segmentXhrHeaders(segment)
+    headers: segmentXhrHeaders(segment),
+    requestType: 'segment'
   });
   const segmentRequestCallback = handleSegmentResponse({
     segment,
     finishProcessingFn,
-    responseType: segmentRequestOptions.responseType
+    responseType: segmentRequestOptions.responseType,
+    triggerSegmentEventFn
+  });
+  triggerSegmentEventFn({
+    type: 'segmentloadstart',
+    segment
   });
   const segmentXhr = xhr(segmentRequestOptions, segmentRequestCallback);
   segmentXhr.addEventListener('progress', handleProgress({
@@ -40258,110 +43776,6 @@ const mediaSegmentRequest = ({
     }));
   });
   return () => abortAll(activeXhrs);
-};
-
-/**
- * @file - codecs.js - Handles tasks regarding codec strings such as translating them to
- * codec strings, or translating codec strings into objects that can be examined.
- */
-const logFn$1 = logger('CodecUtils');
-/**
- * Returns a set of codec strings parsed from the playlist or the default
- * codec strings if no codecs were specified in the playlist
- *
- * @param {Playlist} media the current media playlist
- * @return {Object} an object with the video and audio codecs
- */
-
-const getCodecs = function (media) {
-  // if the codecs were explicitly specified, use them instead of the
-  // defaults
-  const mediaAttributes = media.attributes || {};
-  if (mediaAttributes.CODECS) {
-    return parseCodecs(mediaAttributes.CODECS);
-  }
-};
-const isMaat = (main, media) => {
-  const mediaAttributes = media.attributes || {};
-  return main && main.mediaGroups && main.mediaGroups.AUDIO && mediaAttributes.AUDIO && main.mediaGroups.AUDIO[mediaAttributes.AUDIO];
-};
-const isMuxed = (main, media) => {
-  if (!isMaat(main, media)) {
-    return true;
-  }
-  const mediaAttributes = media.attributes || {};
-  const audioGroup = main.mediaGroups.AUDIO[mediaAttributes.AUDIO];
-  for (const groupId in audioGroup) {
-    // If an audio group has a URI (the case for HLS, as HLS will use external playlists),
-    // or there are listed playlists (the case for DASH, as the manifest will have already
-    // provided all of the details necessary to generate the audio playlist, as opposed to
-    // HLS' externally requested playlists), then the content is demuxed.
-    if (!audioGroup[groupId].uri && !audioGroup[groupId].playlists) {
-      return true;
-    }
-  }
-  return false;
-};
-const unwrapCodecList = function (codecList) {
-  const codecs = {};
-  codecList.forEach(({
-    mediaType,
-    type,
-    details
-  }) => {
-    codecs[mediaType] = codecs[mediaType] || [];
-    codecs[mediaType].push(translateLegacyCodec(`${type}${details}`));
-  });
-  Object.keys(codecs).forEach(function (mediaType) {
-    if (codecs[mediaType].length > 1) {
-      logFn$1(`multiple ${mediaType} codecs found as attributes: ${codecs[mediaType].join(', ')}. Setting playlist codecs to null so that we wait for mux.js to probe segments for real codecs.`);
-      codecs[mediaType] = null;
-      return;
-    }
-    codecs[mediaType] = codecs[mediaType][0];
-  });
-  return codecs;
-};
-const codecCount = function (codecObj) {
-  let count = 0;
-  if (codecObj.audio) {
-    count++;
-  }
-  if (codecObj.video) {
-    count++;
-  }
-  return count;
-};
-/**
- * Calculates the codec strings for a working configuration of
- * SourceBuffers to play variant streams in a main playlist. If
- * there is no possible working configuration, an empty object will be
- * returned.
- *
- * @param main {Object} the m3u8 object for the main playlist
- * @param media {Object} the m3u8 object for the variant playlist
- * @return {Object} the codec strings.
- *
- * @private
- */
-
-const codecsForPlaylist = function (main, media) {
-  const mediaAttributes = media.attributes || {};
-  const codecInfo = unwrapCodecList(getCodecs(media) || []); // HLS with multiple-audio tracks must always get an audio codec.
-  // Put another way, there is no way to have a video-only multiple-audio HLS!
-
-  if (isMaat(main, media) && !codecInfo.audio) {
-    if (!isMuxed(main, media)) {
-      // It is possible for codecs to be specified on the audio media group playlist but
-      // not on the rendition playlist. This is mostly the case for DASH, where audio and
-      // video are always separate (and separately specified).
-      const defaultCodecs = unwrapCodecList(codecsFromDefault(main, mediaAttributes.AUDIO) || []);
-      if (defaultCodecs.audio) {
-        codecInfo.audio = defaultCodecs.audio;
-      }
-    }
-  }
-  return codecInfo;
 };
 const logFn = logger('PlaylistSelector');
 const representationToString = function (representation) {
@@ -40473,25 +43887,40 @@ const comparePlaylistResolution = function (left, right) {
 /**
  * Chooses the appropriate media playlist based on bandwidth and player size
  *
- * @param {Object} main
+ * @param {Object} settings
+ *        Object of information required to use this selector
+ * @param {Object} settings.main
  *        Object representation of the main manifest
- * @param {number} playerBandwidth
+ * @param {number} settings.bandwidth
  *        Current calculated bandwidth of the player
- * @param {number} playerWidth
+ * @param {number} settings.playerWidth
  *        Current width of the player element (should account for the device pixel ratio)
- * @param {number} playerHeight
+ * @param {number} settings.playerHeight
  *        Current height of the player element (should account for the device pixel ratio)
- * @param {boolean} limitRenditionByPlayerDimensions
+ * @param {number} settings.playerObjectFit
+ *        Current value of the video element's object-fit CSS property. Allows taking into
+ *        account that the video might be scaled up to cover the media element when selecting
+ *        media playlists based on player size.
+ * @param {boolean} settings.limitRenditionByPlayerDimensions
  *        True if the player width and height should be used during the selection, false otherwise
- * @param {Object} playlistController
+ * @param {Object} settings.playlistController
  *        the current playlistController object
  * @return {Playlist} the highest bitrate playlist less than the
  * currently detected bandwidth, accounting for some amount of
  * bandwidth variance
  */
 
-let simpleSelector = function (main, playerBandwidth, playerWidth, playerHeight, limitRenditionByPlayerDimensions, playlistController) {
-  // If we end up getting called before `main` is available, exit early
+let simpleSelector = function (settings) {
+  const {
+    main,
+    bandwidth: playerBandwidth,
+    playerWidth,
+    playerHeight,
+    playerObjectFit,
+    limitRenditionByPlayerDimensions,
+    playlistController
+  } = settings; // If we end up getting called before `main` is available, exit early
+
   if (!main) {
     return;
   }
@@ -40575,7 +44004,17 @@ let simpleSelector = function (main, playerBandwidth, playerWidth, playerHeight,
   // if there is no match of exact resolution
 
   if (!resolutionBestRep) {
-    resolutionPlusOneList = haveResolution.filter(rep => rep.width > playerWidth || rep.height > playerHeight); // find all the variants have the same smallest resolution
+    resolutionPlusOneList = haveResolution.filter(rep => {
+      if (playerObjectFit === 'cover') {
+        // video will be scaled up to cover the player. We need to
+        // make sure rendition is at least as wide and as high as the
+        // player.
+        return rep.width > playerWidth && rep.height > playerHeight;
+      } // video will be scaled down to fit inside the player soon as
+      // its resolution exceeds player size in at least one dimension.
+
+      return rep.width > playerWidth || rep.height > playerHeight;
+    }); // find all the variants have the same smallest resolution
 
     resolutionPlusOneSmallest = resolutionPlusOneList.filter(rep => rep.width === resolutionPlusOneList[0].width && rep.height === resolutionPlusOneList[0].height); // ensure that we also pick the highest bandwidth variant that
     // is just-larger-than the video player
@@ -40637,8 +44076,19 @@ let simpleSelector = function (main, playerBandwidth, playerWidth, playerHeight,
  */
 
 const lastBandwidthSelector = function () {
-  const pixelRatio = this.useDevicePixelRatio ? window$1.devicePixelRatio || 1 : 1;
-  return simpleSelector(this.playlists.main, this.systemBandwidth, parseInt(safeGetComputedStyle(this.tech_.el(), 'width'), 10) * pixelRatio, parseInt(safeGetComputedStyle(this.tech_.el(), 'height'), 10) * pixelRatio, this.limitRenditionByPlayerDimensions, this.playlistController_);
+  let pixelRatio = this.useDevicePixelRatio ? window$1.devicePixelRatio || 1 : 1;
+  if (!isNaN(this.customPixelRatio)) {
+    pixelRatio = this.customPixelRatio;
+  }
+  return simpleSelector({
+    main: this.playlists.main,
+    bandwidth: this.systemBandwidth,
+    playerWidth: parseInt(safeGetComputedStyle(this.tech_.el(), 'width'), 10) * pixelRatio,
+    playerHeight: parseInt(safeGetComputedStyle(this.tech_.el(), 'height'), 10) * pixelRatio,
+    playerObjectFit: this.usePlayerObjectFit ? safeGetComputedStyle(this.tech_.el(), 'objectFit') : '',
+    limitRenditionByPlayerDimensions: this.limitRenditionByPlayerDimensions,
+    playlistController: this.playlistController_
+  });
 };
 /**
  * Chooses the appropriate media playlist based on an
@@ -40662,7 +44112,10 @@ const movingAverageBandwidthSelector = function (decay) {
     throw new Error('Moving average bandwidth decay must be between 0 and 1.');
   }
   return function () {
-    const pixelRatio = this.useDevicePixelRatio ? window$1.devicePixelRatio || 1 : 1;
+    let pixelRatio = this.useDevicePixelRatio ? window$1.devicePixelRatio || 1 : 1;
+    if (!isNaN(this.customPixelRatio)) {
+      pixelRatio = this.customPixelRatio;
+    }
     if (average < 0) {
       average = this.systemBandwidth;
       lastSystemBandwidth = this.systemBandwidth;
@@ -40676,7 +44129,15 @@ const movingAverageBandwidthSelector = function (decay) {
       average = decay * this.systemBandwidth + (1 - decay) * average;
       lastSystemBandwidth = this.systemBandwidth;
     }
-    return simpleSelector(this.playlists.main, average, parseInt(safeGetComputedStyle(this.tech_.el(), 'width'), 10) * pixelRatio, parseInt(safeGetComputedStyle(this.tech_.el(), 'height'), 10) * pixelRatio, this.limitRenditionByPlayerDimensions, this.playlistController_);
+    return simpleSelector({
+      main: this.playlists.main,
+      bandwidth: average,
+      playerWidth: parseInt(safeGetComputedStyle(this.tech_.el(), 'width'), 10) * pixelRatio,
+      playerHeight: parseInt(safeGetComputedStyle(this.tech_.el(), 'height'), 10) * pixelRatio,
+      playerObjectFit: this.usePlayerObjectFit ? safeGetComputedStyle(this.tech_.el(), 'objectFit') : '',
+      limitRenditionByPlayerDimensions: this.limitRenditionByPlayerDimensions,
+      playlistController: this.playlistController_
+    });
   };
 };
 /**
@@ -40802,6 +44263,24 @@ const concatSegments = segmentObj => {
 };
 
 /**
+ * Example:
+ * https://host.com/path1/path2/path3/segment.ts?arg1=val1
+ * -->
+ * path3/segment.ts
+ *
+ * @param resolvedUri
+ * @return {string}
+ */
+
+function compactSegmentUrlDescription(resolvedUri) {
+  try {
+    return new URL(resolvedUri).pathname.split('/').slice(-2).join('/');
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
  * @file text-tracks.js
  */
 /**
@@ -40867,10 +44346,10 @@ const createCaptionsTrackIfNotExists = function (inbandTextTracks, tech, caption
  */
 
 const addCaptionData = function ({
-  inbandTextTracks,
-  captionArray,
-  timestampOffset
-}) {
+                                   inbandTextTracks,
+                                   captionArray,
+                                   timestampOffset
+                                 }) {
   if (!captionArray) {
     return;
   }
@@ -40937,11 +44416,11 @@ const deprecateOldCue = function (cue) {
  */
 
 const addMetadata = ({
-  inbandTextTracks,
-  metadataArray,
-  timestampOffset,
-  videoDuration
-}) => {
+                       inbandTextTracks,
+                       metadataArray,
+                       timestampOffset,
+                       videoDuration
+                     }) => {
   if (!metadataArray) {
     return;
   }
@@ -41029,9 +44508,9 @@ const dateRangeKeysToOmit = new Set(['id', 'class', 'startDate', 'duration', 'en
  */
 
 const addDateRangeMetadata = ({
-  inbandTextTracks,
-  dateRanges
-}) => {
+                                inbandTextTracks,
+                                dateRanges
+                              }) => {
   const metadataTrack = inbandTextTracks.metadataTrack_;
   if (!metadataTrack) {
     return;
@@ -41265,9 +44744,6 @@ const shallowEqual = function (a, b) {
   return true;
 };
 
-// https://www.w3.org/TR/WebIDL-1/#quotaexceedederror
-const QUOTA_EXCEEDED_ERR = 22;
-
 /**
  * The segment loader has no recourse except to fetch a segment in the
  * current playlist and use the internal timestamps in that segment to
@@ -41412,12 +44888,12 @@ const timingInfoPropertyForMedia = mediaType => `${mediaType}TimingInfo`;
  */
 
 const timestampOffsetForSegment = ({
-  segmentTimeline,
-  currentTimeline,
-  startOfSegment,
-  buffered,
-  overrideCheck
-}) => {
+                                     segmentTimeline,
+                                     currentTimeline,
+                                     startOfSegment,
+                                     buffered,
+                                     overrideCheck
+                                   }) => {
   // Check to see if we are crossing a discontinuity to see if we need to set the
   // timestamp offset on the transmuxer and source buffer.
   //
@@ -41558,12 +45034,12 @@ const timestampOffsetForSegment = ({
  */
 
 const shouldWaitForTimelineChange = ({
-  timelineChangeController,
-  currentTimeline,
-  segmentTimeline,
-  loaderType,
-  audioDisabled
-}) => {
+                                       timelineChangeController,
+                                       currentTimeline,
+                                       segmentTimeline,
+                                       loaderType,
+                                       audioDisabled
+                                     }) => {
   if (currentTimeline === segmentTimeline) {
     return false;
   }
@@ -41610,6 +45086,69 @@ const shouldWaitForTimelineChange = ({
   }
   return false;
 };
+const shouldFixBadTimelineChanges = timelineChangeController => {
+  if (!timelineChangeController) {
+    return false;
+  }
+  const pendingAudioTimelineChange = timelineChangeController.pendingTimelineChange({
+    type: 'audio'
+  });
+  const pendingMainTimelineChange = timelineChangeController.pendingTimelineChange({
+    type: 'main'
+  });
+  const hasPendingTimelineChanges = pendingAudioTimelineChange && pendingMainTimelineChange;
+  const differentPendingChanges = hasPendingTimelineChanges && pendingAudioTimelineChange.to !== pendingMainTimelineChange.to;
+  const isNotInitialPendingTimelineChange = hasPendingTimelineChanges && pendingAudioTimelineChange.from !== -1 && pendingMainTimelineChange.from !== -1;
+  if (isNotInitialPendingTimelineChange && differentPendingChanges) {
+    return true;
+  }
+  return false;
+};
+/**
+ * Check if the pending audio timeline change is behind the
+ * pending main timeline change.
+ *
+ * @param {SegmentLoader} segmentLoader
+ * @return {boolean}
+ */
+
+const isAudioTimelineBehind = segmentLoader => {
+  const pendingAudioTimelineChange = segmentLoader.timelineChangeController_.pendingTimelineChange({
+    type: 'audio'
+  });
+  const pendingMainTimelineChange = segmentLoader.timelineChangeController_.pendingTimelineChange({
+    type: 'main'
+  });
+  const hasPendingTimelineChanges = pendingAudioTimelineChange && pendingMainTimelineChange;
+  return hasPendingTimelineChanges && pendingAudioTimelineChange.to < pendingMainTimelineChange.to;
+};
+/**
+ * A method to check if the player is waiting for a timeline change, and fixes
+ * certain scenarios where the timelines need to be updated.
+ *
+ * @param {SegmentLoader} segmentLoader
+ */
+
+const checkAndFixTimelines = segmentLoader => {
+  const segmentInfo = segmentLoader.pendingSegment_;
+  if (!segmentInfo) {
+    return;
+  }
+  const waitingForTimelineChange = shouldWaitForTimelineChange({
+    timelineChangeController: segmentLoader.timelineChangeController_,
+    currentTimeline: segmentLoader.currentTimeline_,
+    segmentTimeline: segmentInfo.timeline,
+    loaderType: segmentLoader.loaderType_,
+    audioDisabled: segmentLoader.audioDisabled_
+  });
+  if (waitingForTimelineChange && shouldFixBadTimelineChanges(segmentLoader.timelineChangeController_)) {
+    if (isAudioTimelineBehind(segmentLoader)) {
+      segmentLoader.timelineChangeController_.trigger('audioTimelineBehind');
+      return;
+    }
+    segmentLoader.timelineChangeController_.trigger('fixBadTimelineChange');
+  }
+};
 const mediaDuration = timingInfos => {
   let maxDuration = 0;
   ['video', 'audio'].forEach(function (type) {
@@ -41639,9 +45178,9 @@ const mediaDuration = timingInfos => {
   return maxDuration;
 };
 const segmentTooLong = ({
-  segmentDuration,
-  maxDuration
-}) => {
+                          segmentDuration,
+                          maxDuration
+                        }) => {
   // 0 duration segments are most likely due to metadata only segments or a lack of
   // information.
   if (!segmentDuration) {
@@ -41695,6 +45234,32 @@ const getTroublesomeSegmentDurationMessage = (segmentInfo, sourceType) => {
   }
   return null;
 };
+/**
+ *
+ * @param {Object} options type of segment loader and segment either segmentInfo or simple segment
+ * @return a segmentInfo payload for events or errors.
+ */
+
+const segmentInfoPayload = ({
+                              type,
+                              segment
+                            }) => {
+  if (!segment) {
+    return;
+  }
+  const isEncrypted = Boolean(segment.key || segment.map && segment.map.ke);
+  const isMediaInitialization = Boolean(segment.map && !segment.map.bytes);
+  const start = segment.startOfSegment === undefined ? segment.start : segment.startOfSegment;
+  return {
+    type: type || segment.type,
+    uri: segment.resolvedUri || segment.uri,
+    start,
+    duration: segment.duration,
+    isEncrypted,
+    isMediaInitialization
+  };
+};
+
 /**
  * An object that manages segment loading and appending.
  *
@@ -41826,7 +45391,14 @@ class SegmentLoader extends videojs.EventTarget {
     this.sourceUpdater_.on('ready', () => {
       if (this.hasEnoughInfoToAppend_()) {
         this.processCallQueue_();
+      } else {
+        checkAndFixTimelines(this);
       }
+    });
+    this.sourceUpdater_.on('codecschange', metadata => {
+      this.trigger(_extends({
+        type: 'codecschange'
+      }, metadata));
     }); // Only the main loader needs to listen for pending timeline changes, as the main
     // loader should wait for audio to be ready to change its timeline so that both main
     // and audio timelines change together. For more details, see the
@@ -41836,6 +45408,8 @@ class SegmentLoader extends videojs.EventTarget {
       this.timelineChangeController_.on('pendingtimelinechange', () => {
         if (this.hasEnoughInfoToAppend_()) {
           this.processCallQueue_();
+        } else {
+          checkAndFixTimelines(this);
         }
       });
     } // The main loader only listens on pending timeline changes, but the audio loader,
@@ -41843,16 +45417,37 @@ class SegmentLoader extends videojs.EventTarget {
     // see the shouldWaitForTimelineChange function.
 
     if (this.loaderType_ === 'audio') {
-      this.timelineChangeController_.on('timelinechange', () => {
+      this.timelineChangeController_.on('timelinechange', metadata => {
+        this.trigger(_extends({
+          type: 'timelinechange'
+        }, metadata));
         if (this.hasEnoughInfoToLoad_()) {
           this.processLoadQueue_();
+        } else {
+          checkAndFixTimelines(this);
         }
         if (this.hasEnoughInfoToAppend_()) {
           this.processCallQueue_();
+        } else {
+          checkAndFixTimelines(this);
         }
       });
     }
   }
+
+  /**
+   * TODO: Current sync controller consists of many hls-specific strategies
+   * media sequence sync is also hls-specific, and we would like to be protocol-agnostic on this level
+   * this should be a part of the sync-controller and sync controller should expect different strategy list based on the protocol.
+   *
+   * @return {MediaSequenceSync|null}
+   * @private
+   */
+
+  get mediaSequenceSync_() {
+    return this.syncController_.getMediaSequenceSync(this.loaderType_);
+  }
+
   createTransmuxer_() {
     return segmentTransmuxer.createTransmuxer({
       remux: false,
@@ -41862,6 +45457,7 @@ class SegmentLoader extends videojs.EventTarget {
       captionServices: this.captionServices_
     });
   }
+
   /**
    * reset all of our media stats
    *
@@ -41878,6 +45474,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.mediaSecondsLoaded = 0;
     this.mediaAppends = 0;
   }
+
   /**
    * dispose of the SegmentLoader and reset to the default state
    */
@@ -41899,6 +45496,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.off();
   }
+
   setAudio(enable) {
     this.audioDisabled_ = !enable;
     if (enable) {
@@ -41908,6 +45506,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.sourceUpdater_.removeAudio(0, this.duration_());
     }
   }
+
   /**
    * abort anything that is currently doing on with the SegmentLoader
    * and reset to a default state
@@ -41918,6 +45517,7 @@ class SegmentLoader extends videojs.EventTarget {
       if (this.pendingSegment_) {
         this.pendingSegment_ = null;
       }
+      this.timelineChangeController_.clearPendingTimelineChange(this.loaderType_);
       return;
     }
     this.abort_(); // We aborted the requests we were waiting on, so reset the loader's state to READY
@@ -41932,6 +45532,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.monitorBuffer_();
     }
   }
+
   /**
    * abort all pending xhr requests and null any pending segements
    *
@@ -41953,6 +45554,7 @@ class SegmentLoader extends videojs.EventTarget {
     window$1.clearTimeout(this.quotaExceededErrorRetryTimeout_);
     this.quotaExceededErrorRetryTimeout_ = null;
   }
+
   checkForAbort_(requestId) {
     // If the state is APPENDING, then aborts will not modify the state, meaning the first
     // callback that happens should reset the state to READY so that loading can continue.
@@ -41965,6 +45567,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return false;
   }
+
   /**
    * set an error on the segment loader and null out any pending segements
    *
@@ -41980,6 +45583,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.pendingSegment_ = null;
     return this.error_;
   }
+
   endOfStream() {
     this.ended_ = true;
     if (this.transmuxer_) {
@@ -41990,6 +45594,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.pause();
     this.trigger('ended');
   }
+
   /**
    * Indicates which time ranges are buffered
    *
@@ -42019,6 +45624,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     return this.sourceUpdater_.audioBuffered();
   }
+
   /**
    * Gets and sets init segment for the provided map
    *
@@ -42047,6 +45653,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return storedMap || map;
   }
+
   /**
    * Gets and sets key for the provided key
    *
@@ -42080,6 +45687,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return result;
   }
+
   /**
    * Returns true if all configuration required for loading is present, otherwise false.
    *
@@ -42090,6 +45698,7 @@ class SegmentLoader extends videojs.EventTarget {
   couldBeginLoading_() {
     return this.playlist_ && !this.paused();
   }
+
   /**
    * load a playlist and start to fill the buffer
    */
@@ -42113,6 +45722,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.state = 'READY';
   }
+
   /**
    * Once all the starting parameters have been specified, begin
    * operation. This method should only be invoked from the INIT
@@ -42128,6 +45738,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.resetEverything();
     return this.monitorBuffer_();
   }
+
   /**
    * set a playlist on the segment loader
    *
@@ -42136,6 +45747,10 @@ class SegmentLoader extends videojs.EventTarget {
 
   playlist(newPlaylist, options = {}) {
     if (!newPlaylist) {
+      return;
+    }
+    if (this.playlist_ && this.playlist_.endList && newPlaylist.endList && this.playlist_.uri === newPlaylist.uri) {
+      // skip update if both prev and new are vod and have the same URI
       return;
     }
     const oldPlaylist = this.playlist_;
@@ -42175,7 +45790,13 @@ class SegmentLoader extends videojs.EventTarget {
       }
     }
     this.logger_(`playlist update [${oldId} => ${newPlaylist.id || newPlaylist.uri}]`);
-    this.syncController_.updateMediaSequenceMap(newPlaylist, this.currentTime_(), this.loaderType_); // in VOD, this is always a rendition switch (or we updated our syncInfo above)
+    if (this.mediaSequenceSync_) {
+      this.mediaSequenceSync_.update(newPlaylist, this.currentTime_());
+      this.logger_(`Playlist update:
+currentTime: ${this.currentTime_()}
+bufferedEnd: ${lastBufferedEnd(this.buffered_())}
+`, this.mediaSequenceSync_.diagnostics);
+    } // in VOD, this is always a rendition switch (or we updated our syncInfo above)
     // in LIVE, we always want to update with new playlists (including refreshes)
 
     this.trigger('syncinfoupdate'); // if we were unpaused but waiting for a playlist, start
@@ -42259,6 +45880,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.syncController_.saveExpiredSegmentInfo(oldPlaylist, newPlaylist);
   }
+
   /**
    * Prevent the loader from fetching additional segments. If there
    * is a segment request outstanding, it will finish processing
@@ -42272,6 +45894,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.checkBufferTimeout_ = null;
     }
   }
+
   /**
    * Returns whether the segment loader is fetching additional
    * segments when given the opportunity. This property can be
@@ -42281,6 +45904,7 @@ class SegmentLoader extends videojs.EventTarget {
   paused() {
     return this.checkBufferTimeout_ === null;
   }
+
   /**
    * Delete all the buffered data and reset the SegmentLoader
    *
@@ -42311,6 +45935,7 @@ class SegmentLoader extends videojs.EventTarget {
       });
     }
   }
+
   /**
    * Force the SegmentLoader to resync and start loading around the currentTime instead
    * of starting at the end of the buffer
@@ -42320,8 +45945,12 @@ class SegmentLoader extends videojs.EventTarget {
 
   resetLoader() {
     this.fetchAtBuffer_ = false;
+    if (this.mediaSequenceSync_) {
+      this.mediaSequenceSync_.resetAppendedStatus();
+    }
     this.resyncLoader();
   }
+
   /**
    * Force the SegmentLoader to restart synchronization and make a conservative guess
    * before returning to the simple walk-forward method
@@ -42335,8 +45964,14 @@ class SegmentLoader extends videojs.EventTarget {
     this.mediaIndex = null;
     this.partIndex = null;
     this.syncPoint_ = null;
-    this.isPendingTimestampOffset_ = false;
-    this.shouldForceTimestampOffsetAfterResync_ = true;
+    this.isPendingTimestampOffset_ = false; // this is mainly to sync timing-info when switching between renditions with and without timestamp-rollover,
+    // so we don't want it for DASH or fragmented mp4 segments.
+
+    const isFmp4 = this.currentMediaInfo_ && this.currentMediaInfo_.isFmp4;
+    const isHlsTs = this.sourceType_ === 'hls' && !isFmp4;
+    if (isHlsTs) {
+      this.shouldForceTimestampOffsetAfterResync_ = true;
+    }
     this.callQueue_ = [];
     this.loadQueue_ = [];
     this.metadataQueue_.id3 = [];
@@ -42348,6 +45983,7 @@ class SegmentLoader extends videojs.EventTarget {
       });
     }
   }
+
   /**
    * Remove any data in the source buffer between start and end times
    *
@@ -42358,7 +45994,8 @@ class SegmentLoader extends videojs.EventTarget {
    * operation is complete
    */
 
-  remove(start, end, done = () => {}, force = false) {
+  remove(start, end, done = () => {
+  }, force = false) {
     // clamp end to duration if we need to remove everything.
     // This is due to a browser bug that causes issues if we remove to Infinity.
     // videojs/videojs-contrib-hls#1225
@@ -42410,6 +46047,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     removeFinished();
   }
+
   /**
    * (re-)schedule monitorBufferTick_ to run as soon as possible
    *
@@ -42422,6 +46060,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.checkBufferTimeout_ = window$1.setTimeout(this.monitorBufferTick_.bind(this), 1);
   }
+
   /**
    * As long as the SegmentLoader is in the READY state, periodically
    * invoke fillBuffer_().
@@ -42438,6 +46077,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.checkBufferTimeout_ = window$1.setTimeout(this.monitorBufferTick_.bind(this), CHECK_BUFFER_DELAY);
   }
+
   /**
    * fill the buffer with segements unless the sourceBuffers are
    * currently updating
@@ -42459,6 +46099,16 @@ class SegmentLoader extends videojs.EventTarget {
     if (!segmentInfo) {
       return;
     }
+    const metadata = {
+      segmentInfo: segmentInfoPayload({
+        type: this.loaderType_,
+        segment: segmentInfo
+      })
+    };
+    this.trigger({
+      type: 'segmentselected',
+      metadata
+    });
     if (typeof segmentInfo.timestampOffset === 'number') {
       this.isPendingTimestampOffset_ = false;
       this.timelineChangeController_.pendingTimelineChange({
@@ -42469,6 +46119,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.loadSegment_(segmentInfo);
   }
+
   /**
    * Determines if we should call endOfStream on the media source based
    * on the state of the buffer or if appened segment was the final
@@ -42493,6 +46144,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     return playlist.endList && this.mediaSource_.readyState === 'open' && appendedLastSegment && appendedLastPart;
   }
+
   /**
    * Determines what request should be made given current segment loader state.
    *
@@ -42535,20 +46187,53 @@ class SegmentLoader extends videojs.EventTarget {
         next.mediaIndex = this.mediaIndex + 1;
       }
     } else {
-      // Find the segment containing the end of the buffer or current time.
-      const {
-        segmentIndex,
-        startTime,
-        partIndex
-      } = Playlist.getMediaInfoForTime({
-        exactManifestTimings: this.exactManifestTimings,
-        playlist: this.playlist_,
-        currentTime: this.fetchAtBuffer_ ? bufferedEnd : this.currentTime_(),
-        startingPartIndex: this.syncPoint_.partIndex,
-        startingSegmentIndex: this.syncPoint_.segmentIndex,
-        startTime: this.syncPoint_.time
-      });
-      next.getMediaInfoForTime = this.fetchAtBuffer_ ? `bufferedEnd ${bufferedEnd}` : `currentTime ${this.currentTime_()}`;
+      let segmentIndex;
+      let partIndex;
+      let startTime;
+      const targetTime = this.fetchAtBuffer_ ? bufferedEnd : this.currentTime_();
+      if (this.mediaSequenceSync_) {
+        this.logger_(`chooseNextRequest_ request after Quality Switch:
+For TargetTime: ${targetTime}.
+CurrentTime: ${this.currentTime_()}
+BufferedEnd: ${bufferedEnd}
+Fetch At Buffer: ${this.fetchAtBuffer_}
+`, this.mediaSequenceSync_.diagnostics);
+      }
+      if (this.mediaSequenceSync_ && this.mediaSequenceSync_.isReliable) {
+        const syncInfo = this.getSyncInfoFromMediaSequenceSync_(targetTime);
+        if (!syncInfo) {
+          const message = 'No sync info found while using media sequence sync';
+          this.error({
+            message,
+            metadata: {
+              errorType: videojs.Error.StreamingFailedToSelectNextSegment,
+              error: new Error(message)
+            }
+          });
+          this.logger_('chooseNextRequest_ - no sync info found using media sequence sync'); // no match
+
+          return null;
+        }
+        this.logger_(`chooseNextRequest_ mediaSequence syncInfo (${syncInfo.start} --> ${syncInfo.end})`);
+        segmentIndex = syncInfo.segmentIndex;
+        partIndex = syncInfo.partIndex;
+        startTime = syncInfo.start;
+      } else {
+        this.logger_('chooseNextRequest_ - fallback to a regular segment selection algorithm, based on a syncPoint.'); // fallback
+
+        const mediaInfoForTime = Playlist.getMediaInfoForTime({
+          exactManifestTimings: this.exactManifestTimings,
+          playlist: this.playlist_,
+          currentTime: targetTime,
+          startingPartIndex: this.syncPoint_.partIndex,
+          startingSegmentIndex: this.syncPoint_.segmentIndex,
+          startTime: this.syncPoint_.time
+        });
+        segmentIndex = mediaInfoForTime.segmentIndex;
+        partIndex = mediaInfoForTime.partIndex;
+        startTime = mediaInfoForTime.startTime;
+      }
+      next.getMediaInfoForTime = this.fetchAtBuffer_ ? `bufferedEnd ${targetTime}` : `currentTime ${targetTime}`;
       next.mediaIndex = segmentIndex;
       next.startOfSegment = startTime;
       next.partIndex = partIndex;
@@ -42604,6 +46289,39 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return this.generateSegmentInfo_(next);
   }
+
+  getSyncInfoFromMediaSequenceSync_(targetTime) {
+    if (!this.mediaSequenceSync_) {
+      return null;
+    } // we should pull the target time to the least available time if we drop out of sync for any reason
+
+    const finalTargetTime = Math.max(targetTime, this.mediaSequenceSync_.start);
+    if (targetTime !== finalTargetTime) {
+      this.logger_(`getSyncInfoFromMediaSequenceSync_. Pulled target time from ${targetTime} to ${finalTargetTime}`);
+    }
+    const mediaSequenceSyncInfo = this.mediaSequenceSync_.getSyncInfoForTime(finalTargetTime);
+    if (!mediaSequenceSyncInfo) {
+      // no match at all
+      return null;
+    }
+    if (!mediaSequenceSyncInfo.isAppended) {
+      // has a perfect match
+      return mediaSequenceSyncInfo;
+    } // has match, but segment was already appended.
+    // attempt to auto-advance to the nearest next segment:
+
+    const nextMediaSequenceSyncInfo = this.mediaSequenceSync_.getSyncInfoForTime(mediaSequenceSyncInfo.end);
+    if (!nextMediaSequenceSyncInfo) {
+      // no match at all
+      return null;
+    }
+    if (nextMediaSequenceSyncInfo.isAppended) {
+      this.logger_('getSyncInfoFromMediaSequenceSync_: We encounter unexpected scenario where next media sequence sync info is also appended!');
+    } // got match with the nearest next segment
+
+    return nextMediaSequenceSyncInfo;
+  }
+
   generateSegmentInfo_(options) {
     const {
       independent,
@@ -42666,9 +46384,9 @@ class SegmentLoader extends videojs.EventTarget {
     }
     if (this.sourceUpdater_.videoBuffered().length) {
       segmentInfo.gopsToAlignWith = gopsSafeToAlignWith(this.gopBuffer_,
-      // since the transmuxer is using the actual timing values, but the time is
-      // adjusted by the timestmap offset, we must adjust the value here
-      this.currentTime_() - this.sourceUpdater_.videoTimestampOffset(), this.timeMapping_);
+        // since the transmuxer is using the actual timing values, but the time is
+        // adjusted by the timestmap offset, we must adjust the value here
+        this.currentTime_() - this.sourceUpdater_.videoTimestampOffset(), this.timeMapping_);
     }
     return segmentInfo;
   } // get the timestampoffset for a segment,
@@ -42678,6 +46396,7 @@ class SegmentLoader extends videojs.EventTarget {
   timestampOffsetForSegment_(options) {
     return timestampOffsetForSegment(options);
   }
+
   /**
    * Determines if the network has enough bandwidth to complete the current segment
    * request in a timely manner. If not, the request will be aborted early and bandwidth
@@ -42690,12 +46409,12 @@ class SegmentLoader extends videojs.EventTarget {
 
   earlyAbortWhenNeeded_(stats) {
     if (this.vhs_.tech_.paused() ||
-    // Don't abort if the current playlist is on the lowestEnabledRendition
-    // TODO: Replace using timeout with a boolean indicating whether this playlist is
-    //       the lowestEnabledRendition.
-    !this.xhrOptions_.timeout ||
-    // Don't abort if we have no bandwidth information to estimate segment sizes
-    !this.playlist_.attributes.BANDWIDTH) {
+      // Don't abort if the current playlist is on the lowestEnabledRendition
+      // TODO: Replace using timeout with a boolean indicating whether this playlist is
+      //       the lowestEnabledRendition.
+      !this.xhrOptions_.timeout ||
+      // Don't abort if we have no bandwidth information to estimate segment sizes
+      !this.playlist_.attributes.BANDWIDTH) {
       return;
     } // Wait at least 1 second since the first byte of data has been received before
     // using the calculated bandwidth from the progress event to allow the bitrate
@@ -42748,10 +46467,12 @@ class SegmentLoader extends videojs.EventTarget {
     this.bandwidth = switchCandidate.playlist.attributes.BANDWIDTH * Config.BANDWIDTH_VARIANCE + 1;
     this.trigger('earlyabort');
   }
+
   handleAbort_(segmentInfo) {
     this.logger_(`Aborting ${segmentInfoString(segmentInfo)}`);
     this.mediaRequestsAborted += 1;
   }
+
   /**
    * XHR `progress` event handler
    *
@@ -42769,7 +46490,26 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.trigger('progress');
   }
+
   handleTrackInfo_(simpleSegment, trackInfo) {
+    const {
+      hasAudio,
+      hasVideo
+    } = trackInfo;
+    const metadata = {
+      segmentInfo: segmentInfoPayload({
+        type: this.loaderType_,
+        segment: simpleSegment
+      }),
+      trackInfo: {
+        hasAudio,
+        hasVideo
+      }
+    };
+    this.trigger({
+      type: 'segmenttransmuxingtrackinfoavailable',
+      metadata
+    });
     this.earlyAbortWhenNeeded_(simpleSegment.stats);
     if (this.checkForAbort_(simpleSegment.requestId)) {
       return;
@@ -42802,8 +46542,11 @@ class SegmentLoader extends videojs.EventTarget {
 
     if (this.hasEnoughInfoToAppend_()) {
       this.processCallQueue_();
+    } else {
+      checkAndFixTimelines(this);
     }
   }
+
   handleTimingInfo_(simpleSegment, mediaType, timeType, time) {
     this.earlyAbortWhenNeeded_(simpleSegment.stats);
     if (this.checkForAbort_(simpleSegment.requestId)) {
@@ -42817,8 +46560,11 @@ class SegmentLoader extends videojs.EventTarget {
 
     if (this.hasEnoughInfoToAppend_()) {
       this.processCallQueue_();
+    } else {
+      checkAndFixTimelines(this);
     }
   }
+
   handleCaptions_(simpleSegment, captionData) {
     this.earlyAbortWhenNeeded_(simpleSegment.stats);
     if (this.checkForAbort_(simpleSegment.requestId)) {
@@ -42883,6 +46629,7 @@ class SegmentLoader extends videojs.EventTarget {
       });
     }
   }
+
   handleId3_(simpleSegment, id3Frames, dispatchType) {
     this.earlyAbortWhenNeeded_(simpleSegment.stats);
     if (this.checkForAbort_(simpleSegment.requestId)) {
@@ -42896,12 +46643,14 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.addMetadataToTextTrack(dispatchType, id3Frames, this.duration_());
   }
+
   processMetadataQueue_() {
     this.metadataQueue_.id3.forEach(fn => fn());
     this.metadataQueue_.caption.forEach(fn => fn());
     this.metadataQueue_.id3 = [];
     this.metadataQueue_.caption = [];
   }
+
   processCallQueue_() {
     const callQueue = this.callQueue_; // Clear out the queue before the queued functions are run, since some of the
     // functions may check the length of the load queue and default to pushing themselves
@@ -42910,6 +46659,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.callQueue_ = [];
     callQueue.forEach(fun => fun());
   }
+
   processLoadQueue_() {
     const loadQueue = this.loadQueue_; // Clear out the queue before the queued functions are run, since some of the
     // functions may check the length of the load queue and default to pushing themselves
@@ -42918,6 +46668,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.loadQueue_ = [];
     loadQueue.forEach(fun => fun());
   }
+
   /**
    * Determines whether the loader has enough info to load the next segment.
    *
@@ -42945,41 +46696,45 @@ class SegmentLoader extends videojs.EventTarget {
       return true;
     }
     if (
-    // Technically, instead of waiting to load a segment on timeline changes, a segment
-    // can be requested and downloaded and only wait before it is transmuxed or parsed.
-    // But in practice, there are a few reasons why it is better to wait until a loader
-    // is ready to append that segment before requesting and downloading:
-    //
-    // 1. Because audio and main loaders cross discontinuities together, if this loader
-    //    is waiting for the other to catch up, then instead of requesting another
-    //    segment and using up more bandwidth, by not yet loading, more bandwidth is
-    //    allotted to the loader currently behind.
-    // 2. media-segment-request doesn't have to have logic to consider whether a segment
-    // is ready to be processed or not, isolating the queueing behavior to the loader.
-    // 3. The audio loader bases some of its segment properties on timing information
-    //    provided by the main loader, meaning that, if the logic for waiting on
-    //    processing was in media-segment-request, then it would also need to know how
-    //    to re-generate the segment information after the main loader caught up.
-    shouldWaitForTimelineChange({
-      timelineChangeController: this.timelineChangeController_,
-      currentTimeline: this.currentTimeline_,
-      segmentTimeline: segmentInfo.timeline,
-      loaderType: this.loaderType_,
-      audioDisabled: this.audioDisabled_
-    })) {
+      // Technically, instead of waiting to load a segment on timeline changes, a segment
+      // can be requested and downloaded and only wait before it is transmuxed or parsed.
+      // But in practice, there are a few reasons why it is better to wait until a loader
+      // is ready to append that segment before requesting and downloading:
+      //
+      // 1. Because audio and main loaders cross discontinuities together, if this loader
+      //    is waiting for the other to catch up, then instead of requesting another
+      //    segment and using up more bandwidth, by not yet loading, more bandwidth is
+      //    allotted to the loader currently behind.
+      // 2. media-segment-request doesn't have to have logic to consider whether a segment
+      // is ready to be processed or not, isolating the queueing behavior to the loader.
+      // 3. The audio loader bases some of its segment properties on timing information
+      //    provided by the main loader, meaning that, if the logic for waiting on
+      //    processing was in media-segment-request, then it would also need to know how
+      //    to re-generate the segment information after the main loader caught up.
+      shouldWaitForTimelineChange({
+        timelineChangeController: this.timelineChangeController_,
+        currentTimeline: this.currentTimeline_,
+        segmentTimeline: segmentInfo.timeline,
+        loaderType: this.loaderType_,
+        audioDisabled: this.audioDisabled_
+      })) {
       return false;
     }
     return true;
   }
+
   getCurrentMediaInfo_(segmentInfo = this.pendingSegment_) {
     return segmentInfo && segmentInfo.trackInfo || this.currentMediaInfo_;
   }
+
   getMediaInfo_(segmentInfo = this.pendingSegment_) {
     return this.getCurrentMediaInfo_(segmentInfo) || this.startingMediaInfo_;
   }
+
   getPendingSegmentPlaylist() {
     return this.pendingSegment_ ? this.pendingSegment_.playlist : null;
   }
+
   hasEnoughInfoToAppend_() {
     if (!this.sourceUpdater_.ready()) {
       return false;
@@ -43008,7 +46763,8 @@ class SegmentLoader extends videojs.EventTarget {
 
     if (hasAudio && !this.audioDisabled_ && !isMuxed && !segmentInfo.audioTimingInfo) {
       return false;
-    }
+    } // we need to allow an append here even if we're moving to different timelines.
+
     if (shouldWaitForTimelineChange({
       timelineChangeController: this.timelineChangeController_,
       currentTimeline: this.currentTimeline_,
@@ -43020,6 +46776,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return true;
   }
+
   handleData_(simpleSegment, result) {
     this.earlyAbortWhenNeeded_(simpleSegment.stats);
     if (this.checkForAbort_(simpleSegment.requestId)) {
@@ -43028,6 +46785,7 @@ class SegmentLoader extends videojs.EventTarget {
     // executed after the calls currently queued.
 
     if (this.callQueue_.length || !this.hasEnoughInfoToAppend_()) {
+      checkAndFixTimelines(this);
       this.callQueue_.push(this.handleData_.bind(this, simpleSegment, result));
       return;
     }
@@ -43119,12 +46877,13 @@ class SegmentLoader extends videojs.EventTarget {
     this.processMetadataQueue_();
     this.appendData_(segmentInfo, result);
   }
+
   updateAppendInitSegmentStatus(segmentInfo, type) {
     // alt audio doesn't manage timestamp offset
     if (this.loaderType_ === 'main' && typeof segmentInfo.timestampOffset === 'number' &&
-    // in the case that we're handling partial data, we don't want to append an init
-    // segment for each chunk
-    !segmentInfo.changedTimestampOffset) {
+      // in the case that we're handling partial data, we don't want to append an init
+      // segment for each chunk
+      !segmentInfo.changedTimestampOffset) {
       // if the timestamp offset changed, the timeline may have changed, so we have to re-
       // append init segments
       this.appendInitSegment_ = {
@@ -43138,12 +46897,13 @@ class SegmentLoader extends videojs.EventTarget {
       this.appendInitSegment_[type] = true;
     }
   }
+
   getInitSegmentAndUpdateState_({
-    type,
-    initSegment,
-    map,
-    playlist
-  }) {
+                                  type,
+                                  initSegment,
+                                  map,
+                                  playlist
+                                }) {
     // "The EXT-X-MAP tag specifies how to obtain the Media Initialization Section
     // (Section 3) required to parse the applicable Media Segments.  It applies to every
     // Media Segment that appears after it in the Playlist until the next EXT-X-MAP tag
@@ -43181,11 +46941,12 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return null;
   }
+
   handleQuotaExceededError_({
-    segmentInfo,
-    type,
-    bytes
-  }, error) {
+                              segmentInfo,
+                              type,
+                              bytes
+                            }, error) {
     const audioBuffered = this.sourceUpdater_.audioBuffered();
     const videoBuffered = this.sourceUpdater_.videoBuffered(); // For now we're ignoring any notion of gaps in the buffer, but they, in theory,
     // should be cleared out during the buffer removals. However, log in case it helps
@@ -43249,11 +47010,12 @@ class SegmentLoader extends videojs.EventTarget {
       }, MIN_BACK_BUFFER * 1000);
     }, true);
   }
+
   handleAppendError_({
-    segmentInfo,
-    type,
-    bytes
-  }, error) {
+                       segmentInfo,
+                       type,
+                       bytes
+                     }, error) {
     // if there's no error, nothing to do
     if (!error) {
       return;
@@ -43268,22 +47030,28 @@ class SegmentLoader extends videojs.EventTarget {
 
       return;
     }
-    this.logger_('Received non QUOTA_EXCEEDED_ERR on append', error);
-    this.error(`${type} append of ${bytes.length}b failed for segment ` + `#${segmentInfo.mediaIndex} in playlist ${segmentInfo.playlist.id}`); // If an append errors, we often can't recover.
+    this.logger_('Received non QUOTA_EXCEEDED_ERR on append', error); // If an append errors, we often can't recover.
     // (see https://w3c.github.io/media-source/#sourcebuffer-append-error).
     //
     // Trigger a special error so that it can be handled separately from normal,
     // recoverable errors.
 
+    this.error({
+      message: `${type} append of ${bytes.length}b failed for segment ` + `#${segmentInfo.mediaIndex} in playlist ${segmentInfo.playlist.id}`,
+      metadata: {
+        errorType: videojs.Error.StreamingFailedToAppendSegment
+      }
+    });
     this.trigger('appenderror');
   }
+
   appendToSourceBuffer_({
-    segmentInfo,
-    type,
-    initSegment,
-    data,
-    bytes
-  }) {
+                          segmentInfo,
+                          type,
+                          initSegment,
+                          data,
+                          bytes
+                        }) {
     // If this is a re-append, bytes were already created and don't need to be recreated
     if (!bytes) {
       const segments = [data];
@@ -43301,6 +47069,16 @@ class SegmentLoader extends videojs.EventTarget {
         segments
       });
     }
+    const metadata = {
+      segmentInfo: segmentInfoPayload({
+        type: this.loaderType_,
+        segment: segmentInfo
+      })
+    };
+    this.trigger({
+      type: 'segmentappendstart',
+      metadata
+    });
     this.sourceUpdater_.appendBuffer({
       segmentInfo,
       type,
@@ -43311,6 +47089,7 @@ class SegmentLoader extends videojs.EventTarget {
       bytes
     }));
   }
+
   handleSegmentTimingInfo_(type, requestId, segmentTimingInfo) {
     if (!this.pendingSegment_ || requestId !== this.pendingSegment_.requestId) {
       return;
@@ -43328,6 +47107,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     segment[timingInfoProperty].baseMediaDecodeTime = segmentTimingInfo.baseMediaDecodeTime;
   }
+
   appendData_(segmentInfo, result) {
     const {
       type,
@@ -43352,6 +47132,7 @@ class SegmentLoader extends videojs.EventTarget {
       data
     });
   }
+
   /**
    * load a specific segment from a request into the buffer
    *
@@ -43370,6 +47151,7 @@ class SegmentLoader extends videojs.EventTarget {
       }
     }
     if (!this.hasEnoughInfoToLoad_()) {
+      checkAndFixTimelines(this);
       this.loadQueue_.push(() => {
         // regenerate the audioAppendStart, timestampOffset, etc as they
         // may have changed since this function was added to the queue.
@@ -43384,6 +47166,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     this.updateTransmuxerAndRequestSegment_(segmentInfo);
   }
+
   updateTransmuxerAndRequestSegment_(segmentInfo) {
     // We'll update the source buffer's timestamp offset once we have transmuxed data, but
     // the transmuxer still needs to be updated before then.
@@ -43408,11 +47191,13 @@ class SegmentLoader extends videojs.EventTarget {
     const isEndOfStream = this.isEndOfStream_(segmentInfo.mediaIndex, segmentInfo.playlist, segmentInfo.partIndex);
     const isWalkingForward = this.mediaIndex !== null;
     const isDiscontinuity = segmentInfo.timeline !== this.currentTimeline_ &&
-    // currentTimeline starts at -1, so we shouldn't end the timeline switching to 0,
-    // the first timeline
-    segmentInfo.timeline > 0;
+      // currentTimeline starts at -1, so we shouldn't end the timeline switching to 0,
+      // the first timeline
+      segmentInfo.timeline > 0;
     const isEndOfTimeline = isEndOfStream || isWalkingForward && isDiscontinuity;
-    this.logger_(`Requesting ${segmentInfoString(segmentInfo)}`); // If there's an init segment associated with this segment, but it is not cached (identified by a lack of bytes),
+    this.logger_(`Requesting
+${compactSegmentUrlDescription(segmentInfo.uri)}
+${segmentInfoString(segmentInfo)}`); // If there's an init segment associated with this segment, but it is not cached (identified by a lack of bytes),
     // then this init segment has never been seen before and should be appended.
     //
     // At this point the content type (audio/video or both) is not yet known, but it should be safe to set
@@ -43445,14 +47230,43 @@ class SegmentLoader extends videojs.EventTarget {
       dataFn: this.handleData_.bind(this),
       doneFn: this.segmentRequestFinished_.bind(this),
       onTransmuxerLog: ({
-        message,
-        level,
-        stream
-      }) => {
+                          message,
+                          level,
+                          stream
+                        }) => {
         this.logger_(`${segmentInfoString(segmentInfo)} logged from transmuxer stream ${stream} as a ${level}: ${message}`);
+      },
+      triggerSegmentEventFn: ({
+                                type,
+                                segment,
+                                keyInfo,
+                                trackInfo,
+                                timingInfo
+                              }) => {
+        const segInfo = segmentInfoPayload({
+          segment
+        });
+        const metadata = {
+          segmentInfo: segInfo
+        }; // add other properties if necessary.
+
+        if (keyInfo) {
+          metadata.keyInfo = keyInfo;
+        }
+        if (trackInfo) {
+          metadata.trackInfo = trackInfo;
+        }
+        if (timingInfo) {
+          metadata.timingInfo = timingInfo;
+        }
+        this.trigger({
+          type,
+          metadata
+        });
       }
     });
   }
+
   /**
    * trim the back buffer so that we don't have too much data
    * in the source buffer
@@ -43473,6 +47287,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.remove(0, removeToTime);
     }
   }
+
   /**
    * created a simplified copy of the segment object with just the
    * information necessary to perform the XHR and decryption
@@ -43486,6 +47301,8 @@ class SegmentLoader extends videojs.EventTarget {
   createSimplifiedSegmentObj_(segmentInfo) {
     const segment = segmentInfo.segment;
     const part = segmentInfo.part;
+    const isEncrypted = segmentInfo.segment.key || segmentInfo.segment.map && segmentInfo.segment.map.key;
+    const isMediaInitialization = segmentInfo.segment.map && !segmentInfo.segment.map.bytes;
     const simpleSegment = {
       resolvedUri: part ? part.resolvedUri : segment.resolvedUri,
       byterange: part ? part.byterange : segment.byterange,
@@ -43493,7 +47310,12 @@ class SegmentLoader extends videojs.EventTarget {
       transmuxer: segmentInfo.transmuxer,
       audioAppendStart: segmentInfo.audioAppendStart,
       gopsToAlignWith: segmentInfo.gopsToAlignWith,
-      part: segmentInfo.part
+      part: segmentInfo.part,
+      type: this.loaderType_,
+      start: segmentInfo.startOfSegment,
+      duration: segmentInfo.duration,
+      isEncrypted,
+      isMediaInitialization
     };
     const previousSegment = segmentInfo.playlist.segments[segmentInfo.mediaIndex - 1];
     if (previousSegment && previousSegment.timeline === segment.timeline) {
@@ -43523,6 +47345,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return simpleSegment;
   }
+
   saveTransferStats_(stats) {
     // every request counts as a media request even if it has been aborted
     // or canceled due to a timeout
@@ -43532,6 +47355,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.mediaTransferDuration += stats.roundTripTime;
     }
   }
+
   saveBandwidthRelatedStats_(duration, stats) {
     // byteLength will be used for throughput, and should be based on bytes receieved,
     // which we only know at the end of the request and should reflect total bytes
@@ -43541,9 +47365,21 @@ class SegmentLoader extends videojs.EventTarget {
       this.logger_(`Ignoring segment's bandwidth because its duration of ${duration}` + ` is less than the min to record ${MIN_SEGMENT_DURATION_TO_SAVE_STATS}`);
       return;
     }
+    const metadata = {
+      bandwidthInfo: {
+        from: this.bandwidth,
+        to: stats.bandwidth
+      }
+    }; // player event with payload
+
+    this.trigger({
+      type: 'bandwidthupdated',
+      metadata
+    });
     this.bandwidth = stats.bandwidth;
     this.roundTrip = stats.roundTripTime;
   }
+
   handleTimeout_() {
     // although the VTT segment loader bandwidth isn't really used, it's good to
     // maintain functinality between segment loaders
@@ -43553,6 +47389,7 @@ class SegmentLoader extends videojs.EventTarget {
     this.trigger('bandwidthupdate');
     this.trigger('timeout');
   }
+
   /**
    * Handle the callback from the segmentRequest function and set the
    * associated SegmentLoader state and errors if necessary
@@ -43619,12 +47456,14 @@ class SegmentLoader extends videojs.EventTarget {
     this.trigger('appending');
     this.waitForAppendsToComplete_(segmentInfo);
   }
+
   setTimeMapping_(timeline) {
     const timelineMapping = this.syncController_.mappingForTimeline(timeline);
     if (timelineMapping !== null) {
       this.timeMapping_ = timelineMapping;
     }
   }
+
   updateMediaSecondsLoaded_(segment) {
     if (typeof segment.start === 'number' && typeof segment.end === 'number') {
       this.mediaSecondsLoaded += segment.end - segment.start;
@@ -43632,6 +47471,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.mediaSecondsLoaded += segment.duration;
     }
   }
+
   shouldUpdateTransmuxerTimestampOffset_(timestampOffset) {
     if (timestampOffset === null) {
       return false;
@@ -43646,16 +47486,17 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return false;
   }
+
   trueSegmentStart_({
-    currentStart,
-    playlist,
-    mediaIndex,
-    firstVideoFrameTimeForData,
-    currentVideoTimestampOffset,
-    useVideoTimingInfo,
-    videoTimingInfo,
-    audioTimingInfo
-  }) {
+                      currentStart,
+                      playlist,
+                      mediaIndex,
+                      firstVideoFrameTimeForData,
+                      currentVideoTimestampOffset,
+                      useVideoTimingInfo,
+                      videoTimingInfo,
+                      audioTimingInfo
+                    }) {
     if (typeof currentStart !== 'undefined') {
       // if start was set once, keep using it
       return currentStart;
@@ -43674,6 +47515,7 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return videoTimingInfo.start;
   }
+
   waitForAppendsToComplete_(segmentInfo) {
     const trackInfo = this.getCurrentMediaInfo_(segmentInfo);
     if (!trackInfo) {
@@ -43738,6 +47580,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.sourceUpdater_.audioQueueCallback(this.checkAppendsDone_.bind(this, segmentInfo));
     }
   }
+
   checkAppendsDone_(segmentInfo) {
     if (this.checkForAbort_(segmentInfo.requestId)) {
       return;
@@ -43747,6 +47590,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.handleAppendsDone_();
     }
   }
+
   checkForIllegalMediaSwitch(trackInfo) {
     const illegalMediaSwitchError = illegalMediaSwitch(this.loaderType_, this.getCurrentMediaInfo_(), trackInfo);
     if (illegalMediaSwitchError) {
@@ -43759,15 +47603,16 @@ class SegmentLoader extends videojs.EventTarget {
     }
     return false;
   }
+
   updateSourceBufferTimestampOffset_(segmentInfo) {
     if (segmentInfo.timestampOffset === null ||
-    // we don't yet have the start for whatever media type (video or audio) has
-    // priority, timing-wise, so we must wait
-    typeof segmentInfo.timingInfo.start !== 'number' ||
-    // already updated the timestamp offset for this segment
-    segmentInfo.changedTimestampOffset ||
-    // the alt audio loader should not be responsible for setting the timestamp offset
-    this.loaderType_ !== 'main') {
+      // we don't yet have the start for whatever media type (video or audio) has
+      // priority, timing-wise, so we must wait
+      typeof segmentInfo.timingInfo.start !== 'number' ||
+      // already updated the timestamp offset for this segment
+      segmentInfo.changedTimestampOffset ||
+      // the alt audio loader should not be responsible for setting the timestamp offset
+      this.loaderType_ !== 'main') {
       return;
     }
     let didChange = false; // Primary timing goes by video, and audio is trimmed in the transmuxer, meaning that
@@ -43796,11 +47641,12 @@ class SegmentLoader extends videojs.EventTarget {
       this.trigger('timestampoffset');
     }
   }
+
   getSegmentStartTimeForTimestampOffsetCalculation_({
-    videoTimingInfo,
-    audioTimingInfo,
-    timingInfo
-  }) {
+                                                      videoTimingInfo,
+                                                      audioTimingInfo,
+                                                      timingInfo
+                                                    }) {
     if (!this.useDtsForTimestampOffset_) {
       return timingInfo.start;
     }
@@ -43814,6 +47660,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     return timingInfo.start;
   }
+
   updateTimingInfoEnd_(segmentInfo) {
     segmentInfo.timingInfo = segmentInfo.timingInfo || {};
     const trackInfo = this.getMediaInfo_();
@@ -43823,11 +47670,12 @@ class SegmentLoader extends videojs.EventTarget {
       return;
     }
     segmentInfo.timingInfo.end = typeof prioritizedTimingInfo.end === 'number' ?
-    // End time may not exist in a case where we aren't parsing the full segment (one
-    // current example is the case of fmp4), so use the rough duration to calculate an
-    // end time.
-    prioritizedTimingInfo.end : prioritizedTimingInfo.start + segmentInfo.duration;
+      // End time may not exist in a case where we aren't parsing the full segment (one
+      // current example is the case of fmp4), so use the rough duration to calculate an
+      // end time.
+      prioritizedTimingInfo.end : prioritizedTimingInfo.start + segmentInfo.duration;
   }
+
   /**
    * callback to run when appendBuffer is finished. detects if we are
    * in a good state to do things with the data we got, or if we need
@@ -43839,7 +47687,16 @@ class SegmentLoader extends videojs.EventTarget {
   handleAppendsDone_() {
     // appendsdone can cause an abort
     if (this.pendingSegment_) {
-      this.trigger('appendsdone');
+      const metadata = {
+        segmentInfo: segmentInfoPayload({
+          type: this.loaderType_,
+          segment: this.pendingSegment_
+        })
+      };
+      this.trigger({
+        type: 'appendsdone',
+        metadata
+      });
     }
     if (!this.pendingSegment_) {
       this.state = 'READY'; // TODO should this move into this.checkForAbort to speed up requests post abort in
@@ -43850,7 +47707,14 @@ class SegmentLoader extends videojs.EventTarget {
       }
       return;
     }
-    const segmentInfo = this.pendingSegment_; // Now that the end of the segment has been reached, we can set the end time. It's
+    const segmentInfo = this.pendingSegment_;
+    if (segmentInfo.part && segmentInfo.part.syncInfo) {
+      // low-latency flow
+      segmentInfo.part.syncInfo.markAppended();
+    } else if (segmentInfo.segment.syncInfo) {
+      // normal flow
+      segmentInfo.segment.syncInfo.markAppended();
+    } // Now that the end of the segment has been reached, we can set the end time. It's
     // best to wait until all appends are done so we're sure that the primary media is
     // finished (and we have its end time).
 
@@ -43963,6 +47827,7 @@ class SegmentLoader extends videojs.EventTarget {
       this.monitorBuffer_();
     }
   }
+
   /**
    * Records the current throughput of the decrypt, transmux, and append
    * portion of the semgment pipeline. `throughput.rate` is a the cumulative
@@ -43988,6 +47853,7 @@ class SegmentLoader extends videojs.EventTarget {
 
     this.throughput.rate += (segmentProcessingThroughput - rate) / ++this.throughput.count;
   }
+
   /**
    * Adds a cue to the segment-metadata track with some metadata information about the
    * segment
@@ -44034,7 +47900,10 @@ class SegmentLoader extends videojs.EventTarget {
     this.segmentMetadataTrack_.addCue(cue);
   }
 }
-function noop() {}
+
+function noop() {
+}
+
 const toTitleCase = function (string) {
   if (typeof string !== 'string') {
     return string;
@@ -44253,27 +48122,47 @@ const actions = {
     if (!inSourceBuffers(sourceUpdater.mediaSource, sourceBuffer)) {
       return;
     } // do not update codec if we don't need to.
+    // Only update if we change the codec base.
+    // For example, going from avc1.640028 to avc1.64001f does not require a changeType call.
 
-    if (sourceUpdater.codecs[type] === codec) {
+    const newCodecBase = codec.substring(0, codec.indexOf('.'));
+    const oldCodec = sourceUpdater.codecs[type];
+    const oldCodecBase = oldCodec.substring(0, oldCodec.indexOf('.'));
+    if (oldCodecBase === newCodecBase) {
       return;
     }
-    sourceUpdater.logger_(`changing ${type}Buffer codec from ${sourceUpdater.codecs[type]} to ${codec}`); // check if change to the provided type is supported
+    const metadata = {
+      codecsChangeInfo: {
+        from: oldCodec,
+        to: codec
+      }
+    };
+    sourceUpdater.trigger({
+      type: 'codecschange',
+      metadata
+    });
+    sourceUpdater.logger_(`changing ${type}Buffer codec from ${oldCodec} to ${codec}`); // check if change to the provided type is supported
 
     try {
       sourceBuffer.changeType(mime);
       sourceUpdater.codecs[type] = codec;
     } catch (e) {
+      metadata.errorType = videojs.Error.StreamingCodecsChangeError;
+      metadata.error = e;
+      e.metadata = metadata;
+      sourceUpdater.error_ = e;
+      sourceUpdater.trigger('error');
       videojs.log.warn(`Failed to changeType on ${type}Buffer`, e);
     }
   }
 };
 const pushQueue = ({
-  type,
-  sourceUpdater,
-  action,
-  doneFn,
-  name
-}) => {
+                     type,
+                     sourceUpdater,
+                     action,
+                     doneFn,
+                     name
+                   }) => {
   sourceUpdater.queue.push({
     type,
     action,
@@ -44289,6 +48178,9 @@ const onUpdateend = (type, sourceUpdater) => e => {
   // updateend events on source buffers. This does not appear to be in the spec. As such,
   // if we encounter an updateend without a corresponding pending action from our queue
   // for that source buffer type, process the next action.
+  const bufferedRangesForType = sourceUpdater[`${type}Buffered`]();
+  const descriptiveString = bufferedRangesToString(bufferedRangesForType);
+  sourceUpdater.logger_(`received "updateend" event for ${type} Source Buffer: `, descriptiveString);
   if (sourceUpdater.queuePending[type]) {
     const doneFn = sourceUpdater.queuePending[type].doneFn;
     sourceUpdater.queuePending[type] = null;
@@ -44299,6 +48191,7 @@ const onUpdateend = (type, sourceUpdater) => e => {
   }
   shiftQueue(type, sourceUpdater);
 };
+
 /**
  * A queue of callbacks to be serialized and applied when a
  * MediaSource and its associated SourceBuffers are not in the
@@ -44342,21 +48235,26 @@ class SourceUpdater extends videojs.EventTarget {
     this.initializedEme_ = false;
     this.triggeredReady_ = false;
   }
+
   initializedEme() {
     this.initializedEme_ = true;
     this.triggerReady();
   }
+
   hasCreatedSourceBuffers() {
     // if false, likely waiting on one of the segment loaders to get enough data to create
     // source buffers
     return this.createdSourceBuffers_;
   }
+
   hasInitializedAnyEme() {
     return this.initializedEme_;
   }
+
   ready() {
     return this.hasCreatedSourceBuffers() && this.hasInitializedAnyEme();
   }
+
   createSourceBuffers(codecs) {
     if (this.hasCreatedSourceBuffers()) {
       // already created them before
@@ -44369,6 +48267,7 @@ class SourceUpdater extends videojs.EventTarget {
     this.trigger('createdsourcebuffers');
     this.triggerReady();
   }
+
   triggerReady() {
     // only allow ready to be triggered once, this prevents the case
     // where:
@@ -44381,6 +48280,7 @@ class SourceUpdater extends videojs.EventTarget {
       this.trigger('ready');
     }
   }
+
   /**
    * Add a type of source buffer to the media source.
    *
@@ -44399,6 +48299,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'addSourceBuffer'
     });
   }
+
   /**
    * call abort on a source buffer.
    *
@@ -44414,6 +48315,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'abort'
     });
   }
+
   /**
    * Call removeSourceBuffer and remove a specific type
    * of source buffer on the mediaSource.
@@ -44434,6 +48336,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'removeSourceBuffer'
     });
   }
+
   /**
    * Whether or not the removeSourceBuffer function is supported
    * on the mediaSource.
@@ -44447,6 +48350,7 @@ class SourceUpdater extends videojs.EventTarget {
     // throws errors, so we report that it does not support this.
     return !videojs.browser.IS_FIREFOX && window$1.MediaSource && window$1.MediaSource.prototype && typeof window$1.MediaSource.prototype.removeSourceBuffer === 'function';
   }
+
   /**
    * Whether or not the changeType function is supported
    * on our SourceBuffers.
@@ -44458,6 +48362,7 @@ class SourceUpdater extends videojs.EventTarget {
   static canChangeType() {
     return window$1.SourceBuffer && window$1.SourceBuffer.prototype && typeof window$1.SourceBuffer.prototype.changeType === 'function';
   }
+
   /**
    * Whether or not the changeType function is supported
    * on our SourceBuffers.
@@ -44469,6 +48374,7 @@ class SourceUpdater extends videojs.EventTarget {
   canChangeType() {
     return this.constructor.canChangeType();
   }
+
   /**
    * Call the changeType function on a source buffer, given the code and type.
    *
@@ -44491,6 +48397,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'changeType'
     });
   }
+
   /**
    * Add source buffers with a codec or, if they are already created,
    * call changeType on source buffers using changeType.
@@ -44513,6 +48420,7 @@ class SourceUpdater extends videojs.EventTarget {
       }
     });
   }
+
   /**
    * Queue an update to append an ArrayBuffer.
    *
@@ -44560,6 +48468,7 @@ class SourceUpdater extends videojs.EventTarget {
       });
     }
   }
+
   /**
    * Get the audio buffer's buffered timerange.
    *
@@ -44575,6 +48484,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return this.audioBuffer.buffered ? this.audioBuffer.buffered : createTimeRanges();
   }
+
   /**
    * Get the video buffer's buffered timerange.
    *
@@ -44590,6 +48500,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return this.videoBuffer.buffered ? this.videoBuffer.buffered : createTimeRanges();
   }
+
   /**
    * Get a combined video/audio buffer's buffered timerange.
    *
@@ -44608,6 +48519,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return bufferIntersection(this.audioBuffered(), this.videoBuffered());
   }
+
   /**
    * Add a callback to the queue that will set duration on the mediaSource.
    *
@@ -44631,6 +48543,7 @@ class SourceUpdater extends videojs.EventTarget {
       doneFn
     });
   }
+
   /**
    * Add a mediaSource endOfStream call to the queue
    *
@@ -44658,6 +48571,7 @@ class SourceUpdater extends videojs.EventTarget {
       doneFn
     });
   }
+
   /**
    * Queue an update to remove a time range from the buffer.
    *
@@ -44681,6 +48595,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'remove'
     });
   }
+
   /**
    * Queue an update to remove a time range from the buffer.
    *
@@ -44704,6 +48619,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'remove'
     });
   }
+
   /**
    * Whether the underlying sourceBuffer is updating or not
    *
@@ -44717,6 +48633,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return false;
   }
+
   /**
    * Set/get the timestampoffset on the audio SourceBuffer
    *
@@ -44725,8 +48642,8 @@ class SourceUpdater extends videojs.EventTarget {
 
   audioTimestampOffset(offset) {
     if (typeof offset !== 'undefined' && this.audioBuffer &&
-    // no point in updating if it's the same
-    this.audioTimestampOffset_ !== offset) {
+      // no point in updating if it's the same
+      this.audioTimestampOffset_ !== offset) {
       pushQueue({
         type: 'audio',
         sourceUpdater: this,
@@ -44737,6 +48654,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return this.audioTimestampOffset_;
   }
+
   /**
    * Set/get the timestampoffset on the video SourceBuffer
    *
@@ -44745,8 +48663,8 @@ class SourceUpdater extends videojs.EventTarget {
 
   videoTimestampOffset(offset) {
     if (typeof offset !== 'undefined' && this.videoBuffer &&
-    // no point in updating if it's the same
-    this.videoTimestampOffset !== offset) {
+      // no point in updating if it's the same
+      this.videoTimestampOffset_ !== offset) {
       pushQueue({
         type: 'video',
         sourceUpdater: this,
@@ -44757,6 +48675,7 @@ class SourceUpdater extends videojs.EventTarget {
     }
     return this.videoTimestampOffset_;
   }
+
   /**
    * Add a function to the queue that will be called
    * when it is its turn to run in the audio queue.
@@ -44776,6 +48695,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'callback'
     });
   }
+
   /**
    * Add a function to the queue that will be called
    * when it is its turn to run in the video queue.
@@ -44795,6 +48715,7 @@ class SourceUpdater extends videojs.EventTarget {
       name: 'callback'
     });
   }
+
   /**
    * dispose of the source updater and the underlying sourceBuffer
    */
@@ -44817,6 +48738,7 @@ class SourceUpdater extends videojs.EventTarget {
     this.off();
   }
 }
+
 const uint8ToUtf8 = uintArray => decodeURIComponent(escape(String.fromCharCode.apply(null, uintArray)));
 const bufferToHexString = buffer => {
   const uInt8Buffer = new Uint8Array(buffer);
@@ -44827,11 +48749,13 @@ const bufferToHexString = buffer => {
  * @file vtt-segment-loader.js
  */
 const VTT_LINE_TERMINATORS = new Uint8Array('\n\n'.split('').map(char => char.charCodeAt(0)));
+
 class NoVttJsError extends Error {
   constructor() {
     super('Trying to parse received VTT cues, but there is no WebVTT. Make sure vtt.js is loaded.');
   }
 }
+
 /**
  * An object that manages segment loading and appending.
  *
@@ -44847,17 +48771,13 @@ class VTTSegmentLoader extends SegmentLoader {
 
     this.mediaSource_ = null;
     this.subtitlesTrack_ = null;
-    this.loaderType_ = 'subtitle';
     this.featuresNativeTextTracks_ = settings.featuresNativeTextTracks;
     this.loadVttJs = settings.loadVttJs; // The VTT segment will have its own time mappings. Saving VTT segment timing info in
     // the sync controller leads to improper behavior.
 
     this.shouldSaveSegmentTimingInfo_ = false;
   }
-  createTransmuxer_() {
-    // don't need to transmux any subtitles
-    return null;
-  }
+
   /**
    * Indicates which time ranges are buffered
    *
@@ -44874,6 +48794,7 @@ class VTTSegmentLoader extends SegmentLoader {
     const end = cues[cues.length - 1].startTime;
     return createTimeRanges([[start, end]]);
   }
+
   /**
    * Gets and sets init segment for the provided map
    *
@@ -44908,6 +48829,7 @@ class VTTSegmentLoader extends SegmentLoader {
     }
     return storedMap || map;
   }
+
   /**
    * Returns true if all configuration required for loading is present, otherwise false.
    *
@@ -44918,6 +48840,7 @@ class VTTSegmentLoader extends SegmentLoader {
   couldBeginLoading_() {
     return this.playlist_ && this.subtitlesTrack_ && !this.paused();
   }
+
   /**
    * Once all the starting parameters have been specified, begin
    * operation. This method should only be invoked from the INIT
@@ -44931,6 +48854,7 @@ class VTTSegmentLoader extends SegmentLoader {
     this.resetEverything();
     return this.monitorBuffer_();
   }
+
   /**
    * Set a subtitle track on the segment loader to add subtitles to
    *
@@ -44952,6 +48876,7 @@ class VTTSegmentLoader extends SegmentLoader {
     }
     return this.subtitlesTrack_;
   }
+
   /**
    * Remove any data in the source buffer between start and end times
    *
@@ -44962,6 +48887,7 @@ class VTTSegmentLoader extends SegmentLoader {
   remove(start, end) {
     removeCuesFromTrack(start, end, this.subtitlesTrack_);
   }
+
   /**
    * fill the buffer with segements unless the sourceBuffers are
    * currently updating
@@ -44998,9 +48924,11 @@ class VTTSegmentLoader extends SegmentLoader {
   timestampOffsetForSegment_() {
     return null;
   }
+
   chooseNextRequest_() {
     return this.skipEmptySegments_(super.chooseNextRequest_());
   }
+
   /**
    * Prevents the segment loader from requesting segments we know contain no subtitles
    * by walking forward until we find the next segment that we don't know whether it is
@@ -45028,12 +48956,14 @@ class VTTSegmentLoader extends SegmentLoader {
     }
     return segmentInfo;
   }
+
   stopForError(error) {
     this.error(error);
     this.state = 'READY';
     this.pause();
     this.trigger('error');
   }
+
   /**
    * append a decrypted segement to the SourceBuffer through a SourceUpdater
    *
@@ -45064,7 +48994,11 @@ class VTTSegmentLoader extends SegmentLoader {
       this.stopForError(error);
       return;
     }
-    const segmentInfo = this.pendingSegment_; // although the VTT segment loader bandwidth isn't really used, it's good to
+    const segmentInfo = this.pendingSegment_;
+    const isMp4WebVttSegmentWithCues = result.mp4VttCues && result.mp4VttCues.length;
+    if (isMp4WebVttSegmentWithCues) {
+      segmentInfo.mp4VttCues = result.mp4VttCues;
+    } // although the VTT segment loader bandwidth isn't really used, it's good to
     // maintain functionality between segment loaders
 
     this.saveBandwidthRelatedStats_(segmentInfo.duration, simpleSegment.stats); // if this request included a segment key, save that data in the cache
@@ -45095,11 +49029,17 @@ class VTTSegmentLoader extends SegmentLoader {
       this.parseVTTCues_(segmentInfo);
     } catch (e) {
       this.stopForError({
-        message: e.message
+        message: e.message,
+        metadata: {
+          errorType: videojs.Error.StreamingVttParserError,
+          error: e
+        }
       });
       return;
     }
-    this.updateTimeMapping_(segmentInfo, this.syncController_.timelines[segmentInfo.timeline], this.playlist_);
+    if (!isMp4WebVttSegmentWithCues) {
+      this.updateTimeMapping_(segmentInfo, this.syncController_.timelines[segmentInfo.timeline], this.playlist_);
+    }
     if (segmentInfo.cues.length) {
       segmentInfo.timingInfo = {
         start: segmentInfo.cues[0].startTime,
@@ -45131,11 +49071,44 @@ class VTTSegmentLoader extends SegmentLoader {
     removeDuplicateCuesFromTrack(this.subtitlesTrack_);
     this.handleAppendsDone_();
   }
-  handleData_() {// noop as we shouldn't be getting video/audio data captions
-    // that we do not support here.
+
+  handleData_(simpleSegment, result) {
+    const isVttType = simpleSegment && simpleSegment.type === 'vtt';
+    const isTextResult = result && result.type === 'text';
+    const isFmp4VttSegment = isVttType && isTextResult; // handle segment data for fmp4 encapsulated webvtt
+
+    if (isFmp4VttSegment) {
+      super.handleData_(simpleSegment, result);
+    }
   }
+
   updateTimingInfoEnd_() {// noop
   }
+
+  /**
+   * Utility function for converting mp4 webvtt cue objects into VTTCues.
+   *
+   * @param {Object} segmentInfo with mp4 webvtt cues for parsing into VTTCue objecs
+   */
+
+  parseMp4VttCues_(segmentInfo) {
+    const timestampOffset = this.sourceUpdater_.videoTimestampOffset() === null ? this.sourceUpdater_.audioTimestampOffset() : this.sourceUpdater_.videoTimestampOffset();
+    segmentInfo.mp4VttCues.forEach(cue => {
+      const start = cue.start + timestampOffset;
+      const end = cue.end + timestampOffset;
+      const vttCue = new window$1.VTTCue(start, end, cue.cueText);
+      if (cue.settings) {
+        cue.settings.split(' ').forEach(cueSetting => {
+          const keyValString = cueSetting.split(':');
+          const key = keyValString[0];
+          const value = keyValString[1];
+          vttCue[key] = isNaN(value) ? value : Number(value);
+        });
+      }
+      segmentInfo.cues.push(vttCue);
+    });
+  }
+
   /**
    * Uses the WebVTT parser to parse the segment response
    *
@@ -45153,6 +49126,15 @@ class VTTSegmentLoader extends SegmentLoader {
       // caller is responsible for exception handling.
       throw new NoVttJsError();
     }
+    segmentInfo.cues = [];
+    segmentInfo.timestampmap = {
+      MPEGTS: 0,
+      LOCAL: 0
+    };
+    if (segmentInfo.mp4VttCues) {
+      this.parseMp4VttCues_(segmentInfo);
+      return;
+    }
     if (typeof window$1.TextDecoder === 'function') {
       decoder = new window$1.TextDecoder('utf8');
     } else {
@@ -45160,11 +49142,6 @@ class VTTSegmentLoader extends SegmentLoader {
       decodeBytesToString = true;
     }
     const parser = new window$1.WebVTT.Parser(window$1, window$1.vttjs, decoder);
-    segmentInfo.cues = [];
-    segmentInfo.timestampmap = {
-      MPEGTS: 0,
-      LOCAL: 0
-    };
     parser.oncue = segmentInfo.cues.push.bind(segmentInfo.cues);
     parser.ontimestampmap = map => {
       segmentInfo.timestampmap = map;
@@ -45186,6 +49163,7 @@ class VTTSegmentLoader extends SegmentLoader {
     parser.parse(segmentData);
     parser.flush();
   }
+
   /**
    * Updates the start and end times of any cues parsed by the WebVTT parser using
    * the information parsed from the X-TIMESTAMP-MAP header and a TS to media time mapping
@@ -45229,7 +49207,7 @@ class VTTSegmentLoader extends SegmentLoader {
     const diff = mpegTsInSeconds - LOCAL + mappingObj.mapping;
     segmentInfo.cues.forEach(cue => {
       const duration = cue.endTime - cue.startTime;
-      const startTime = MPEGTS === 0 ? cue.startTime + diff : this.handleRollover_(cue.startTime + diff, mappingObj.time);
+      const startTime = this.handleRollover_(cue.startTime + diff, mappingObj.time);
       cue.startTime = Math.max(startTime, 0);
       cue.endTime = Math.max(startTime + duration, 0);
     });
@@ -45242,6 +49220,7 @@ class VTTSegmentLoader extends SegmentLoader {
       };
     }
   }
+
   /**
    * MPEG-TS PES timestamps are limited to 2^33.
    * Once they reach 2^33, they roll over to 0.
@@ -45364,6 +49343,270 @@ const updateAdCues = function (media, track, offset = 0) {
   }
 };
 
+class SyncInfo {
+  /**
+   * @param {number} start - media sequence start
+   * @param {number} end - media sequence end
+   * @param {number} segmentIndex - index for associated segment
+   * @param {number|null} [partIndex] - index for associated part
+   * @param {boolean} [appended] - appended indicator
+   *
+   */
+  constructor({
+                start,
+                end,
+                segmentIndex,
+                partIndex = null,
+                appended = false
+              }) {
+    this.start_ = start;
+    this.end_ = end;
+    this.segmentIndex_ = segmentIndex;
+    this.partIndex_ = partIndex;
+    this.appended_ = appended;
+  }
+
+  isInRange(targetTime) {
+    return targetTime >= this.start && targetTime < this.end;
+  }
+
+  markAppended() {
+    this.appended_ = true;
+  }
+
+  resetAppendedStatus() {
+    this.appended_ = false;
+  }
+
+  get isAppended() {
+    return this.appended_;
+  }
+
+  get start() {
+    return this.start_;
+  }
+
+  get end() {
+    return this.end_;
+  }
+
+  get segmentIndex() {
+    return this.segmentIndex_;
+  }
+
+  get partIndex() {
+    return this.partIndex_;
+  }
+}
+
+class SyncInfoData {
+  /**
+   *
+   * @param {SyncInfo} segmentSyncInfo - sync info for a given segment
+   * @param {Array<SyncInfo>} [partsSyncInfo] - sync infos for a list of parts for a given segment
+   */
+  constructor(segmentSyncInfo, partsSyncInfo = []) {
+    this.segmentSyncInfo_ = segmentSyncInfo;
+    this.partsSyncInfo_ = partsSyncInfo;
+  }
+
+  get segmentSyncInfo() {
+    return this.segmentSyncInfo_;
+  }
+
+  get partsSyncInfo() {
+    return this.partsSyncInfo_;
+  }
+
+  get hasPartsSyncInfo() {
+    return this.partsSyncInfo_.length > 0;
+  }
+
+  resetAppendStatus() {
+    this.segmentSyncInfo_.resetAppendedStatus();
+    this.partsSyncInfo_.forEach(partSyncInfo => partSyncInfo.resetAppendedStatus());
+  }
+}
+
+class MediaSequenceSync {
+  constructor() {
+    /**
+     * @type {Map<number, SyncInfoData>}
+     * @protected
+     */
+    this.storage_ = new Map();
+    this.diagnostics_ = '';
+    this.isReliable_ = false;
+    this.start_ = -Infinity;
+    this.end_ = Infinity;
+  }
+
+  get start() {
+    return this.start_;
+  }
+
+  get end() {
+    return this.end_;
+  }
+
+  get diagnostics() {
+    return this.diagnostics_;
+  }
+
+  get isReliable() {
+    return this.isReliable_;
+  }
+
+  resetAppendedStatus() {
+    this.storage_.forEach(syncInfoData => syncInfoData.resetAppendStatus());
+  }
+
+  /**
+   * update sync storage
+   *
+   * @param {Object} playlist
+   * @param {number} currentTime
+   *
+   * @return {void}
+   */
+
+  update(playlist, currentTime) {
+    const {
+      mediaSequence,
+      segments
+    } = playlist;
+    this.isReliable_ = this.isReliablePlaylist_(mediaSequence, segments);
+    if (!this.isReliable_) {
+      return;
+    }
+    return this.updateStorage_(segments, mediaSequence, this.calculateBaseTime_(mediaSequence, segments, currentTime));
+  }
+
+  /**
+   * @param {number} targetTime
+   * @return {SyncInfo|null}
+   */
+
+  getSyncInfoForTime(targetTime) {
+    for (const {
+      segmentSyncInfo,
+      partsSyncInfo
+    } of this.storage_.values()) {
+      // Normal segment flow:
+      if (!partsSyncInfo.length) {
+        if (segmentSyncInfo.isInRange(targetTime)) {
+          return segmentSyncInfo;
+        }
+      } else {
+        // Low latency flow:
+        for (const partSyncInfo of partsSyncInfo) {
+          if (partSyncInfo.isInRange(targetTime)) {
+            return partSyncInfo;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  getSyncInfoForMediaSequence(mediaSequence) {
+    return this.storage_.get(mediaSequence);
+  }
+
+  updateStorage_(segments, startingMediaSequence, startingTime) {
+    const newStorage = new Map();
+    let newDiagnostics = '\n';
+    let currentStart = startingTime;
+    let currentMediaSequence = startingMediaSequence;
+    this.start_ = currentStart;
+    segments.forEach((segment, segmentIndex) => {
+      const prevSyncInfoData = this.storage_.get(currentMediaSequence);
+      const segmentStart = currentStart;
+      const segmentEnd = segmentStart + segment.duration;
+      const segmentIsAppended = Boolean(prevSyncInfoData && prevSyncInfoData.segmentSyncInfo && prevSyncInfoData.segmentSyncInfo.isAppended);
+      const segmentSyncInfo = new SyncInfo({
+        start: segmentStart,
+        end: segmentEnd,
+        appended: segmentIsAppended,
+        segmentIndex
+      });
+      segment.syncInfo = segmentSyncInfo;
+      let currentPartStart = currentStart;
+      const partsSyncInfo = (segment.parts || []).map((part, partIndex) => {
+        const partStart = currentPartStart;
+        const partEnd = currentPartStart + part.duration;
+        const partIsAppended = Boolean(prevSyncInfoData && prevSyncInfoData.partsSyncInfo && prevSyncInfoData.partsSyncInfo[partIndex] && prevSyncInfoData.partsSyncInfo[partIndex].isAppended);
+        const partSyncInfo = new SyncInfo({
+          start: partStart,
+          end: partEnd,
+          appended: partIsAppended,
+          segmentIndex,
+          partIndex
+        });
+        currentPartStart = partEnd;
+        newDiagnostics += `Media Sequence: ${currentMediaSequence}.${partIndex} | Range: ${partStart} --> ${partEnd} | Appended: ${partIsAppended}\n`;
+        part.syncInfo = partSyncInfo;
+        return partSyncInfo;
+      });
+      newStorage.set(currentMediaSequence, new SyncInfoData(segmentSyncInfo, partsSyncInfo));
+      newDiagnostics += `${compactSegmentUrlDescription(segment.resolvedUri)} | Media Sequence: ${currentMediaSequence} | Range: ${segmentStart} --> ${segmentEnd} | Appended: ${segmentIsAppended}\n`;
+      currentMediaSequence++;
+      currentStart = segmentEnd;
+    });
+    this.end_ = currentStart;
+    this.storage_ = newStorage;
+    this.diagnostics_ = newDiagnostics;
+  }
+
+  calculateBaseTime_(mediaSequence, segments, fallback) {
+    if (!this.storage_.size) {
+      // Initial setup flow.
+      return 0;
+    }
+    if (this.storage_.has(mediaSequence)) {
+      // Normal flow.
+      return this.storage_.get(mediaSequence).segmentSyncInfo.start;
+    }
+    const minMediaSequenceFromStorage = Math.min(...this.storage_.keys()); // This case captures a race condition that can occur if we switch to a new media playlist that is out of date
+    // and still has an older Media Sequence. If this occurs, we extrapolate backwards to get the base time.
+
+    if (mediaSequence < minMediaSequenceFromStorage) {
+      const mediaSequenceDiff = minMediaSequenceFromStorage - mediaSequence;
+      let baseTime = this.storage_.get(minMediaSequenceFromStorage).segmentSyncInfo.start;
+      for (let i = 0; i < mediaSequenceDiff; i++) {
+        const segment = segments[i];
+        baseTime -= segment.duration;
+      }
+      return baseTime;
+    } // Fallback flow.
+    // There is a gap between last recorded playlist and a new one received.
+
+    return fallback;
+  }
+
+  isReliablePlaylist_(mediaSequence, segments) {
+    return mediaSequence !== undefined && mediaSequence !== null && Array.isArray(segments) && segments.length;
+  }
+}
+
+class DependantMediaSequenceSync extends MediaSequenceSync {
+  constructor(parent) {
+    super();
+    this.parent_ = parent;
+  }
+
+  calculateBaseTime_(mediaSequence, segments, fallback) {
+    if (!this.storage_.size) {
+      const info = this.parent_.getSyncInfoForMediaSequence(mediaSequence);
+      if (info) {
+        return info.segmentSyncInfo.start;
+      }
+      return 0;
+    }
+    return super.calculateBaseTime_(mediaSequence, segments, fallback);
+  }
+}
+
 /**
  * @file sync-controller.js
  */
@@ -45376,181 +49619,113 @@ const MAX_MEDIA_SEQUENCE_DIFF_FOR_SYNC = 86400;
 const syncPointStrategies = [
 // Stategy "VOD": Handle the VOD-case where the sync-point is *always*
 //                the equivalence display-time 0 === segment-index 0
-{
-  name: 'VOD',
-  run: (syncController, playlist, duration, currentTimeline, currentTime) => {
-    if (duration !== Infinity) {
-      const syncPoint = {
-        time: 0,
-        segmentIndex: 0,
-        partIndex: null
-      };
-      return syncPoint;
-    }
-    return null;
-  }
-}, {
-  name: 'MediaSequence',
-  /**
-   * run media sequence strategy
-   *
-   * @param {SyncController} syncController
-   * @param {Object} playlist
-   * @param {number} duration
-   * @param {number} currentTimeline
-   * @param {number} currentTime
-   * @param {string} type
-   */
-  run: (syncController, playlist, duration, currentTimeline, currentTime, type) => {
-    if (!type) {
-      return null;
-    }
-    const mediaSequenceMap = syncController.getMediaSequenceMap(type);
-    if (!mediaSequenceMap || mediaSequenceMap.size === 0) {
-      return null;
-    }
-    if (playlist.mediaSequence === undefined || !Array.isArray(playlist.segments) || !playlist.segments.length) {
-      return null;
-    }
-    let currentMediaSequence = playlist.mediaSequence;
-    let segmentIndex = 0;
-    for (const segment of playlist.segments) {
-      const range = mediaSequenceMap.get(currentMediaSequence);
-      if (!range) {
-        // unexpected case
-        // we expect this playlist to be the same playlist in the map
-        // just break from the loop and move forward to the next strategy
-        break;
-      }
-      if (currentTime >= range.start && currentTime < range.end) {
-        // we found segment
-        if (Array.isArray(segment.parts) && segment.parts.length) {
-          let currentPartStart = range.start;
-          let partIndex = 0;
-          for (const part of segment.parts) {
-            const start = currentPartStart;
-            const end = start + part.duration;
-            if (currentTime >= start && currentTime < end) {
-              return {
-                time: range.start,
-                segmentIndex,
-                partIndex
-              };
-            }
-            partIndex++;
-            currentPartStart = end;
-          }
-        } // no parts found, return sync point for segment
-
-        return {
-          time: range.start,
-          segmentIndex,
+  {
+    name: 'VOD',
+    run: (syncController, playlist, duration, currentTimeline, currentTime) => {
+      if (duration !== Infinity) {
+        const syncPoint = {
+          time: 0,
+          segmentIndex: 0,
           partIndex: null
         };
+        return syncPoint;
       }
-      segmentIndex++;
-      currentMediaSequence++;
-    } // we didn't find any segments for provided current time
-
-    return null;
-  }
-},
-// Stategy "ProgramDateTime": We have a program-date-time tag in this playlist
-{
-  name: 'ProgramDateTime',
-  run: (syncController, playlist, duration, currentTimeline, currentTime) => {
-    if (!Object.keys(syncController.timelineToDatetimeMappings).length) {
       return null;
     }
-    let syncPoint = null;
-    let lastDistance = null;
-    const partsAndSegments = getPartsAndSegments(playlist);
-    currentTime = currentTime || 0;
-    for (let i = 0; i < partsAndSegments.length; i++) {
-      // start from the end and loop backwards for live
-      // or start from the front and loop forwards for non-live
-      const index = playlist.endList || currentTime === 0 ? i : partsAndSegments.length - (i + 1);
-      const partAndSegment = partsAndSegments[index];
-      const segment = partAndSegment.segment;
-      const datetimeMapping = syncController.timelineToDatetimeMappings[segment.timeline];
-      if (!datetimeMapping || !segment.dateTimeObject) {
-        continue;
+  }, {
+    name: 'MediaSequence',
+    /**
+     * run media sequence strategy
+     *
+     * @param {SyncController} syncController
+     * @param {Object} playlist
+     * @param {number} duration
+     * @param {number} currentTimeline
+     * @param {number} currentTime
+     * @param {string} type
+     */
+    run: (syncController, playlist, duration, currentTimeline, currentTime, type) => {
+      const mediaSequenceSync = syncController.getMediaSequenceSync(type);
+      if (!mediaSequenceSync) {
+        return null;
       }
-      const segmentTime = segment.dateTimeObject.getTime() / 1000;
-      let start = segmentTime + datetimeMapping; // take part duration into account.
-
-      if (segment.parts && typeof partAndSegment.partIndex === 'number') {
-        for (let z = 0; z < partAndSegment.partIndex; z++) {
-          start += segment.parts[z].duration;
-        }
+      if (!mediaSequenceSync.isReliable) {
+        return null;
       }
-      const distance = Math.abs(currentTime - start); // Once the distance begins to increase, or if distance is 0, we have passed
-      // currentTime and can stop looking for better candidates
-
-      if (lastDistance !== null && (distance === 0 || lastDistance < distance)) {
-        break;
+      const syncInfo = mediaSequenceSync.getSyncInfoForTime(currentTime);
+      if (!syncInfo) {
+        return null;
       }
-      lastDistance = distance;
-      syncPoint = {
-        time: start,
-        segmentIndex: partAndSegment.segmentIndex,
-        partIndex: partAndSegment.partIndex
+      return {
+        time: syncInfo.start,
+        partIndex: syncInfo.partIndex,
+        segmentIndex: syncInfo.segmentIndex
       };
     }
-    return syncPoint;
-  }
-},
-// Stategy "Segment": We have a known time mapping for a timeline and a
-//                    segment in the current timeline with timing data
-{
-  name: 'Segment',
-  run: (syncController, playlist, duration, currentTimeline, currentTime) => {
-    let syncPoint = null;
-    let lastDistance = null;
-    currentTime = currentTime || 0;
-    const partsAndSegments = getPartsAndSegments(playlist);
-    for (let i = 0; i < partsAndSegments.length; i++) {
-      // start from the end and loop backwards for live
-      // or start from the front and loop forwards for non-live
-      const index = playlist.endList || currentTime === 0 ? i : partsAndSegments.length - (i + 1);
-      const partAndSegment = partsAndSegments[index];
-      const segment = partAndSegment.segment;
-      const start = partAndSegment.part && partAndSegment.part.start || segment && segment.start;
-      if (segment.timeline === currentTimeline && typeof start !== 'undefined') {
-        const distance = Math.abs(currentTime - start); // Once the distance begins to increase, we have passed
+  },
+// Stategy "ProgramDateTime": We have a program-date-time tag in this playlist
+  {
+    name: 'ProgramDateTime',
+    run: (syncController, playlist, duration, currentTimeline, currentTime) => {
+      if (!Object.keys(syncController.timelineToDatetimeMappings).length) {
+        return null;
+      }
+      let syncPoint = null;
+      let lastDistance = null;
+      const partsAndSegments = getPartsAndSegments(playlist);
+      currentTime = currentTime || 0;
+      for (let i = 0; i < partsAndSegments.length; i++) {
+        // start from the end and loop backwards for live
+        // or start from the front and loop forwards for non-live
+        const index = playlist.endList || currentTime === 0 ? i : partsAndSegments.length - (i + 1);
+        const partAndSegment = partsAndSegments[index];
+        const segment = partAndSegment.segment;
+        const datetimeMapping = syncController.timelineToDatetimeMappings[segment.timeline];
+        if (!datetimeMapping || !segment.dateTimeObject) {
+          continue;
+        }
+        const segmentTime = segment.dateTimeObject.getTime() / 1000;
+        let start = segmentTime + datetimeMapping; // take part duration into account.
+
+        if (segment.parts && typeof partAndSegment.partIndex === 'number') {
+          for (let z = 0; z < partAndSegment.partIndex; z++) {
+            start += segment.parts[z].duration;
+          }
+        }
+        const distance = Math.abs(currentTime - start); // Once the distance begins to increase, or if distance is 0, we have passed
         // currentTime and can stop looking for better candidates
 
-        if (lastDistance !== null && lastDistance < distance) {
+        if (lastDistance !== null && (distance === 0 || lastDistance < distance)) {
           break;
         }
-        if (!syncPoint || lastDistance === null || lastDistance >= distance) {
-          lastDistance = distance;
-          syncPoint = {
-            time: start,
-            segmentIndex: partAndSegment.segmentIndex,
-            partIndex: partAndSegment.partIndex
-          };
-        }
+        lastDistance = distance;
+        syncPoint = {
+          time: start,
+          segmentIndex: partAndSegment.segmentIndex,
+          partIndex: partAndSegment.partIndex
+        };
       }
+      return syncPoint;
     }
-    return syncPoint;
-  }
-},
-// Stategy "Discontinuity": We have a discontinuity with a known
-//                          display-time
-{
-  name: 'Discontinuity',
-  run: (syncController, playlist, duration, currentTimeline, currentTime) => {
-    let syncPoint = null;
-    currentTime = currentTime || 0;
-    if (playlist.discontinuityStarts && playlist.discontinuityStarts.length) {
+  },
+// Stategy "Segment": We have a known time mapping for a timeline and a
+//                    segment in the current timeline with timing data
+  {
+    name: 'Segment',
+    run: (syncController, playlist, duration, currentTimeline, currentTime) => {
+      let syncPoint = null;
       let lastDistance = null;
-      for (let i = 0; i < playlist.discontinuityStarts.length; i++) {
-        const segmentIndex = playlist.discontinuityStarts[i];
-        const discontinuity = playlist.discontinuitySequence + i + 1;
-        const discontinuitySync = syncController.discontinuities[discontinuity];
-        if (discontinuitySync) {
-          const distance = Math.abs(currentTime - discontinuitySync.time); // Once the distance begins to increase, we have passed
+      currentTime = currentTime || 0;
+      const partsAndSegments = getPartsAndSegments(playlist);
+      for (let i = 0; i < partsAndSegments.length; i++) {
+        // start from the end and loop backwards for live
+        // or start from the front and loop forwards for non-live
+        const index = playlist.endList || currentTime === 0 ? i : partsAndSegments.length - (i + 1);
+        const partAndSegment = partsAndSegments[index];
+        const segment = partAndSegment.segment;
+        const start = partAndSegment.part && partAndSegment.part.start || segment && segment.start;
+        if (segment.timeline === currentTimeline && typeof start !== 'undefined') {
+          const distance = Math.abs(currentTime - start); // Once the distance begins to increase, we have passed
           // currentTime and can stop looking for better candidates
 
           if (lastDistance !== null && lastDistance < distance) {
@@ -45559,107 +49734,99 @@ const syncPointStrategies = [
           if (!syncPoint || lastDistance === null || lastDistance >= distance) {
             lastDistance = distance;
             syncPoint = {
-              time: discontinuitySync.time,
-              segmentIndex,
-              partIndex: null
+              time: start,
+              segmentIndex: partAndSegment.segmentIndex,
+              partIndex: partAndSegment.partIndex
             };
           }
         }
       }
-    }
-    return syncPoint;
-  }
-},
-// Stategy "Playlist": We have a playlist with a known mapping of
-//                     segment index to display time
-{
-  name: 'Playlist',
-  run: (syncController, playlist, duration, currentTimeline, currentTime) => {
-    if (playlist.syncInfo) {
-      const syncPoint = {
-        time: playlist.syncInfo.time,
-        segmentIndex: playlist.syncInfo.mediaSequence - playlist.mediaSequence,
-        partIndex: null
-      };
       return syncPoint;
     }
-    return null;
-  }
-}];
+  },
+// Stategy "Discontinuity": We have a discontinuity with a known
+//                          display-time
+  {
+    name: 'Discontinuity',
+    run: (syncController, playlist, duration, currentTimeline, currentTime) => {
+      let syncPoint = null;
+      currentTime = currentTime || 0;
+      if (playlist.discontinuityStarts && playlist.discontinuityStarts.length) {
+        let lastDistance = null;
+        for (let i = 0; i < playlist.discontinuityStarts.length; i++) {
+          const segmentIndex = playlist.discontinuityStarts[i];
+          const discontinuity = playlist.discontinuitySequence + i + 1;
+          const discontinuitySync = syncController.discontinuities[discontinuity];
+          if (discontinuitySync) {
+            const distance = Math.abs(currentTime - discontinuitySync.time); // Once the distance begins to increase, we have passed
+            // currentTime and can stop looking for better candidates
+
+            if (lastDistance !== null && lastDistance < distance) {
+              break;
+            }
+            if (!syncPoint || lastDistance === null || lastDistance >= distance) {
+              lastDistance = distance;
+              syncPoint = {
+                time: discontinuitySync.time,
+                segmentIndex,
+                partIndex: null
+              };
+            }
+          }
+        }
+      }
+      return syncPoint;
+    }
+  },
+// Stategy "Playlist": We have a playlist with a known mapping of
+//                     segment index to display time
+  {
+    name: 'Playlist',
+    run: (syncController, playlist, duration, currentTimeline, currentTime) => {
+      if (playlist.syncInfo) {
+        const syncPoint = {
+          time: playlist.syncInfo.time,
+          segmentIndex: playlist.syncInfo.mediaSequence - playlist.mediaSequence,
+          partIndex: null
+        };
+        return syncPoint;
+      }
+      return null;
+    }
+  }];
+
 class SyncController extends videojs.EventTarget {
   constructor(options = {}) {
     super(); // ...for synching across variants
 
     this.timelines = [];
     this.discontinuities = [];
-    this.timelineToDatetimeMappings = {};
-    /**
-     * @type {Map<string, Map<number, { start: number, end: number }>>}
-     * @private
-     */
+    this.timelineToDatetimeMappings = {}; // TODO: this map should be only available for HLS. Since only HLS has MediaSequence.
+    //  For some reason this map helps with syncing between quality switch for MPEG-DASH as well.
+    //  Moreover if we disable this map for MPEG-DASH - quality switch will be broken.
+    //  MPEG-DASH should have its own separate sync strategy
 
-    this.mediaSequenceStorage_ = new Map();
+    const main = new MediaSequenceSync();
+    const audio = new DependantMediaSequenceSync(main);
+    const vtt = new DependantMediaSequenceSync(main);
+    this.mediaSequenceStorage_ = {
+      main,
+      audio,
+      vtt
+    };
     this.logger_ = logger('SyncController');
   }
+
   /**
-   * Get media sequence map by type
    *
-   * @param {string} type - segment loader type
-   * @return {Map<number, { start: number, end: number }> | undefined}
+   * @param {string} loaderType
+   * @return {MediaSequenceSync|null}
    */
 
-  getMediaSequenceMap(type) {
-    return this.mediaSequenceStorage_.get(type);
+  getMediaSequenceSync(loaderType) {
+    return this.mediaSequenceStorage_[loaderType] || null;
   }
-  /**
-   * Update Media Sequence Map -> <MediaSequence, Range>
-   *
-   * @param {Object} playlist - parsed playlist
-   * @param {number} currentTime - current player's time
-   * @param {string} type - segment loader type
-   * @return {void}
-   */
 
-  updateMediaSequenceMap(playlist, currentTime, type) {
-    // we should not process this playlist if it does not have mediaSequence or segments
-    if (playlist.mediaSequence === undefined || !Array.isArray(playlist.segments) || !playlist.segments.length) {
-      return;
-    }
-    const currentMap = this.getMediaSequenceMap(type);
-    const result = new Map();
-    let currentMediaSequence = playlist.mediaSequence;
-    let currentBaseTime;
-    if (!currentMap) {
-      // first playlist setup:
-      currentBaseTime = 0;
-    } else if (currentMap.has(playlist.mediaSequence)) {
-      // further playlists setup:
-      currentBaseTime = currentMap.get(playlist.mediaSequence).start;
-    } else {
-      // it seems like we have a gap between playlists, use current time as a fallback:
-      this.logger_(`MediaSequence sync for ${type} segment loader - received a gap between playlists.
-Fallback base time to: ${currentTime}.
-Received media sequence: ${currentMediaSequence}.
-Current map: `, currentMap);
-      currentBaseTime = currentTime;
-    }
-    this.logger_(`MediaSequence sync for ${type} segment loader.
-Received media sequence: ${currentMediaSequence}.
-base time is ${currentBaseTime}
-Current map: `, currentMap);
-    playlist.segments.forEach(segment => {
-      const start = currentBaseTime;
-      const end = start + segment.duration;
-      const range = {
-        start,
-        end
-      };
-      result.set(currentMediaSequence, range);
-      currentMediaSequence++;
-      currentBaseTime = end;
-    });
-    this.mediaSequenceStorage_.set(type, result);
-  }
   /**
    * Find a sync-point for the playlist specified
    *
@@ -45684,8 +49851,8 @@ Current map: `, currentMap);
     // Always use VOD sync point for VOD
     if (duration !== Infinity) {
       const vodSyncPointStrategy = syncPointStrategies.find(({
-        name
-      }) => name === 'VOD');
+                                                               name
+                                                             }) => name === 'VOD');
       return vodSyncPointStrategy.run(this, playlist, duration);
     }
     const syncPoints = this.runStrategies_(playlist, duration, currentTimeline, currentTime, type);
@@ -45725,6 +49892,7 @@ Current map: `, currentMap);
       value: currentTime
     });
   }
+
   /**
    * Calculate the amount of time that has expired off the playlist during playback
    *
@@ -45741,7 +49909,7 @@ Current map: `, currentMap);
     if (!playlist || !playlist.segments) {
       return null;
     }
-    const syncPoints = this.runStrategies_(playlist, duration, playlist.discontinuitySequence, 0, 'main'); // Without sync-points, there is not enough information to determine the expired time
+    const syncPoints = this.runStrategies_(playlist, duration, playlist.discontinuitySequence, 0); // Without sync-points, there is not enough information to determine the expired time
 
     if (!syncPoints.length) {
       return null;
@@ -45762,6 +49930,7 @@ Current map: `, currentMap);
       endIndex: 0
     }));
   }
+
   /**
    * Runs each sync-point strategy and returns a list of sync-points returned by the
    * strategies
@@ -45797,6 +49966,7 @@ Current map: `, currentMap);
     }
     return syncPoints;
   }
+
   /**
    * Selects the sync-point nearest the specified target
    *
@@ -45828,6 +49998,7 @@ Current map: `, currentMap);
     this.logger_(`syncPoint for [${target.key}: ${target.value}] chosen with strategy` + ` [${bestStrategy}]: [time:${bestSyncPoint.time},` + ` segmentIndex:${bestSyncPoint.segmentIndex}` + (typeof bestSyncPoint.partIndex === 'number' ? `,partIndex:${bestSyncPoint.partIndex}` : '') + ']');
     return bestSyncPoint;
   }
+
   /**
    * Save any meta-data present on the segments when segments leave
    * the live window to the playlist to allow for synchronization at the
@@ -45859,6 +50030,7 @@ Current map: `, currentMap);
       }
     }
   }
+
   /**
    * Save the mapping from playlist's ProgramDateTime to display. This should only happen
    * before segments start to load.
@@ -45878,6 +50050,7 @@ Current map: `, currentMap);
       this.timelineToDatetimeMappings[firstSegment.timeline] = -playlistTimestamp;
     }
   }
+
   /**
    * Calculates and saves timeline mappings, playlist sync info, and segment timing values
    * based on the latest timing information.
@@ -45892,9 +50065,9 @@ Current map: `, currentMap);
    */
 
   saveSegmentTimingInfo({
-    segmentInfo,
-    shouldSaveTimelineMapping
-  }) {
+                          segmentInfo,
+                          shouldSaveTimelineMapping
+                        }) {
     const didCalculateSegmentTimeMapping = this.calculateSegmentTimeMapping_(segmentInfo, segmentInfo.timingInfo, shouldSaveTimelineMapping);
     const segment = segmentInfo.segment;
     if (didCalculateSegmentTimeMapping) {
@@ -45913,18 +50086,21 @@ Current map: `, currentMap);
       this.timelineToDatetimeMappings[segment.timeline] = -(dateTime.getTime() / 1000);
     }
   }
+
   timestampOffsetForTimeline(timeline) {
     if (typeof this.timelines[timeline] === 'undefined') {
       return null;
     }
     return this.timelines[timeline].time;
   }
+
   mappingForTimeline(timeline) {
     if (typeof this.timelines[timeline] === 'undefined') {
       return null;
     }
     return this.timelines[timeline].mapping;
   }
+
   /**
    * Use the "media time" for a segment to generate a mapping to "display time" and
    * save that display time to the segment.
@@ -45981,6 +50157,7 @@ Current map: `, currentMap);
     segment.end = end;
     return true;
   }
+
   /**
    * Each time we have discontinuity in the playlist, attempt to calculate the location
    * in display of the start of the discontinuity and save that. We also save an accuracy
@@ -46034,6 +50211,7 @@ Current map: `, currentMap);
       }
     }
   }
+
   dispose() {
     this.trigger('dispose');
     this.off();
@@ -46056,15 +50234,17 @@ class TimelineChangeController extends videojs.EventTarget {
     this.pendingTimelineChanges_ = {};
     this.lastTimelineChanges_ = {};
   }
+
   clearPendingTimelineChange(type) {
     this.pendingTimelineChanges_[type] = null;
     this.trigger('pendingtimelinechange');
   }
+
   pendingTimelineChange({
-    type,
-    from,
-    to
-  }) {
+                          type,
+                          from,
+                          to
+                        }) {
     if (typeof from === 'number' && typeof to === 'number') {
       this.pendingTimelineChanges_[type] = {
         type,
@@ -46075,11 +50255,12 @@ class TimelineChangeController extends videojs.EventTarget {
     }
     return this.pendingTimelineChanges_[type];
   }
+
   lastTimelineChange({
-    type,
-    from,
-    to
-  }) {
+                       type,
+                       from,
+                       to
+                     }) {
     if (typeof from === 'number' && typeof to === 'number') {
       this.lastTimelineChanges_[type] = {
         type,
@@ -46087,10 +50268,20 @@ class TimelineChangeController extends videojs.EventTarget {
         to
       };
       delete this.pendingTimelineChanges_[type];
-      this.trigger('timelinechange');
+      const metadata = {
+        timelineChangeInfo: {
+          from,
+          to
+        }
+      };
+      this.trigger({
+        type: 'timelinechange',
+        metadata
+      });
     }
     return this.lastTimelineChanges_[type];
   }
+
   dispose() {
     this.trigger('dispose');
     this.pendingTimelineChanges_ = {};
@@ -46115,6 +50306,7 @@ const workerCode = transform(getWorkerString(function () {
     function Stream() {
       this.listeners = {};
     }
+
     /**
      * Add a listener for a specified event type.
      *
@@ -46138,7 +50330,6 @@ const workerCode = transform(getWorkerString(function () {
      * type of event through `on`
      * @return {boolean} if we could turn it off or not
      */;
-
     _proto.off = function off(type, listener) {
       if (!this.listeners[type]) {
         return false;
@@ -46162,7 +50353,6 @@ const workerCode = transform(getWorkerString(function () {
      *
      * @param {string} type the event name
      */;
-
     _proto.trigger = function trigger(type) {
       var callbacks = this.listeners[type];
       if (!callbacks) {
@@ -46188,7 +50378,6 @@ const workerCode = transform(getWorkerString(function () {
     /**
      * Destroys the stream and cleans up.
      */;
-
     _proto.dispose = function dispose() {
       this.listeners = {};
     }
@@ -46200,7 +50389,6 @@ const workerCode = transform(getWorkerString(function () {
      * @param {Stream} destination the stream that will receive all `data` events
      * @see http://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
      */;
-
     _proto.pipe = function pipe(destination) {
       this.on('data', function (data) {
         destination.push(data);
@@ -46208,6 +50396,7 @@ const workerCode = transform(getWorkerString(function () {
     };
     return Stream;
   }();
+
   /*! @name pkcs7 @version 1.0.4 @license Apache-2.0 */
 
   /**
@@ -46221,7 +50410,8 @@ const workerCode = transform(getWorkerString(function () {
   function unpad(padded) {
     return padded.subarray(0, padded.byteLength - padded[padded.byteLength - 1]);
   }
-  /*! @name aes-decrypter @version 4.0.1 @license Apache-2.0 */
+
+  /*! @name aes-decrypter @version 4.0.2 @license Apache-2.0 */
 
   /**
    * @file aes.js
@@ -46312,6 +50502,7 @@ const workerCode = transform(getWorkerString(function () {
     return tables;
   };
   let aesTables = null;
+
   /**
    * Schedule out an AES key for both encryption and decryption. This
    * is a low-level class. Use a cipher mode to do bulk encryption.
@@ -46323,17 +50514,17 @@ const workerCode = transform(getWorkerString(function () {
   class AES {
     constructor(key) {
       /**
-      * The expanded S-box and inverse S-box tables. These will be computed
-      * on the client so that we don't have to send them down the wire.
-      *
-      * There are two tables, _tables[0] is for encryption and
-      * _tables[1] is for decryption.
-      *
-      * The first 4 sub-tables are the expanded S-box with MixColumns. The
-      * last (_tables[01][4]) is the S-box itself.
-      *
-      * @private
-      */
+       * The expanded S-box and inverse S-box tables. These will be computed
+       * on the client so that we don't have to send them down the wire.
+       *
+       * There are two tables, _tables[0] is for encryption and
+       * _tables[1] is for decryption.
+       *
+       * The first 4 sub-tables are the expanded S-box with MixColumns. The
+       * last (_tables[01][4]) is the S-box itself.
+       *
+       * @private
+       */
       // if we have yet to precompute the S-box tables
       // do so now
       if (!aesTables) {
@@ -46378,6 +50569,7 @@ const workerCode = transform(getWorkerString(function () {
         }
       }
     }
+
     /**
      * Decrypt 16 bytes, specified as four 32-bit words.
      *
@@ -46435,6 +50627,7 @@ const workerCode = transform(getWorkerString(function () {
       }
     }
   }
+
   /**
    * @file async-stream.js
    */
@@ -46454,6 +50647,7 @@ const workerCode = transform(getWorkerString(function () {
       this.delay = 1;
       this.timeout_ = null;
     }
+
     /**
      * process an async job
      *
@@ -46468,6 +50662,7 @@ const workerCode = transform(getWorkerString(function () {
         this.timeout_ = null;
       }
     }
+
     /**
      * push a job into the stream
      *
@@ -46481,6 +50676,7 @@ const workerCode = transform(getWorkerString(function () {
       }
     }
   }
+
   /**
    * @file decrypter.js
    *
@@ -46560,6 +50756,7 @@ const workerCode = transform(getWorkerString(function () {
     }
     return decrypted;
   };
+
   /**
    * The `Decrypter` class that manages decryption of AES
    * data through `AsyncStream` objects and the `decrypt`
@@ -46591,6 +50788,7 @@ const workerCode = transform(getWorkerString(function () {
         done(null, unpad(decrypted));
       });
     }
+
     /**
      * a getter for step the maximum number of bytes to process at one time
      *
@@ -46601,6 +50799,7 @@ const workerCode = transform(getWorkerString(function () {
       // 4 * 8000;
       return 32000;
     }
+
     /**
      * @private
      */
@@ -46612,6 +50811,7 @@ const workerCode = transform(getWorkerString(function () {
       };
     }
   }
+
   var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
   var win;
   if (typeof window !== "undefined") {
@@ -46694,7 +50894,6 @@ const workerCode = transform(getWorkerString(function () {
     /* eslint-enable */
   };
 }));
-
 var Decrypter = factory(workerCode);
 /* rollup-plugin-worker-factory end for worker!/home/runner/work/http-streaming/http-streaming/src/decrypter-worker.js */
 
@@ -47202,9 +51401,9 @@ const initialize = {
           playlistLoader = new DashPlaylistLoader(properties.playlists[0], vhs, requestOptions, mainPlaylistLoader);
         } else if (sourceType === 'vhs-json') {
           playlistLoader = new PlaylistLoader(
-          // if the vhs-json object included the media playlist, use the media playlist
-          // as provided, otherwise use the resolved URI to load the playlist
-          properties.playlists ? properties.playlists[0] : properties.resolvedUri, vhs, requestOptions);
+            // if the vhs-json object included the media playlist, use the media playlist
+            // as provided, otherwise use the resolved URI to load the playlist
+            properties.playlists ? properties.playlists[0] : properties.resolvedUri, vhs, requestOptions);
         }
         properties = merge({
           id: variantLabel,
@@ -47566,50 +51765,61 @@ class SteeringManifest {
     this.priority_ = [];
     this.pathwayClones_ = new Map();
   }
+
   set version(number) {
     // Only version 1 is currently supported for both DASH and HLS.
     if (number === 1) {
       this.version_ = number;
     }
   }
+
   set ttl(seconds) {
     // TTL = time-to-live, default = 300 seconds.
     this.ttl_ = seconds || 300;
   }
+
   set reloadUri(uri) {
     if (uri) {
       // reload URI can be relative to the previous reloadUri.
       this.reloadUri_ = resolveUrl(this.reloadUri_, uri);
     }
   }
+
   set priority(array) {
     // priority must be non-empty and unique values.
     if (array && array.length) {
       this.priority_ = array;
     }
   }
+
   set pathwayClones(array) {
     // pathwayClones must be non-empty.
     if (array && array.length) {
       this.pathwayClones_ = new Map(array.map(clone => [clone.ID, clone]));
     }
   }
+
   get version() {
     return this.version_;
   }
+
   get ttl() {
     return this.ttl_;
   }
+
   get reloadUri() {
     return this.reloadUri_;
   }
+
   get priority() {
     return this.priority_;
   }
+
   get pathwayClones() {
     return this.pathwayClones_;
   }
 }
+
 /**
  * This class represents a content steering manifest and associated state. See both HLS and DASH specifications.
  * HLS: https://developer.apple.com/streaming/HLSContentSteeringSpecification.pdf and
@@ -47639,6 +51849,7 @@ class ContentSteeringController extends videojs.EventTarget {
     this.xhr_ = xhr;
     this.getBandwidth_ = bandwidth;
   }
+
   /**
    * Assigns the content steering tag properties to the steering controller
    *
@@ -47674,6 +51885,7 @@ class ContentSteeringController extends videojs.EventTarget {
       this.trigger('content-steering');
     }
   }
+
   /**
    * Requests the content steering manifest and parse the response. This should only be called after
    * assignTagProperties was called with a content steering tag.
@@ -47699,8 +51911,18 @@ class ContentSteeringController extends videojs.EventTarget {
       this.dispose();
       return;
     }
+    const metadata = {
+      contentSteeringInfo: {
+        uri
+      }
+    };
+    this.trigger({
+      type: 'contentsteeringloadstart',
+      metadata
+    });
     this.request_ = this.xhr_({
-      uri
+      uri,
+      requestType: 'content-steering-manifest'
     }, (error, errorInfo) => {
       if (error) {
         // If the client receives HTTP 410 Gone in response to a manifest request,
@@ -47731,11 +51953,40 @@ class ContentSteeringController extends videojs.EventTarget {
         this.startTTLTimeout_();
         return;
       }
-      const steeringManifestJson = JSON.parse(this.request_.responseText);
+      this.trigger({
+        type: 'contentsteeringloadcomplete',
+        metadata
+      });
+      let steeringManifestJson;
+      try {
+        steeringManifestJson = JSON.parse(this.request_.responseText);
+      } catch (parseError) {
+        const errorMetadata = {
+          errorType: videojs.Error.StreamingContentSteeringParserError,
+          error: parseError
+        };
+        this.trigger({
+          type: 'error',
+          metadata: errorMetadata
+        });
+      }
       this.assignSteeringProperties_(steeringManifestJson);
+      const parsedMetadata = {
+        contentSteeringInfo: metadata.contentSteeringInfo,
+        contentSteeringManifest: {
+          version: this.steeringManifest.version,
+          reloadUri: this.steeringManifest.reloadUri,
+          priority: this.steeringManifest.priority
+        }
+      };
+      this.trigger({
+        type: 'contentsteeringparsed',
+        metadata: parsedMetadata
+      });
       this.startTTLTimeout_();
     });
   }
+
   /**
    * Set the proxy server URL and add the steering manifest url as a URI encoded parameter.
    *
@@ -47749,6 +52000,7 @@ class ContentSteeringController extends videojs.EventTarget {
     proxyServerUrlObject.searchParams.set('url', encodeURI(steeringUrlObject.toString()));
     return this.setSteeringParams_(proxyServerUrlObject.toString());
   }
+
   /**
    * Decodes and parses the data uri encoded steering manifest
    *
@@ -47759,6 +52011,7 @@ class ContentSteeringController extends videojs.EventTarget {
     const steeringManifestJson = JSON.parse(window$1.atob(dataUri));
     this.assignSteeringProperties_(steeringManifestJson);
   }
+
   /**
    * Set the HLS or DASH content steering manifest request query parameters. For example:
    * _HLS_pathway="<CURRENT-PATHWAY-ID>" and _HLS_throughput=<THROUGHPUT>
@@ -47782,6 +52035,7 @@ class ContentSteeringController extends videojs.EventTarget {
     }
     return urlObject.toString();
   }
+
   /**
    * Assigns the current steering manifest properties and to the SteeringManifest object
    *
@@ -47831,6 +52085,7 @@ class ContentSteeringController extends videojs.EventTarget {
       this.trigger('content-steering');
     }
   }
+
   /**
    * Returns the pathway to use for steering decisions
    *
@@ -47840,6 +52095,7 @@ class ContentSteeringController extends videojs.EventTarget {
   getPathway() {
     return this.currentPathway || this.defaultPathway;
   }
+
   /**
    * Chooses the manifest request URI based on proxy URIs and server URLs.
    * Also accounts for exclusion on certain manifest URIs.
@@ -47867,6 +52123,7 @@ class ContentSteeringController extends videojs.EventTarget {
 
     return null;
   }
+
   /**
    * Start the timeout for re-requesting the steering manifest at the TTL interval.
    *
@@ -47881,6 +52138,7 @@ class ContentSteeringController extends videojs.EventTarget {
       this.requestSteeringManifest();
     }, ttlMS);
   }
+
   /**
    * Clear the TTL timeout if necessary.
    */
@@ -47889,6 +52147,7 @@ class ContentSteeringController extends videojs.EventTarget {
     window$1.clearTimeout(this.ttlTimeout_);
     this.ttlTimeout_ = null;
   }
+
   /**
    * aborts any current steering xhr and sets the current request object to null
    */
@@ -47899,6 +52158,7 @@ class ContentSteeringController extends videojs.EventTarget {
     }
     this.request_ = null;
   }
+
   /**
    * aborts steering requests clears the ttl timeout and resets all properties.
    */
@@ -47919,6 +52179,7 @@ class ContentSteeringController extends videojs.EventTarget {
     this.availablePathways_ = new Set();
     this.steeringManifest = new SteeringManifest();
   }
+
   /**
    * adds a pathway to the available pathways set
    *
@@ -47930,6 +52191,7 @@ class ContentSteeringController extends videojs.EventTarget {
       this.availablePathways_.add(pathway);
     }
   }
+
   /**
    * Clears all pathways from the available pathways set
    */
@@ -47937,6 +52199,7 @@ class ContentSteeringController extends videojs.EventTarget {
   clearAvailablePathways() {
     this.availablePathways_.clear();
   }
+
   /**
    * Removes a pathway from the available pathways set.
    */
@@ -47944,6 +52207,7 @@ class ContentSteeringController extends videojs.EventTarget {
   excludePathway(pathway) {
     return this.availablePathways_.delete(pathway);
   }
+
   /**
    * Checks the refreshed DASH manifest content steering tag for changes.
    *
@@ -47955,14 +52219,21 @@ class ContentSteeringController extends videojs.EventTarget {
   didDASHTagChange(baseURL, newTag) {
     return !newTag && this.steeringManifest.reloadUri || newTag && (resolveUrl(baseURL, newTag.serverURL) !== this.steeringManifest.reloadUri || newTag.defaultServiceLocation !== this.defaultPathway || newTag.queryBeforeStart !== this.queryBeforeStart || newTag.proxyServerURL !== this.proxyServerUrl_);
   }
+
   getAvailablePathways() {
     return this.availablePathways_;
   }
 }
 
-/**
- * @file playlist-controller.js
- */
+const debounce = (callback, wait) => {
+  let timeoutId = null;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      callback.apply(null, args);
+    }, wait);
+  };
+};
 const ABORT_EARLY_EXCLUSION_SECONDS = 10;
 let Vhs$1; // SegmentLoader stats that need to have each loader's
 // values summed to calculate the final value
@@ -47972,16 +52243,16 @@ const sumLoaderStat = function (stat) {
   return this.audioSegmentLoader_[stat] + this.mainSegmentLoader_[stat];
 };
 const shouldSwitchToMedia = function ({
-  currentPlaylist,
-  buffered,
-  currentTime,
-  nextPlaylist,
-  bufferLowWaterLine,
-  bufferHighWaterLine,
-  duration,
-  bufferBasedABR,
-  log
-}) {
+                                        currentPlaylist,
+                                        buffered,
+                                        currentTime,
+                                        nextPlaylist,
+                                        bufferLowWaterLine,
+                                        bufferHighWaterLine,
+                                        duration,
+                                        bufferBasedABR,
+                                        log
+                                      }) {
   // we have no other playlist to switch to
   if (!nextPlaylist) {
     videojs.log.warn('We received no playlist to switch to. Please check your stream.');
@@ -48045,6 +52316,7 @@ const shouldSwitchToMedia = function ({
   log(`not ${sharedLogLine} as no switching criteria met`);
   return false;
 };
+
 /**
  * the main playlist controller controller all interactons
  * between playlists and segmentloaders. At this time this mainly
@@ -48057,7 +52329,11 @@ const shouldSwitchToMedia = function ({
 
 class PlaylistController extends videojs.EventTarget {
   constructor(options) {
-    super();
+    super(); // Adding a slight debounce to avoid duplicate calls during rapid quality changes, for example:
+    // When selecting quality from the quality list,
+    // where we may have multiple bandwidth profiles for the same vertical resolution.
+
+    this.fastQualityChange_ = debounce(this.fastQualityChange_.bind(this), 100);
     const {
       src,
       withCredentials,
@@ -48071,7 +52347,8 @@ class PlaylistController extends videojs.EventTarget {
       cacheEncryptionKeys,
       bufferBasedABR,
       leastPixelDiffSelector,
-      captionServices
+      captionServices,
+      experimentalUseMMS
     } = options;
     if (!src) {
       throw new Error('A non-empty playlist URL or JSON manifest string is required');
@@ -48088,11 +52365,13 @@ class PlaylistController extends videojs.EventTarget {
     this.withCredentials = withCredentials;
     this.tech_ = tech;
     this.vhs_ = tech.vhs;
+    this.player_ = options.player_;
     this.sourceType_ = sourceType;
     this.useCueTags_ = useCueTags;
     this.playlistExclusionDuration = playlistExclusionDuration;
     this.maxPlaylistRetries = maxPlaylistRetries;
     this.enableLowInitialPlaylist = enableLowInitialPlaylist;
+    this.usingManagedMediaSource_ = false;
     if (this.useCueTags_) {
       this.cueTagsTrack_ = this.tech_.addTextTrack('metadata', 'ad-cues');
       this.cueTagsTrack_.inBandMetadataTrackDispatchType = '';
@@ -48104,14 +52383,26 @@ class PlaylistController extends videojs.EventTarget {
     };
     this.on('error', this.pauseLoading);
     this.mediaTypes_ = createMediaTypes();
-    this.mediaSource = new window$1.MediaSource();
+    if (experimentalUseMMS && window$1.ManagedMediaSource) {
+      // Airplay source not yet implemented. Remote playback must be disabled.
+      this.tech_.el_.disableRemotePlayback = true;
+      this.mediaSource = new window$1.ManagedMediaSource();
+      this.usingManagedMediaSource_ = true;
+      videojs.log('Using ManagedMediaSource');
+    } else if (window$1.MediaSource) {
+      this.mediaSource = new window$1.MediaSource();
+    }
     this.handleDurationChange_ = this.handleDurationChange_.bind(this);
     this.handleSourceOpen_ = this.handleSourceOpen_.bind(this);
     this.handleSourceEnded_ = this.handleSourceEnded_.bind(this);
+    this.load = this.load.bind(this);
+    this.pause = this.pause.bind(this);
     this.mediaSource.addEventListener('durationchange', this.handleDurationChange_); // load the media source into the player
 
     this.mediaSource.addEventListener('sourceopen', this.handleSourceOpen_);
-    this.mediaSource.addEventListener('sourceended', this.handleSourceEnded_); // we don't have to handle sourceclose since dispose will handle termination of
+    this.mediaSource.addEventListener('sourceended', this.handleSourceEnded_);
+    this.mediaSource.addEventListener('startstreaming', this.load);
+    this.mediaSource.addEventListener('endstreaming', this.pause); // we don't have to handle sourceclose since dispose will handle termination of
     // everything, and the MediaSource should not be detached without a proper disposal
 
     this.seekable_ = createTimeRanges();
@@ -48121,6 +52412,7 @@ class PlaylistController extends videojs.EventTarget {
       kind: 'metadata',
       label: 'segment-metadata'
     }, false).track;
+    this.segmentMetadataTrack_.mode = 'hidden';
     this.decrypter_ = new Decrypter();
     this.sourceUpdater_ = new SourceUpdater(this.mediaSource);
     this.inbandTextTracks_ = {};
@@ -48177,10 +52469,12 @@ class PlaylistController extends videojs.EventTarget {
           tech.off('vttjserror', onError);
           resolve();
         }
+
         function onError() {
           tech.off('vttjsloaded', onLoad);
           reject();
         }
+
         tech.one('vttjsloaded', onLoad);
         tech.one('vttjserror', onError); // safe to call multiple times, script will be loaded only once:
 
@@ -48233,12 +52527,15 @@ class PlaylistController extends videojs.EventTarget {
       });
     });
   }
+
   mainAppendsToLoadedData_() {
     return this.mainAppendsToLoadedData__;
   }
+
   audioAppendsToLoadedData_() {
     return this.audioAppendsToLoadedData__;
   }
+
   appendsToLoadedData_() {
     const main = this.mainAppendsToLoadedData_();
     const audio = this.audioAppendsToLoadedData_();
@@ -48247,9 +52544,11 @@ class PlaylistController extends videojs.EventTarget {
     }
     return main + audio;
   }
+
   timeToLoadedData_() {
     return this.timeToLoadedData__;
   }
+
   /**
    * Run selectPlaylist and switch to the new playlist if we should
    *
@@ -48263,12 +52562,26 @@ class PlaylistController extends videojs.EventTarget {
       this.switchMedia_(nextPlaylist, reason);
     }
   }
+
   switchMedia_(playlist, cause, delay) {
     const oldMedia = this.media();
     const oldId = oldMedia && (oldMedia.id || oldMedia.uri);
     const newId = playlist && (playlist.id || playlist.uri);
     if (oldId && oldId !== newId) {
       this.logger_(`switch media ${oldId} -> ${newId} from ${cause}`);
+      const metadata = {
+        renditionInfo: {
+          id: newId,
+          bandwidth: playlist.attributes.BANDWIDTH,
+          resolution: playlist.attributes.RESOLUTION,
+          codecs: playlist.attributes.CODECS
+        },
+        cause
+      };
+      this.trigger({
+        type: 'renditionselected',
+        metadata
+      });
       this.tech_.trigger({
         type: 'usage',
         name: `vhs-rendition-change-${cause}`
@@ -48276,6 +52589,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     this.mainPlaylistLoader_.media(playlist, delay);
   }
+
   /**
    * A function that ensures we switch our playlists inside of `mediaTypes`
    * to match the current `serviceLocation` provided by the contentSteering controller.
@@ -48302,6 +52616,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     });
   }
+
   /**
    * Start a timer that periodically calls checkABR_
    *
@@ -48312,6 +52627,7 @@ class PlaylistController extends videojs.EventTarget {
     this.stopABRTimer_();
     this.abrTimer_ = window$1.setInterval(() => this.checkABR_(), 250);
   }
+
   /**
    * Stop the timer that periodically calls checkABR_
    *
@@ -48327,6 +52643,7 @@ class PlaylistController extends videojs.EventTarget {
     window$1.clearInterval(this.abrTimer_);
     this.abrTimer_ = null;
   }
+
   /**
    * Get a list of playlists for the currently selected audio playlist
    *
@@ -48392,6 +52709,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     return playlists;
   }
+
   /**
    * Register event handlers on the main playlist loader. A helper
    * function for construction time.
@@ -48505,7 +52823,15 @@ class PlaylistController extends videojs.EventTarget {
       }
       if (this.sourceType_ === 'dash') {
         // we don't want to re-request the same hls playlist right after it was changed
-        this.mainPlaylistLoader_.load();
+        // Initially it was implemented as workaround to restart playlist loader for live
+        // when playlist loader is paused because of playlist exclusions:
+        // see: https://github.com/videojs/http-streaming/pull/1339
+        // but this introduces duplicate "loadedplaylist" event.
+        // Ideally we want to re-think playlist loader life-cycle events,
+        // but simply checking "paused" state should help a lot
+        if (this.mainPlaylistLoader_.isPaused) {
+          this.mainPlaylistLoader_.load();
+        }
       } // TODO: Create a new event on the PlaylistLoader that signals
       // that the segments have changed in some way and use that to
       // update the SegmentLoader instead of doing it twice here and
@@ -48559,7 +52885,15 @@ class PlaylistController extends videojs.EventTarget {
         name: 'vhs-rendition-enabled'
       });
     });
+    const playlistLoaderEvents = ['manifestrequeststart', 'manifestrequestcomplete', 'manifestparsestart', 'manifestparsecomplete', 'playlistrequeststart', 'playlistrequestcomplete', 'playlistparsestart', 'playlistparsecomplete', 'renditiondisabled', 'renditionenabled'];
+    playlistLoaderEvents.forEach(eventName => {
+      this.mainPlaylistLoader_.on(eventName, metadata => {
+        // trigger directly on the player to ensure early events are fired.
+        this.player_.trigger(_extends({}, metadata));
+      });
+    });
   }
+
   /**
    * Given an updated media playlist (whether it was loaded for the first time, or
    * refreshed for live playlists), update any relevant properties and state to reflect
@@ -48594,6 +52928,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     }
   }
+
   /**
    * A helper function for triggerring presence usage events once per source
    *
@@ -48643,6 +52978,7 @@ class PlaylistController extends videojs.EventTarget {
       });
     }
   }
+
   shouldSwitchToMedia_(nextPlaylist) {
     const currentPlaylist = this.mainPlaylistLoader_.media() || this.mainPlaylistLoader_.pendingMedia_;
     const currentTime = this.tech_.currentTime();
@@ -48661,6 +52997,7 @@ class PlaylistController extends videojs.EventTarget {
       log: this.logger_
     });
   }
+
   /**
    * Register event handlers on the segment loaders. A helper function
    * for construction time.
@@ -48721,6 +53058,38 @@ class PlaylistController extends videojs.EventTarget {
     this.mainSegmentLoader_.on('ended', () => {
       this.logger_('main segment loader ended');
       this.onEndOfStream();
+    }); // There is the possibility of the video segment and the audio segment
+    // at a current time to be on different timelines. When this occurs, the player
+    // forwards playback to a point where these two segment types are back on the same
+    // timeline. This time will be just after the end of the audio segment that is on
+    // a previous timeline.
+
+    this.timelineChangeController_.on('audioTimelineBehind', () => {
+      const segmentInfo = this.audioSegmentLoader_.pendingSegment_;
+      if (!segmentInfo || !segmentInfo.segment || !segmentInfo.segment.syncInfo) {
+        return;
+      } // Update the current time to just after the faulty audio segment.
+      // This moves playback to a spot where both audio and video segments
+      // are on the same timeline.
+
+      const newTime = segmentInfo.segment.syncInfo.end + 0.01;
+      this.tech_.setCurrentTime(newTime);
+    });
+    this.timelineChangeController_.on('fixBadTimelineChange', () => {
+      // pause, reset-everything and load for all segment-loaders
+      this.logger_('Fix bad timeline change. Restarting al segment loaders...');
+      this.mainSegmentLoader_.pause();
+      this.mainSegmentLoader_.resetEverything();
+      if (this.mediaTypes_.AUDIO.activePlaylistLoader) {
+        this.audioSegmentLoader_.pause();
+        this.audioSegmentLoader_.resetEverything();
+      }
+      if (this.mediaTypes_.SUBTITLES.activePlaylistLoader) {
+        this.subtitleSegmentLoader_.pause();
+        this.subtitleSegmentLoader_.resetEverything();
+      } // start segment loader loading in case they are paused
+
+      this.load();
     });
     this.mainSegmentLoader_.on('earlyabort', event => {
       // never try to early abort with the new ABR algorithm
@@ -48770,10 +53139,24 @@ class PlaylistController extends videojs.EventTarget {
       this.logger_('audioSegmentLoader ended');
       this.onEndOfStream();
     });
+    const segmentLoaderEvents = ['segmentselected', 'segmentloadstart', 'segmentloaded', 'segmentkeyloadstart', 'segmentkeyloadcomplete', 'segmentdecryptionstart', 'segmentdecryptioncomplete', 'segmenttransmuxingstart', 'segmenttransmuxingcomplete', 'segmenttransmuxingtrackinfoavailable', 'segmenttransmuxingtiminginfoavailable', 'segmentappendstart', 'appendsdone', 'bandwidthupdated', 'timelinechange', 'codecschange'];
+    segmentLoaderEvents.forEach(eventName => {
+      this.mainSegmentLoader_.on(eventName, metadata => {
+        this.player_.trigger(_extends({}, metadata));
+      });
+      this.audioSegmentLoader_.on(eventName, metadata => {
+        this.player_.trigger(_extends({}, metadata));
+      });
+      this.subtitleSegmentLoader_.on(eventName, metadata => {
+        this.player_.trigger(_extends({}, metadata));
+      });
+    });
   }
+
   mediaSecondsLoaded_() {
     return Math.max(this.audioSegmentLoader_.mediaSecondsLoaded + this.mainSegmentLoader_.mediaSecondsLoaded);
   }
+
   /**
    * Call load on our SegmentLoaders
    */
@@ -48787,6 +53170,21 @@ class PlaylistController extends videojs.EventTarget {
       this.subtitleSegmentLoader_.load();
     }
   }
+
+  /**
+   * Call pause on our SegmentLoaders
+   */
+
+  pause() {
+    this.mainSegmentLoader_.pause();
+    if (this.mediaTypes_.AUDIO.activePlaylistLoader) {
+      this.audioSegmentLoader_.pause();
+    }
+    if (this.mediaTypes_.SUBTITLES.activePlaylistLoader) {
+      this.subtitleSegmentLoader_.pause();
+    }
+  }
+
   /**
    * Re-tune playback quality level for the current player
    * conditions. This method will perform destructive actions like removing
@@ -48806,19 +53204,23 @@ class PlaylistController extends videojs.EventTarget {
 
     this.waitingForFastQualityPlaylistReceived_ = true;
   }
-  runFastQualitySwitch_() {
-    this.waitingForFastQualityPlaylistReceived_ = false; // Delete all buffered data to allow an immediate quality switch, then seek to give
-    // the browser a kick to remove any cached frames from the previous rendtion (.04 seconds
-    // ahead was roughly the minimum that will accomplish this across a variety of content
-    // in IE and Edge, but seeking in place is sufficient on all other browsers)
-    // Edge/IE bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/14600375/
-    // Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=651904
 
+  runFastQualitySwitch_() {
+    this.waitingForFastQualityPlaylistReceived_ = false;
     this.mainSegmentLoader_.pause();
-    this.mainSegmentLoader_.resetEverything(() => {
-      this.tech_.setCurrentTime(this.tech_.currentTime());
-    }); // don't need to reset audio as it is reset when media changes
+    this.mainSegmentLoader_.resetEverything();
+    if (this.mediaTypes_.AUDIO.activePlaylistLoader) {
+      this.audioSegmentLoader_.pause();
+      this.audioSegmentLoader_.resetEverything();
+    }
+    if (this.mediaTypes_.SUBTITLES.activePlaylistLoader) {
+      this.subtitleSegmentLoader_.pause();
+      this.subtitleSegmentLoader_.resetEverything();
+    } // start segment loader loading in case they are paused
+
+    this.load();
   }
+
   /**
    * Begin playback.
    */
@@ -48842,6 +53244,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     }
   }
+
   /**
    * Seek to the latest media position if this is a live video and the
    * player and video are loaded and initialized.
@@ -48885,6 +53288,7 @@ class PlaylistController extends videojs.EventTarget {
     this.load();
     return true;
   }
+
   /**
    * handle the sourceopen event on the MediaSource
    *
@@ -48904,11 +53308,13 @@ class PlaylistController extends videojs.EventTarget {
       // on browsers which return a promise
 
       if (typeof playPromise !== 'undefined' && typeof playPromise.then === 'function') {
-        playPromise.then(null, e => {});
+        playPromise.then(null, e => {
+        });
       }
     }
     this.trigger('sourceopen');
   }
+
   /**
    * handle the sourceended event on the MediaSource
    *
@@ -48926,6 +53332,7 @@ class PlaylistController extends videojs.EventTarget {
     const duration = this.duration();
     cues[cues.length - 1].endTime = isNaN(duration) || Math.abs(duration) === Infinity ? Number.MAX_VALUE : duration;
   }
+
   /**
    * handle the durationchange event on the MediaSource
    *
@@ -48935,6 +53342,7 @@ class PlaylistController extends videojs.EventTarget {
   handleDurationChange_() {
     this.tech_.trigger('durationchange');
   }
+
   /**
    * Calls endOfStream on the media source when all active stream types have called
    * endOfStream
@@ -48965,6 +53373,7 @@ class PlaylistController extends videojs.EventTarget {
     this.stopABRTimer_();
     this.sourceUpdater_.endOfStream();
   }
+
   /**
    * Check if a playlist has stopped being updated
    *
@@ -48996,6 +53405,7 @@ class PlaylistController extends videojs.EventTarget {
 
     return bufferedEnd - currentTime <= SAFE_TIME_DELTA && absolutePlaylistEnd - bufferedEnd <= SAFE_TIME_DELTA;
   }
+
   /**
    * Exclude a playlist for a set amount of time, making it unavailable for selection by
    * the rendition selection algorithm, then force a new playlist (rendition) selection.
@@ -49009,10 +53419,10 @@ class PlaylistController extends videojs.EventTarget {
    */
 
   excludePlaylist({
-    playlistToExclude = this.mainPlaylistLoader_.media(),
-    error = {},
-    playlistExclusionDuration
-  }) {
+                    playlistToExclude = this.mainPlaylistLoader_.media(),
+                    error = {},
+                    playlistExclusionDuration
+                  }) {
     // If the `error` was generated by the playlist loader, it will contain
     // the playlist we were trying to load (but failed) and that should be
     // excluded instead of the currently selected playlist which is likely
@@ -49123,6 +53533,7 @@ class PlaylistController extends videojs.EventTarget {
 
     return this.switchMedia_(nextPlaylist, 'exclude', isFinalRendition || shouldDelay);
   }
+
   /**
    * Pause all segment/playlist loaders
    */
@@ -49131,6 +53542,7 @@ class PlaylistController extends videojs.EventTarget {
     this.delegateLoaders_('all', ['abort', 'pause']);
     this.stopABRTimer_();
   }
+
   /**
    * Call a set of functions in order on playlist loaders, segment loaders,
    * or both types of loaders.
@@ -49178,6 +53590,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     }));
   }
+
   /**
    * set the current time on all segment loaders
    *
@@ -49215,6 +53628,7 @@ class PlaylistController extends videojs.EventTarget {
 
     this.load();
   }
+
   /**
    * get the current duration
    *
@@ -49250,6 +53664,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     return Vhs$1.Playlist.duration(media);
   }
+
   /**
    * check the seekable range
    *
@@ -49259,8 +53674,50 @@ class PlaylistController extends videojs.EventTarget {
   seekable() {
     return this.seekable_;
   }
+
+  getSeekableRange_(playlistLoader, mediaType) {
+    const media = playlistLoader.media();
+    if (!media) {
+      return null;
+    }
+    const mediaSequenceSync = this.syncController_.getMediaSequenceSync(mediaType);
+    if (mediaSequenceSync && mediaSequenceSync.isReliable) {
+      const start = mediaSequenceSync.start;
+      const end = mediaSequenceSync.end;
+      if (!isFinite(start) || !isFinite(end)) {
+        return null;
+      }
+      const liveEdgeDelay = Vhs$1.Playlist.liveEdgeDelay(this.mainPlaylistLoader_.main, media); // Make sure our seekable end is not less than the seekable start
+
+      const calculatedEnd = Math.max(start, end - liveEdgeDelay);
+      return createTimeRanges([[start, calculatedEnd]]);
+    }
+    const expired = this.syncController_.getExpiredTime(media, this.duration());
+    if (expired === null) {
+      return null;
+    }
+    const seekable = Vhs$1.Playlist.seekable(media, expired, Vhs$1.Playlist.liveEdgeDelay(this.mainPlaylistLoader_.main, media));
+    return seekable.length ? seekable : null;
+  }
+
+  computeFinalSeekable_(mainSeekable, audioSeekable) {
+    if (!audioSeekable) {
+      return mainSeekable;
+    }
+    const mainStart = mainSeekable.start(0);
+    const mainEnd = mainSeekable.end(0);
+    const audioStart = audioSeekable.start(0);
+    const audioEnd = audioSeekable.end(0);
+    if (audioStart > mainEnd || mainStart > audioEnd) {
+      // Seekables are far apart, rely on main
+      return mainSeekable;
+    } // Return the overlapping seekable range
+
+    return createTimeRanges([[Math.max(mainStart, audioStart), Math.min(mainEnd, audioEnd)]]);
+  }
+
   onSyncInfoUpdate_() {
-    let audioSeekable; // TODO check for creation of both source buffers before updating seekable
+    // TODO check for creation of both source buffers before updating seekable
     //
     // A fix was made to this function where a check for
     // this.sourceUpdater_.hasCreatedSourceBuffers
@@ -49279,60 +53736,42 @@ class PlaylistController extends videojs.EventTarget {
     //
     // For now, fall back to the older behavior, with the understanding that the seekable
     // range may not be completely correct, leading to a suboptimal initial live point.
-
     if (!this.mainPlaylistLoader_) {
       return;
     }
-    let media = this.mainPlaylistLoader_.media();
-    if (!media) {
+    const mainSeekable = this.getSeekableRange_(this.mainPlaylistLoader_, 'main');
+    if (!mainSeekable) {
       return;
     }
-    let expired = this.syncController_.getExpiredTime(media, this.duration());
-    if (expired === null) {
-      // not enough information to update seekable
-      return;
-    }
-    const main = this.mainPlaylistLoader_.main;
-    const mainSeekable = Vhs$1.Playlist.seekable(media, expired, Vhs$1.Playlist.liveEdgeDelay(main, media));
-    if (mainSeekable.length === 0) {
-      return;
-    }
+    let audioSeekable;
     if (this.mediaTypes_.AUDIO.activePlaylistLoader) {
-      media = this.mediaTypes_.AUDIO.activePlaylistLoader.media();
-      expired = this.syncController_.getExpiredTime(media, this.duration());
-      if (expired === null) {
-        return;
-      }
-      audioSeekable = Vhs$1.Playlist.seekable(media, expired, Vhs$1.Playlist.liveEdgeDelay(main, media));
-      if (audioSeekable.length === 0) {
+      audioSeekable = this.getSeekableRange_(this.mediaTypes_.AUDIO.activePlaylistLoader, 'audio');
+      if (!audioSeekable) {
         return;
       }
     }
-    let oldEnd;
-    let oldStart;
-    if (this.seekable_ && this.seekable_.length) {
-      oldEnd = this.seekable_.end(0);
-      oldStart = this.seekable_.start(0);
+    const oldSeekable = this.seekable_;
+    this.seekable_ = this.computeFinalSeekable_(mainSeekable, audioSeekable);
+    if (!this.seekable_) {
+      return;
     }
-    if (!audioSeekable) {
-      // seekable has been calculated based on buffering video data so it
-      // can be returned directly
-      this.seekable_ = mainSeekable;
-    } else if (audioSeekable.start(0) > mainSeekable.end(0) || mainSeekable.start(0) > audioSeekable.end(0)) {
-      // seekables are pretty far off, rely on main
-      this.seekable_ = mainSeekable;
-    } else {
-      this.seekable_ = createTimeRanges([[audioSeekable.start(0) > mainSeekable.start(0) ? audioSeekable.start(0) : mainSeekable.start(0), audioSeekable.end(0) < mainSeekable.end(0) ? audioSeekable.end(0) : mainSeekable.end(0)]]);
-    } // seekable is the same as last time
-
-    if (this.seekable_ && this.seekable_.length) {
-      if (this.seekable_.end(0) === oldEnd && this.seekable_.start(0) === oldStart) {
+    if (oldSeekable && oldSeekable.length && this.seekable_.length) {
+      if (oldSeekable.start(0) === this.seekable_.start(0) && oldSeekable.end(0) === this.seekable_.end(0)) {
+        // Seekable range hasn't changed
         return;
       }
     }
     this.logger_(`seekable updated [${printableRange(this.seekable_)}]`);
+    const metadata = {
+      seekableRanges: this.seekable_
+    };
+    this.trigger({
+      type: 'seekablerangeschanged',
+      metadata
+    });
     this.tech_.trigger('seekablechanged');
   }
+
   /**
    * Update the player duration
    */
@@ -49389,6 +53828,7 @@ class PlaylistController extends videojs.EventTarget {
       this.sourceUpdater_.setDuration(duration);
     }
   }
+
   /**
    * dispose of the PlaylistController and everything
    * that it controls
@@ -49428,6 +53868,7 @@ class PlaylistController extends videojs.EventTarget {
     this.mediaSource.removeEventListener('sourceended', this.handleSourceEnded_);
     this.off();
   }
+
   /**
    * return the main playlist object if we have one
    *
@@ -49437,6 +53878,7 @@ class PlaylistController extends videojs.EventTarget {
   main() {
     return this.mainPlaylistLoader_.main;
   }
+
   /**
    * return the currently selected playlist
    *
@@ -49447,6 +53889,7 @@ class PlaylistController extends videojs.EventTarget {
     // playlist loader will not return media if it has not been fully loaded
     return this.mainPlaylistLoader_.media() || this.initialMedia_;
   }
+
   areMediaTypesKnown_() {
     const usingAudioLoader = !!this.mediaTypes_.AUDIO.activePlaylistLoader;
     const hasMainMediaInfo = !!this.mainSegmentLoader_.getCurrentMediaInfo_(); // if we are not using an audio loader, then we have audio media info
@@ -49458,7 +53901,8 @@ class PlaylistController extends videojs.EventTarget {
       return false;
     }
     return true;
-  }
+  } // find from and to for codec switch event
+
   getCodecsOrExclude_() {
     const media = {
       main: this.mainSegmentLoader_.getCurrentMediaInfo_() || {},
@@ -49493,7 +53937,7 @@ class PlaylistController extends videojs.EventTarget {
       return;
     } // fmp4 relies on browser support, while ts relies on muxer support
 
-    const supportFunction = (isFmp4, codec) => isFmp4 ? browserSupportsCodec(codec) : muxerSupportsCodec(codec);
+    const supportFunction = (isFmp4, codec) => isFmp4 ? browserSupportsCodec(codec, this.usingManagedMediaSource_) : muxerSupportsCodec(codec);
     const unsupportedCodecs = {};
     let unsupportedAudio;
     ['video', 'audio'].forEach(function (type) {
@@ -49561,6 +54005,7 @@ class PlaylistController extends videojs.EventTarget {
 
     return codecs;
   }
+
   /**
    * Create source buffers and exlude any incompatible renditions.
    *
@@ -49585,6 +54030,7 @@ class PlaylistController extends videojs.EventTarget {
     const codecString = [codecs.video, codecs.audio].filter(Boolean).join(',');
     this.excludeIncompatibleVariants_(codecString);
   }
+
   /**
    * Excludes playlists with codecs that are unsupported by the muxer and browser.
    */
@@ -49603,10 +54049,10 @@ class PlaylistController extends videojs.EventTarget {
       ids.push(variant.id);
       const codecs = codecsForPlaylist(this.main, variant);
       const unsupported = [];
-      if (codecs.audio && !muxerSupportsCodec(codecs.audio) && !browserSupportsCodec(codecs.audio)) {
+      if (codecs.audio && !muxerSupportsCodec(codecs.audio) && !browserSupportsCodec(codecs.audio, this.usingManagedMediaSource_)) {
         unsupported.push(`audio codec ${codecs.audio}`);
       }
-      if (codecs.video && !muxerSupportsCodec(codecs.video) && !browserSupportsCodec(codecs.video)) {
+      if (codecs.video && !muxerSupportsCodec(codecs.video) && !browserSupportsCodec(codecs.video, this.usingManagedMediaSource_)) {
         unsupported.push(`video codec ${codecs.video}`);
       }
       if (codecs.text && codecs.text === 'stpp.ttml.im1t') {
@@ -49618,6 +54064,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     });
   }
+
   /**
    * Exclude playlists that are known to be codec or
    * stream-incompatible with the SourceBuffer configuration. For
@@ -49683,6 +54130,7 @@ class PlaylistController extends videojs.EventTarget {
       }
     });
   }
+
   updateAdCues_(media) {
     let offset = 0;
     const seekable = this.seekable();
@@ -49691,6 +54139,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     updateAdCues(media, this.cueTagsTrack_, offset);
   }
+
   /**
    * Calculates the desired forward buffer length based on current time
    *
@@ -49704,6 +54153,7 @@ class PlaylistController extends videojs.EventTarget {
     const max = Math.max(initial, Config.MAX_GOAL_BUFFER_LENGTH);
     return Math.min(initial + currentTime * rate, max);
   }
+
   /**
    * Calculates the desired buffer low water line based on current time
    *
@@ -49718,9 +54168,11 @@ class PlaylistController extends videojs.EventTarget {
     const newMax = Math.max(initial, Config.EXPERIMENTAL_MAX_BUFFER_LOW_WATER_LINE);
     return Math.min(initial + currentTime * rate, this.bufferBasedABR ? newMax : max);
   }
+
   bufferHighWaterLine() {
     return Config.BUFFER_HIGH_WATER_LINE;
   }
+
   addDateRangesToTextTrack_(dateRanges) {
     createMetadataTrackIfNotExists(this.inbandTextTracks_, 'com.apple.streaming', this.tech_);
     addDateRangeMetadata({
@@ -49728,6 +54180,7 @@ class PlaylistController extends videojs.EventTarget {
       dateRanges
     });
   }
+
   addMetadataToTextTrack(dispatchType, metadataArray, videoDuration) {
     const timestampOffset = this.sourceUpdater_.videoBuffer ? this.sourceUpdater_.videoTimestampOffset() : this.sourceUpdater_.audioTimestampOffset(); // There's potentially an issue where we could double add metadata if there's a muxed
     // audio/video source with a metadata track, and an alt audio with a metadata track.
@@ -49741,6 +54194,7 @@ class PlaylistController extends videojs.EventTarget {
       videoDuration
     });
   }
+
   /**
    * Utility for getting the pathway or service location from an HLS or DASH playlist.
    *
@@ -49751,6 +54205,7 @@ class PlaylistController extends videojs.EventTarget {
   pathwayAttribute_(playlist) {
     return playlist.attributes['PATHWAY-ID'] || playlist.attributes.serviceLocation;
   }
+
   /**
    * Initialize available pathways and apply the tag properties.
    */
@@ -49775,6 +54230,7 @@ class PlaylistController extends videojs.EventTarget {
       this.contentSteeringController_.requestSteeringManifest();
     });
   }
+
   /**
    * Reset the content steering controller and re-init.
    */
@@ -49784,12 +54240,19 @@ class PlaylistController extends videojs.EventTarget {
     this.contentSteeringController_.dispose();
     this.initContentSteeringController_();
   }
+
   /**
    * Attaches the listeners for content steering.
    */
 
   attachContentSteeringListeners_() {
     this.contentSteeringController_.on('content-steering', this.excludeThenChangePathway_.bind(this));
+    const contentSteeringEvents = ['contentsteeringloadstart', 'contentsteeringloadcomplete', 'contentsteeringparsed'];
+    contentSteeringEvents.forEach(eventName => {
+      this.contentSteeringController_.on(eventName, metadata => {
+        this.trigger(_extends({}, metadata));
+      });
+    });
     if (this.sourceType_ === 'dash') {
       this.mainPlaylistLoader_.on('loadedplaylist', () => {
         const main = this.main(); // check if steering tag or pathways changed.
@@ -49819,6 +54282,7 @@ class PlaylistController extends videojs.EventTarget {
       });
     }
   }
+
   /**
    * Simple exclude and change playlist logic for content steering.
    */
@@ -49870,6 +54334,7 @@ class PlaylistController extends videojs.EventTarget {
       this.changeSegmentPathway_();
     }
   }
+
   /**
    * Add, update, or delete playlists and media groups for
    * the pathway clones for HLS Content Steering.
@@ -49923,6 +54388,7 @@ class PlaylistController extends videojs.EventTarget {
 
     this.contentSteeringController_.currentPathwayClones = new Map(JSON.parse(JSON.stringify([...nextPathwayClones])));
   }
+
   /**
    * Determines whether two pathway clone objects are equivalent.
    *
@@ -49951,6 +54417,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     return true;
   }
+
   /**
    * Changes the current playlists for audio, video and subtitles after a new pathway
    * is chosen from content steering.
@@ -49965,6 +54432,7 @@ class PlaylistController extends videojs.EventTarget {
     }
     this.switchMedia_(nextPlaylist, 'content-steering');
   }
+
   /**
    * Iterates through playlists and check their keyId set and compare with the
    * keyStatusMap, only enable playlists that have a usable key. If the playlist
@@ -50016,6 +54484,7 @@ class PlaylistController extends videojs.EventTarget {
       });
     }
   }
+
   /**
    * Adds a keystatus to the keystatus map, tries to convert to string if necessary.
    *
@@ -50030,6 +54499,7 @@ class PlaylistController extends videojs.EventTarget {
     this.logger_(`KeyStatus '${status}' with key ID ${formattedKeyIdString} added to the keyStatusMap`);
     this.keyStatusMap_.set(formattedKeyIdString, status);
   }
+
   /**
    * Utility function for adding key status to the keyStatusMap and filtering usable encrypted playlists.
    *
@@ -50046,6 +54516,7 @@ class PlaylistController extends videojs.EventTarget {
     this.mainPlaylistLoader_.off('loadedplaylist', this.excludeNonUsableThenChangePlaylist_.bind(this));
     this.mainPlaylistLoader_.on('loadedplaylist', this.excludeNonUsableThenChangePlaylist_.bind(this));
   }
+
   excludeNonUsableThenChangePlaylist_() {
     this.excludeNonUsablePlaylistsByKeyId_();
     this.fastQualityChange_();
@@ -50077,17 +54548,34 @@ const enableFunction = (loader, playlistID, changePlaylistFn) => enable => {
   } else {
     playlist.disabled = true;
   }
+  const metadata = {
+    renditionInfo: {
+      id: playlistID,
+      bandwidth: playlist.attributes.BANDWIDTH,
+      resolution: playlist.attributes.RESOLUTION,
+      codecs: playlist.attributes.CODECS
+    },
+    cause: 'fast-quality'
+  };
   if (enable !== currentlyEnabled && !incompatible) {
     // Ensure the outside world knows about our changes
-    changePlaylistFn();
     if (enable) {
-      loader.trigger('renditionenabled');
+      // call fast quality change only when the playlist is enabled
+      changePlaylistFn(playlist);
+      loader.trigger({
+        type: 'renditionenabled',
+        metadata
+      });
     } else {
-      loader.trigger('renditiondisabled');
+      loader.trigger({
+        type: 'renditiondisabled',
+        metadata
+      });
     }
   }
   return enable;
 };
+
 /**
  * The representation object encapsulates the publicly visible information
  * in a media playlist along with a setter/getter-type function (enabled)
@@ -50120,6 +54608,7 @@ class Representation {
     this.enabled = enableFunction(vhsHandler.playlists, playlist.id, qualityChangeFunction);
   }
 }
+
 /**
  * A mixin function that adds the `representations` api to an instance
  * of the VhsHandler class
@@ -50151,11 +54640,12 @@ const renditionSelectionMixin = function (vhsHandler) {
  */
 
 const timerCancelEvents = ['seeking', 'seeked', 'pause', 'playing', 'error'];
+
 /**
  * @class PlaybackWatcher
  */
 
-class PlaybackWatcher {
+class PlaybackWatcher extends videojs.EventTarget {
   /**
    * Represents an PlaybackWatcher object.
    *
@@ -50163,12 +54653,14 @@ class PlaybackWatcher {
    * @param {Object} options an object that includes the tech and settings
    */
   constructor(options) {
+    super();
     this.playlistController_ = options.playlistController;
     this.tech_ = options.tech;
     this.seekable = options.seekable;
     this.allowSeeksWithinUnsafeLiveWindow = options.allowSeeksWithinUnsafeLiveWindow;
     this.liveRangeSafeTimeDelta = options.liveRangeSafeTimeDelta;
     this.media = options.media;
+    this.playedRanges_ = [];
     this.consecutiveUpdates = 0;
     this.lastRecordedTime = null;
     this.checkCurrentTimeTimeout_ = null;
@@ -50261,6 +54753,7 @@ class PlaybackWatcher {
       this.resetTimeUpdate_();
     };
   }
+
   /**
    * Periodically check current time to see if playback stopped
    *
@@ -50275,6 +54768,7 @@ class PlaybackWatcher {
 
     this.checkCurrentTimeTimeout_ = window$1.setTimeout(this.monitorCurrentTime_.bind(this), 250);
   }
+
   /**
    * Reset stalled download stats for a specific type of loader
    *
@@ -50294,6 +54788,7 @@ class PlaybackWatcher {
     this[`${type}StalledDownloads_`] = 0;
     this[`${type}Buffered_`] = loader.buffered_();
   }
+
   /**
    * Checks on every segment `appendsdone` to see
    * if segment appends are making progress. If they are not
@@ -50315,6 +54810,13 @@ class PlaybackWatcher {
     // appends are working
 
     if (isBufferedDifferent) {
+      const metadata = {
+        bufferedRanges: buffered
+      };
+      pc.trigger({
+        type: 'bufferedrangeschanged',
+        metadata
+      });
       this.resetSegmentDownloads_(type);
       return;
     }
@@ -50345,6 +54847,7 @@ class PlaybackWatcher {
       playlistExclusionDuration: Infinity
     });
   }
+
   /**
    * The purpose of this function is to emulate the "waiting" event on
    * browsers that do not emit it when they are waiting for more
@@ -50373,10 +54876,19 @@ class PlaybackWatcher {
     } else if (currentTime === this.lastRecordedTime) {
       this.consecutiveUpdates++;
     } else {
+      this.playedRanges_.push(createTimeRanges([this.lastRecordedTime, currentTime]));
+      const metadata = {
+        playedRanges: this.playedRanges_
+      };
+      this.playlistController_.trigger({
+        type: 'playedrangeschanged',
+        metadata
+      });
       this.consecutiveUpdates = 0;
       this.lastRecordedTime = currentTime;
     }
   }
+
   /**
    * Resets the 'timeupdate' mechanism designed to detect that we are stalled
    *
@@ -50386,6 +54898,7 @@ class PlaybackWatcher {
   resetTimeUpdate_() {
     this.consecutiveUpdates = 0;
   }
+
   /**
    * Fixes situations where there's a bad seek
    *
@@ -50416,9 +54929,9 @@ class PlaybackWatcher {
       // provide a buffer of .1 seconds to handle rounding/imprecise numbers
 
       seekTo = seekableStart + (
-      // if the playlist is too short and the seekable range is an exact time (can
-      // happen in live with a 3 segment playlist), then don't use a time delta
-      seekableStart === seekable.end(0) ? 0 : SAFE_TIME_DELTA);
+        // if the playlist is too short and the seekable range is an exact time (can
+        // happen in live with a 3 segment playlist), then don't use a time delta
+        seekableStart === seekable.end(0) ? 0 : SAFE_TIME_DELTA);
     }
     if (typeof seekTo !== 'undefined') {
       this.logger_(`Trying to seek outside of seekable at time ${currentTime} with ` + `seekable range ${printableRange(seekable)}. Seeking to ` + `${seekTo}.`);
@@ -50459,6 +54972,7 @@ class PlaybackWatcher {
     this.tech_.setCurrentTime(seekTo);
     return true;
   }
+
   /**
    * Handler for situations when we determine the player is waiting.
    *
@@ -50493,6 +55007,7 @@ class PlaybackWatcher {
       return;
     }
   }
+
   /**
    * Handler for situations when the tech fires a `waiting` event
    *
@@ -50553,6 +55068,7 @@ class PlaybackWatcher {
 
     return false;
   }
+
   afterSeekableWindow_(seekable, currentTime, playlist, allowSeeksWithinUnsafeLiveWindow = false) {
     if (!seekable.length) {
       // we can't make a solid case if there's no seekable, default to false
@@ -50569,19 +55085,21 @@ class PlaybackWatcher {
     }
     return false;
   }
+
   beforeSeekableWindow_(seekable, currentTime) {
     if (seekable.length &&
-    // can't fall before 0 and 0 seekable start identifies VOD stream
-    seekable.start(0) > 0 && currentTime < seekable.start(0) - this.liveRangeSafeTimeDelta) {
+      // can't fall before 0 and 0 seekable start identifies VOD stream
+      seekable.start(0) > 0 && currentTime < seekable.start(0) - this.liveRangeSafeTimeDelta) {
       return true;
     }
     return false;
   }
+
   videoUnderflow_({
-    videoBuffered,
-    audioBuffered,
-    currentTime
-  }) {
+                    videoBuffered,
+                    audioBuffered,
+                    currentTime
+                  }) {
     // audio only content will not have video underflow :)
     if (!videoBuffered) {
       return;
@@ -50615,6 +55133,7 @@ class PlaybackWatcher {
     }
     return false;
   }
+
   /**
    * Timer callback. If playback still has not proceeded, then we seek
    * to the start of the next buffered region.
@@ -50633,11 +55152,22 @@ class PlaybackWatcher {
     this.logger_('skipTheGap_:', 'currentTime:', currentTime, 'scheduled currentTime:', scheduledCurrentTime, 'nextRange start:', nextRange.start(0)); // only seek if we still have not played
 
     this.tech_.setCurrentTime(nextRange.start(0) + TIME_FUDGE_FACTOR);
+    const metadata = {
+      gapInfo: {
+        from: currentTime,
+        to: nextRange.start(0)
+      }
+    };
+    this.playlistController_.trigger({
+      type: 'gapjumped',
+      metadata
+    });
     this.tech_.trigger({
       type: 'usage',
       name: 'vhs-gap-skip'
     });
   }
+
   gapFromVideoUnderflow_(buffered, currentTime) {
     // At least in Chrome, if there is a gap in the video buffer, the audio will continue
     // playing for ~3 seconds after the video gap starts. This is done to account for
@@ -50676,6 +55206,7 @@ class PlaybackWatcher {
     return null;
   }
 }
+
 const defaultOptions = {
   errorInterval: 30,
   getSource(next) {
@@ -50798,18 +55329,11 @@ const initPlugin = function (player, options) {
 const reloadSourceOnError = function (options) {
   initPlugin(this, options);
 };
-var version$4 = "3.10.0";
-var version$3 = "7.0.2";
-var version$2 = "1.3.0";
-var version$1 = "7.1.0";
-var version = "4.0.1";
-
-/**
- * @file videojs-http-streaming.js
- *
- * The main file for the VHS project.
- * License: https://github.com/videojs/videojs-http-streaming/blob/main/LICENSE
- */
+var version$4 = "3.17.0";
+var version$3 = "7.1.0";
+var version$2 = "1.3.1";
+var version$1 = "7.2.0";
+var version = "4.0.2";
 const Vhs = {
   PlaylistLoader,
   Playlist,
@@ -50992,11 +55516,11 @@ const getAllPsshKeySystemsOptions = (playlists, keySystems) => {
  */
 
 const waitForKeySessionCreation = ({
-  player,
-  sourceKeySystems,
-  audioMedia,
-  mainPlaylists
-}) => {
+                                     player,
+                                     sourceKeySystems,
+                                     audioMedia,
+                                     mainPlaylists
+                                   }) => {
   if (!player.eme.initializeMediaKeys) {
     return Promise.resolve();
   } // TODO should all audio PSSH values be initialized for DRM?
@@ -51040,12 +55564,12 @@ const waitForKeySessionCreation = ({
   //   Promise.any.
 
   return Promise.race([
-  // If a session was previously created, these will all finish resolving without
-  // creating a new session, otherwise it will take until the end of all license
-  // requests, which is why the key session check is used (to make setup much faster).
-  Promise.all(initializationFinishedPromises),
-  // Once a single session is created, the browser knows DRM will be used.
-  Promise.race(keySessionCreatedPromises)]);
+    // If a session was previously created, these will all finish resolving without
+    // creating a new session, otherwise it will take until the end of all license
+    // requests, which is why the key session check is used (to make setup much faster).
+    Promise.all(initializationFinishedPromises),
+    // Once a single session is created, the browser knows DRM will be used.
+    Promise.race(keySessionCreatedPromises)]);
 };
 /**
  * If the [eme](https://github.com/videojs/videojs-contrib-eme) plugin is available, and
@@ -51066,11 +55590,11 @@ const waitForKeySessionCreation = ({
  */
 
 const setupEmeOptions = ({
-  player,
-  sourceKeySystems,
-  media,
-  audioMedia
-}) => {
+                           player,
+                           sourceKeySystems,
+                           media,
+                           audioMedia
+                         }) => {
   const sourceOptions = emeKeySystems(sourceKeySystems, media, audioMedia);
   if (!sourceOptions) {
     return false;
@@ -51199,35 +55723,35 @@ const removeOnResponseHook = (xhr, callback) => {
  */
 
 Vhs.supportsNativeHls = function () {
-  if (!document || !document.createElement) {
+  if (!document$1 || !document$1.createElement) {
     return false;
   }
-  const video = document.createElement('video'); // native HLS is definitely not supported if HTML5 video isn't
+  const video = document$1.createElement('video'); // native HLS is definitely not supported if HTML5 video isn't
 
   if (!videojs.getTech('Html5').isSupported()) {
     return false;
   } // HLS manifests can go by many mime-types
 
   const canPlay = [
-  // Apple santioned
-  'application/vnd.apple.mpegurl',
-  // Apple sanctioned for backwards compatibility
-  'audio/mpegurl',
-  // Very common
-  'audio/x-mpegurl',
-  // Very common
-  'application/x-mpegurl',
-  // Included for completeness
-  'video/x-mpegurl', 'video/mpegurl', 'application/mpegurl'];
+    // Apple santioned
+    'application/vnd.apple.mpegurl',
+    // Apple sanctioned for backwards compatibility
+    'audio/mpegurl',
+    // Very common
+    'audio/x-mpegurl',
+    // Very common
+    'application/x-mpegurl',
+    // Included for completeness
+    'video/x-mpegurl', 'video/mpegurl', 'application/mpegurl'];
   return canPlay.some(function (canItPlay) {
     return /maybe|probably/i.test(video.canPlayType(canItPlay));
   });
 }();
 Vhs.supportsNativeDash = function () {
-  if (!document || !document.createElement || !videojs.getTech('Html5').isSupported()) {
+  if (!document$1 || !document$1.createElement || !videojs.getTech('Html5').isSupported()) {
     return false;
   }
-  return /maybe|probably/i.test(document.createElement('video').canPlayType('application/dash+xml'));
+  return /maybe|probably/i.test(document$1.createElement('video').canPlayType('application/dash+xml'));
 }();
 Vhs.supportsTypeNatively = type => {
   if (type === 'hls') {
@@ -51283,6 +55807,7 @@ Vhs.xhr.offResponse = function (callback) {
   removeOnResponseHook(Vhs.xhr, callback);
 };
 const Component = videojs.getComponent('Component');
+
 /**
  * The Vhs Handler object, where we orchestrate all of the parts
  * of VHS to interact with video.js
@@ -51324,8 +55849,8 @@ class VhsHandler extends Component {
     } // listen for fullscreenchange events for this player so that we
     // can adjust our quality selection quickly
 
-    this.on(document, ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'], event => {
-      const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    this.on(document$1, ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'], event => {
+      const fullscreenElement = document$1.fullscreenElement || document$1.webkitFullscreenElement || document$1.mozFullScreenElement || document$1.msFullscreenElement;
       if (fullscreenElement && fullscreenElement.contains(this.tech_.el())) {
         this.playlistController_.fastQualityChange_();
       } else {
@@ -51351,6 +55876,7 @@ class VhsHandler extends Component {
     });
     this.on(this.tech_, 'play', this.play);
   }
+
   /**
    * Set VHS options based on options from configuration, as well as partial
    * options to be passed at a later time.
@@ -51364,9 +55890,10 @@ class VhsHandler extends Component {
     this.options_.withCredentials = this.options_.withCredentials || false;
     this.options_.limitRenditionByPlayerDimensions = this.options_.limitRenditionByPlayerDimensions === false ? false : true;
     this.options_.useDevicePixelRatio = this.options_.useDevicePixelRatio || false;
+    this.options_.usePlayerObjectFit = this.options_.usePlayerObjectFit || false;
     this.options_.useBandwidthFromLocalStorage = typeof this.source_.useBandwidthFromLocalStorage !== 'undefined' ? this.source_.useBandwidthFromLocalStorage : this.options_.useBandwidthFromLocalStorage || false;
     this.options_.useForcedSubtitles = this.options_.useForcedSubtitles || false;
-    this.options_.useNetworkInformationApi = this.options_.useNetworkInformationApi || false;
+    this.options_.useNetworkInformationApi = typeof this.options_.useNetworkInformationApi !== 'undefined' ? this.options_.useNetworkInformationApi : true;
     this.options_.useDtsForTimestampOffset = this.options_.useDtsForTimestampOffset || false;
     this.options_.customTagParsers = this.options_.customTagParsers || [];
     this.options_.customTagMappers = this.options_.customTagMappers || [];
@@ -51404,18 +55931,25 @@ class VhsHandler extends Component {
 
     this.options_.enableLowInitialPlaylist = this.options_.enableLowInitialPlaylist && this.options_.bandwidth === Config.INITIAL_BANDWIDTH; // grab options passed to player.src
 
-    ['withCredentials', 'useDevicePixelRatio', 'limitRenditionByPlayerDimensions', 'bandwidth', 'customTagParsers', 'customTagMappers', 'cacheEncryptionKeys', 'playlistSelector', 'initialPlaylistSelector', 'bufferBasedABR', 'liveRangeSafeTimeDelta', 'llhls', 'useForcedSubtitles', 'useNetworkInformationApi', 'useDtsForTimestampOffset', 'exactManifestTimings', 'leastPixelDiffSelector'].forEach(option => {
+    ['withCredentials', 'useDevicePixelRatio', 'usePlayerObjectFit', 'customPixelRatio', 'limitRenditionByPlayerDimensions', 'bandwidth', 'customTagParsers', 'customTagMappers', 'cacheEncryptionKeys', 'playlistSelector', 'initialPlaylistSelector', 'bufferBasedABR', 'liveRangeSafeTimeDelta', 'llhls', 'useForcedSubtitles', 'useNetworkInformationApi', 'useDtsForTimestampOffset', 'exactManifestTimings', 'leastPixelDiffSelector'].forEach(option => {
       if (typeof this.source_[option] !== 'undefined') {
         this.options_[option] = this.source_[option];
       }
     });
     this.limitRenditionByPlayerDimensions = this.options_.limitRenditionByPlayerDimensions;
     this.useDevicePixelRatio = this.options_.useDevicePixelRatio;
+    this.usePlayerObjectFit = this.options_.usePlayerObjectFit;
+    const customPixelRatio = this.options_.customPixelRatio; // Ensure the custom pixel ratio is a number greater than or equal to 0
+
+    if (typeof customPixelRatio === 'number' && customPixelRatio >= 0) {
+      this.customPixelRatio = customPixelRatio;
+    }
   } // alias for public method to set options
 
   setOptions(options = {}) {
     this.setOptions_(options);
   }
+
   /**
    * called when player.src gets called, handle a new source
    *
@@ -51436,7 +55970,9 @@ class VhsHandler extends Component {
 
     this.options_.seekTo = time => {
       this.tech_.setCurrentTime(time);
-    };
+    }; // pass player to allow for player level eventing on construction.
+
+    this.options_.player_ = this.player_;
     this.playlistController_ = new PlaylistController(this.options_);
     const playbackWatcherOptions = merge({
       liveRangeSafeTimeDelta: SAFE_TIME_DELTA
@@ -51446,6 +55982,7 @@ class VhsHandler extends Component {
       playlistController: this.playlistController_
     });
     this.playbackWatcher_ = new PlaybackWatcher(playbackWatcherOptions);
+    this.attachStreamingEventListeners_();
     this.playlistController_.on('error', () => {
       const player = videojs.players[this.tech_.options_.playerId];
       let error = this.playlistController_.error;
@@ -51679,9 +56216,17 @@ class VhsHandler extends Component {
     if (!this.tech_.el()) {
       return;
     }
-    this.mediaSourceUrl_ = window$1.URL.createObjectURL(this.playlistController_.mediaSource);
-    this.tech_.src(this.mediaSourceUrl_);
+    this.mediaSourceUrl_ = window$1.URL.createObjectURL(this.playlistController_.mediaSource); // If we are playing HLS with MSE in Safari, add source elements for both the blob and manifest URLs.
+    // The latter will enable Airplay playback on receiver devices.
+
+    if ((videojs.browser.IS_ANY_SAFARI || videojs.browser.IS_IOS) && this.options_.overrideNative && this.options_.sourceType === 'hls' && typeof this.tech_.addSourceElement === 'function') {
+      this.tech_.addSourceElement(this.mediaSourceUrl_);
+      this.tech_.addSourceElement(this.source_.src);
+    } else {
+      this.tech_.src(this.mediaSourceUrl_);
+    }
   }
+
   createKeySessions_() {
     const audioPlaylistLoader = this.playlistController_.mediaTypes_.AUDIO.activePlaylistLoader;
     this.logger_('waiting for EME key session creation');
@@ -51701,6 +56246,7 @@ class VhsHandler extends Component {
       });
     });
   }
+
   handleWaitingForKey_() {
     // If waitingforkey is fired, it's possible that the data that's necessary to retrieve
     // the key is in the manifest. While this should've happened on initial source load, it
@@ -51713,6 +56259,7 @@ class VhsHandler extends Component {
     this.logger_('waitingforkey fired, attempting to create any new key sessions');
     this.createKeySessions_();
   }
+
   /**
    * If necessary and EME is available, sets up EME options and waits for key session
    * creation.
@@ -51742,6 +56289,7 @@ class VhsHandler extends Component {
     }
     this.createKeySessions_();
   }
+
   /**
    * Initializes the quality levels and sets listeners to update them.
    *
@@ -51764,6 +56312,7 @@ class VhsHandler extends Component {
       handleVhsMediaChange(this.qualityLevels_, this.playlists);
     });
   }
+
   /**
    * return the version
    */
@@ -51777,6 +56326,7 @@ class VhsHandler extends Component {
       'aes-decrypter': version
     };
   }
+
   /**
    * return the version
    */
@@ -51784,9 +56334,11 @@ class VhsHandler extends Component {
   version() {
     return this.constructor.version();
   }
+
   canChangeType() {
     return SourceUpdater.canChangeType();
   }
+
   /**
    * Begin playing the video.
    */
@@ -51794,6 +56346,7 @@ class VhsHandler extends Component {
   play() {
     this.playlistController_.play();
   }
+
   /**
    * a wrapper around the function in PlaylistController
    */
@@ -51801,6 +56354,7 @@ class VhsHandler extends Component {
   setCurrentTime(currentTime) {
     this.playlistController_.setCurrentTime(currentTime);
   }
+
   /**
    * a wrapper around the function in PlaylistController
    */
@@ -51808,6 +56362,7 @@ class VhsHandler extends Component {
   duration() {
     return this.playlistController_.duration();
   }
+
   /**
    * a wrapper around the function in PlaylistController
    */
@@ -51815,6 +56370,7 @@ class VhsHandler extends Component {
   seekable() {
     return this.playlistController_.seekable();
   }
+
   /**
    * Abort all outstanding work and cleanup.
    */
@@ -51841,6 +56397,7 @@ class VhsHandler extends Component {
     }
     super.dispose();
   }
+
   convertToProgramTime(time, callback) {
     return getProgramTime({
       playlist: this.playlistController_.media(),
@@ -51860,6 +56417,7 @@ class VhsHandler extends Component {
       callback
     });
   }
+
   /**
    * Adds the onRequest, onResponse, offRequest and offResponse functions
    * to the VhsHandler xhr Object.
@@ -51905,7 +56463,24 @@ class VhsHandler extends Component {
 
     this.player_.trigger('xhr-hooks-ready');
   }
+
+  attachStreamingEventListeners_() {
+    const playlistControllerEvents = ['seekablerangeschanged', 'bufferedrangeschanged', 'contentsteeringloadstart', 'contentsteeringloadcomplete', 'contentsteeringparsed'];
+    const playbackWatcher = ['gapjumped', 'playedrangeschanged']; // re-emit streaming events and payloads on the player.
+
+    playlistControllerEvents.forEach(eventName => {
+      this.playlistController_.on(eventName, metadata => {
+        this.player_.trigger(_extends({}, metadata));
+      });
+    });
+    playbackWatcher.forEach(eventName => {
+      this.playbackWatcher_.on(eventName, metadata => {
+        this.player_.trigger(_extends({}, metadata));
+      });
+    });
+  }
 }
+
 /**
  * The Source Handler object, which informs video.js what additional
  * MIME types are supported and sets up playback. It is registered
@@ -51918,7 +56493,11 @@ const VhsSourceHandler = {
   name: 'videojs-http-streaming',
   VERSION: version$4,
   canHandleSource(srcObj, options = {}) {
-    const localOptions = merge(videojs.options, options);
+    const localOptions = merge(videojs.options, options); // If not opting to experimentalUseMMS, and playback is only supported with MediaSource, cannot handle source
+
+    if (!localOptions.vhs.experimentalUseMMS && !browserSupportsCodec('avc1.4d400d,mp4a.40.2', false)) {
+      return false;
+    }
     return VhsSourceHandler.canPlayType(srcObj.type, localOptions);
   },
   handleSource(source, tech, options = {}) {
@@ -51951,14 +56530,15 @@ const VhsSourceHandler = {
   }
 };
 /**
- * Check to see if the native MediaSource object exists and supports
- * an MP4 container with both H.264 video and AAC-LC audio.
+ * Check to see if either the native MediaSource or ManagedMediaSource
+ * objectx exist and support an MP4 container with both H.264 video
+ * and AAC-LC audio.
  *
  * @return {boolean} if  native media sources are supported
  */
 
 const supportsNativeMediaSources = () => {
-  return browserSupportsCodec('avc1.4d400d,mp4a.40.2');
+  return browserSupportsCodec('avc1.4d400d,mp4a.40.2', true);
 }; // register source handlers with the appropriate techs
 
 if (supportsNativeMediaSources()) {
@@ -51975,4 +56555,4 @@ if (!videojs.getPlugin || !videojs.getPlugin('reloadSourceOnError')) {
   videojs.registerPlugin('reloadSourceOnError', reloadSourceOnError);
 }
 
-export { videojs as default };
+export {videojs as default};
