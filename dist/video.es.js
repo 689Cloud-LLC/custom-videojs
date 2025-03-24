@@ -42703,14 +42703,11 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
 
     // console.log('handleKeyResponse', request.response)
     const errorObj = handleErrors(error, request);
+    console.log("errorObj", errorObj)
+
     if (errorObj) {
         return finishProcessingFn(errorObj, segment);
     }
-
-    console.log("segment", segment)
-    console.log("objects", objects)
-    console.log("finishProcessingFn", finishProcessingFn)
-    console.log("request", request)
 
     return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
 
@@ -43685,7 +43682,7 @@ const mediaSegmentRequest = ({
     const keyRequestOptions = merge(xhrOptions, {
       uri: segment.key.resolvedUri,
       responseType: 'arraybuffer',
-      requestType: 'segment-key'
+      // requestType: 'segment-key'
     });
       // const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
       const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn);
@@ -43707,7 +43704,7 @@ const mediaSegmentRequest = ({
       const mapKeyRequestOptions = merge(xhrOptions, {
         uri: segment.map.key.resolvedUri,
         responseType: 'arraybuffer',
-        requestType: 'segment-key'
+        // requestType: 'segment-key'
       });
         // const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
         const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn);
