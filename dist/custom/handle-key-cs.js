@@ -102,6 +102,12 @@ const decryptKeyFile = (request, callback) => {
 
 
 const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) => {
+
+    console.log("segment", segment)
+    console.log("objects", objects)
+    console.log("finishProcessingFn", finishProcessingFn)
+    console.log("request", request)
+    
     if (request.response.byteLength !== 16 && request.response.byteLength !== 32) {
         return finishProcessingFn({
             status: request.status,
