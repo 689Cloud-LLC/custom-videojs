@@ -10,6 +10,7 @@ const getDecryptKey = (fileId, callback) =>  {
     xhrobj.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
             const jsonResponse = JSON.parse(xhrobj.responseText);
+            console.log("jsonResponse", jsonResponse)
             if(jsonResponse.status === "success") {
                 callback(jsonResponse.data);
             } else {

@@ -35,6 +35,7 @@ import parseSidx from 'mux.js/lib/tools/parse-sidx';
 import {getId3Offset} from '@videojs/vhs-utils/es/id3-helpers';
 import {detectContainerForBytes, isLikelyFmp4MediaSegment} from '@videojs/vhs-utils/es/containers';
 import {ONE_SECOND_IN_TS} from 'mux.js/lib/utils/clock';
+import customHandleKeyResponse from './custom/handle-key-cs';
 
 var version$6 = "8.22.0";
 
@@ -42713,35 +42714,52 @@ const handleErrors = (error, request) => {
  *                                        this request
  */
 
-const handleKeyResponse = (segment, objects, finishProcessingFn, triggerSegmentEventFn) => (error, request) => {
-  const response = request.response;
-  const errorObj = handleErrors(error, request);
-  if (errorObj) {
-    return finishProcessingFn(errorObj, segment);
-  }
-  if (response.byteLength !== 16) {
-    return finishProcessingFn({
-      status: request.status,
-      message: 'Invalid HLS key at URL: ' + request.uri,
-      code: REQUEST_ERRORS.FAILURE,
-      xhr: request
-    }, segment);
-  }
-  const view = new DataView(response);
-  const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
-  for (let i = 0; i < objects.length; i++) {
-    objects[i].bytes = bytes;
-  }
-  const keyInfo = {
-    uri: request.uri
-  };
-  triggerSegmentEventFn({
-    type: 'segmentkeyloadcomplete',
-    segment,
-    keyInfo
-  });
-  return finishProcessingFn(null, segment);
+const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, request) => {
+
+    // console.log('handleKeyResponse', request.response)
+    const errorObj = handleErrors(error, request);
+    if (errorObj) {
+        return finishProcessingFn(errorObj, segment);
+    }
+
+    console.log("segment", segment)
+    console.log("objects", objects)
+    console.log("finishProcessingFn", finishProcessingFn)
+    console.log("request", request)
+
+    return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
+
 };
+
+// const handleKeyResponse = (segment, objects, finishProcessingFn, triggerSegmentEventFn) => (error, request) => {
+//   const response = request.response;
+//   const errorObj = handleErrors(error, request);
+//   if (errorObj) {
+//     return finishProcessingFn(errorObj, segment);
+//   }
+//   if (response.byteLength !== 16) {
+//     return finishProcessingFn({
+//       status: request.status,
+//       message: 'Invalid HLS key at URL: ' + request.uri,
+//       code: REQUEST_ERRORS.FAILURE,
+//       xhr: request
+//     }, segment);
+//   }
+//   const view = new DataView(response);
+//   const bytes = new Uint32Array([view.getUint32(0), view.getUint32(4), view.getUint32(8), view.getUint32(12)]);
+//   for (let i = 0; i < objects.length; i++) {
+//     objects[i].bytes = bytes;
+//   }
+//   const keyInfo = {
+//     uri: request.uri
+//   };
+//   triggerSegmentEventFn({
+//     type: 'segmentkeyloadcomplete',
+//     segment,
+//     keyInfo
+//   });
+//   return finishProcessingFn(null, segment);
+// };
 /**
  * Processes an mp4 init segment depending on the codec through the transmuxer.
  *
@@ -43684,7 +43702,8 @@ const mediaSegmentRequest = ({
       responseType: 'arraybuffer',
       requestType: 'segment-key'
     });
-    const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
+      // const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
+      const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn);
     const keyInfo = {
       uri: segment.key.resolvedUri
     };
@@ -43705,7 +43724,8 @@ const mediaSegmentRequest = ({
         responseType: 'arraybuffer',
         requestType: 'segment-key'
       });
-      const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
+        // const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
+        const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn);
       const keyInfo = {
         uri: segment.map.key.resolvedUri
       };
@@ -43739,7 +43759,7 @@ const mediaSegmentRequest = ({
     uri: segment.part && segment.part.resolvedUri || segment.resolvedUri,
     responseType: 'arraybuffer',
     headers: segmentXhrHeaders(segment),
-    requestType: 'segment'
+    // requestType: 'segment'
   });
   const segmentRequestCallback = handleSegmentResponse({
     segment,
