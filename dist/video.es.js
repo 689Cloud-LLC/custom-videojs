@@ -14509,32 +14509,17 @@ class FullscreenToggle extends Button {
    * @listens click
    */
   handleClick(event) {
-    if (!this.player_.isFullscreen()) {
-      this.player_.requestFullscreen();
-    } else {
-      this.player_.exitFullscreen();
-    }
-  }
-}
-
-/**
- * This gets called when an `FullscreenToggle` is "clicked". See
- * {@link ClickableComponent} for more detailed information on what a click can be.
- *
- * @param {Event} [event]
- *        The `keydown`, `tap`, or `click` event that caused this function to be
- *        called.
- *
- * @listens tap
- * @listens click
- */
-handleClick(event)
-{
-  if (!document.fullscreenElement) {
+    if (!document.fullscreenElement) {
     // @ts-ignore
     document.getElementById('vid-cont').requestFullscreen();
   } else if (document.exitFullscreen) {
     document.exitFullscreen();
+  }
+    // if (!this.player_.isFullscreen()) {
+    //   this.player_.requestFullscreen();
+    // } else {
+    //   this.player_.exitFullscreen();
+    // }
   }
 }
 
