@@ -42708,15 +42708,15 @@ const handleKeyResponse = (segment, objects, finishProcessingFn, triggerSegmentE
     if (errorObj) {
         return finishProcessingFn(errorObj, segment);
     }
-  const keyInfo = {
-    uri: request.uri
-  };
-  triggerSegmentEventFn({
-    type: 'segmentkeyloadcomplete',
-    segment,
-    keyInfo
-  });
-    return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
+  // const keyInfo = {
+  //   uri: request.uri
+  // };
+  // triggerSegmentEventFn({
+  //   type: 'segmentkeyloadcomplete',
+  //   segment,
+  //   keyInfo
+  // });
+    return customHandleKeyResponse(segment, objects, finishProcessingFn, request, triggerSegmentEventFn);
 
 };
 

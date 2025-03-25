@@ -101,7 +101,7 @@ const decryptKeyFile = (request, callback) => {
  */
 
 
-const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) => {
+const customHandleKeyResponse = (segment, objects, finishProcessingFn, request, triggerSegmentEventFn) => {
     console.log("segment", segment)
     console.log("objects", objects)
     console.log("request", request)
@@ -151,6 +151,14 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
                 objects[i].bytes = bytes;
             }
             console.log("end segment", segment)
+            const keyInfo = {
+                uri: request.uri
+            };
+            triggerSegmentEventFn({
+                type: 'segmentkeyloadcomplete',
+                segment,
+                keyInfo
+            });
             return finishProcessingFn(null, segment);
         });
     } else {
@@ -179,6 +187,14 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
         for (let i = 0; i < objects.length; i++) {
             objects[i].bytes = bytes;
         }
+        const keyInfo = {
+            uri: request.uri
+        };
+        triggerSegmentEventFn({
+            type: 'segmentkeyloadcomplete',
+            segment,
+            keyInfo
+        });
 
         return finishProcessingFn(null, segment);
     }
