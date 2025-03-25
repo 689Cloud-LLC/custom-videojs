@@ -43692,7 +43692,7 @@ const mediaSegmentRequest = ({
       // requestType: 'segment-key'
     });
       // const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
-      const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn);
+      const keyRequestCallback = handleKeyResponse(segment, objects, finishProcessingFn, triggerSegmentEventFn);
     const keyInfo = {
       uri: segment.key.resolvedUri
     };
@@ -43714,7 +43714,7 @@ const mediaSegmentRequest = ({
         // requestType: 'segment-key'
       });
         // const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
-        const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn);
+        const mapKeyRequestCallback = handleKeyResponse(segment, [segment.map.key], finishProcessingFn, triggerSegmentEventFn);
       const keyInfo = {
         uri: segment.map.key.resolvedUri
       };
