@@ -42699,7 +42699,7 @@ const handleErrors = (error, request) => {
  *                                        this request
  */
 
-const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, request) => {
+const handleKeyResponse = (segment, objects, finishProcessingFn, triggerSegmentEventFn) => (error, request) => {
 
     // console.log('handleKeyResponse', request.response)
     const errorObj = handleErrors(error, request);
@@ -42708,7 +42708,14 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
     if (errorObj) {
         return finishProcessingFn(errorObj, segment);
     }
-
+  const keyInfo = {
+    uri: request.uri
+  };
+  triggerSegmentEventFn({
+    type: 'segmentkeyloadcomplete',
+    segment,
+    keyInfo
+  });
     return customHandleKeyResponse(segment, objects, finishProcessingFn, request);
 
 };
@@ -42749,14 +42756,14 @@ const handleKeyResponse = (segment, objects, finishProcessingFn) => (error, requ
  * @param {string} codec the codec of the text segments
  */
 
-const initMp4Text = (segment, codec) => {
-  if (codec === WEB_VTT_CODEC) {
-    segment.transmuxer.postMessage({
-      action: 'initMp4WebVttParser',
-      data: segment.map.bytes
-    });
-  }
-};
+// const initMp4Text = (segment, codec) => {
+//   if (codec === WEB_VTT_CODEC) {
+//     segment.transmuxer.postMessage({
+//       action: 'initMp4WebVttParser',
+//       data: segment.map.bytes
+//     });
+//   }
+// };
 /**
  * Parses an mp4 text segment with the transmuxer and calls the doneFn from
  * the segment loader.
@@ -42766,24 +42773,24 @@ const initMp4Text = (segment, codec) => {
  * @param {Function} doneFn the doneFn passed from the segment loader
  */
 
-const parseMp4TextSegment = (segment, codec, doneFn) => {
-  if (codec === WEB_VTT_CODEC) {
-    workerCallback({
-      action: 'getMp4WebVttText',
-      data: segment.bytes,
-      transmuxer: segment.transmuxer,
-      callback: ({
-                   data,
-                   mp4VttCues
-                 }) => {
-        segment.bytes = data;
-        doneFn(null, segment, {
-          mp4VttCues
-        });
-      }
-    });
-  }
-};
+// const parseMp4TextSegment = (segment, codec, doneFn) => {
+//   if (codec === WEB_VTT_CODEC) {
+//     workerCallback({
+//       action: 'getMp4WebVttText',
+//       data: segment.bytes,
+//       transmuxer: segment.transmuxer,
+//       callback: ({
+//                    data,
+//                    mp4VttCues
+//                  }) => {
+//         segment.bytes = data;
+//         doneFn(null, segment, {
+//           mp4VttCues
+//         });
+//       }
+//     });
+//   }
+// };
 const parseInitSegment = (segment, callback) => {
   const type = detectContainerForBytes(segment.map.bytes); // TODO: We should also handle ts init segments here, but we
   // only know how to parse mp4 init segments at the moment
@@ -43084,15 +43091,15 @@ const handleSegmentBytes = ({
     const {
       tracks
     } = segment.map;
-    const isMp4TextSegment = tracks.text && (!tracks.audio || !tracks.video);
-    if (isMp4TextSegment) {
-      dataFn(segment, {
-        data: bytesAsUint8Array,
-        type: 'text'
-      });
-      parseMp4TextSegment(segment, tracks.text.codec, doneFn);
-      return;
-    }
+    // const isMp4TextSegment = tracks.text && (!tracks.audio || !tracks.video);
+    // if (isMp4TextSegment) {
+    //   dataFn(segment, {
+    //     data: bytesAsUint8Array,
+    //     type: 'text'
+    //   });
+    //   parseMp4TextSegment(segment, tracks.text.codec, doneFn);
+    //   return;
+    // }
     const trackInfo = {
       isFmp4: true,
       hasVideo: !!tracks.video,
