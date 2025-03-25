@@ -117,6 +117,7 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
 
     if (request.response.byteLength === 32) {
         decryptKeyFile(request, function(response) {
+            console.log("response", response)
 
             if (response.byteLength !== 16) {
                 return finishProcessingFn({
@@ -129,10 +130,10 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
 
             const decode = String.fromCharCode.apply(null, new Uint8Array(response));
             const deContent = btoa(decode);
-            // console.log("deContent: ", deContent);
+            console.log("deContent: ", deContent);
 
             const decode16 = String.fromCharCode.apply(null, new Uint16Array(response));
-            // console.log('decode16', decode16);
+            console.log('decode16', decode16);
 
             const buf = new ArrayBuffer(decode16.length * 2); // 2 bytes for each char
             const bufView = new Uint16Array(buf);
@@ -149,7 +150,7 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
             for (let i = 0; i < objects.length; i++) {
                 objects[i].bytes = bytes;
             }
-
+            console.log("end segment", segment)
             return finishProcessingFn(null, segment);
         });
     } else {
