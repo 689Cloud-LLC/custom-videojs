@@ -38,7 +38,8 @@ const decryptKeyFile = (request, callback) => {
 
     if (fileId !== decryptKey.fileId) {
         decryptKey.fileId = fileId;
-        console.log(fileId);
+        console.log("fileId", fileId)
+        console.log("decryptKey.fileId", decryptKey.fileId)
         return getDecryptKey(fileId, function(response) {
             // a string
             decryptKey.key = response;
@@ -103,7 +104,6 @@ const decryptKeyFile = (request, callback) => {
 const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) => {
     console.log("segment", segment)
     console.log("objects", objects)
-    console.log("finishProcessingFn", finishProcessingFn)
     console.log("request", request)
 
     if (request.response.byteLength !== 16 && request.response.byteLength !== 32) {
@@ -117,6 +117,7 @@ const customHandleKeyResponse = (segment, objects, finishProcessingFn, request) 
 
     if (request.response.byteLength === 32) {
         decryptKeyFile(request, function(response) {
+
             if (response.byteLength !== 16) {
                 return finishProcessingFn({
                     status: request.status,
