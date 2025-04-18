@@ -13284,6 +13284,7 @@ class FullscreenToggle extends Button {
   handleClick(event) {
     if (!document.fullscreenElement) {
       // @ts-ignore
+      console.log("request fullscreen");
       document.getElementById('vid-cont').requestFullscreen();
     } else if (document.exitFullscreen) {
       document.exitFullscreen();
