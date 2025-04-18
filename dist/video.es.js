@@ -21806,7 +21806,9 @@ class Player extends Component$1 {
         } else if (this.isFullscreen()) {
           this.exitFullscreen();
         } else {
-          this.requestFullscreen();
+          console.log("handleTechDoubleClick_ request fullscreen");
+          document.getElementById('vid-cont').requestFullscreen();
+          // this.requestFullscreen();
         }
       }
     }
