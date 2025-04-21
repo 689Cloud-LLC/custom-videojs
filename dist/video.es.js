@@ -21804,7 +21804,8 @@ class Player extends Component$1 {
         if (this.options_ !== undefined && this.options_.userActions !== undefined && typeof this.options_.userActions.doubleClick === 'function') {
           this.options_.userActions.doubleClick.call(this, event);
         } else if (this.isFullscreen()) {
-          this.exitFullscreen();
+          // this.exitFullscreen();
+           document.exitFullscreen();
         } else {
           console.log("handleTechDoubleClick_ request fullscreen");
           document.getElementById('vid-cont').requestFullscreen();
