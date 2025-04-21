@@ -21799,6 +21799,17 @@ class Player extends Component$1 {
        * Set to `false` to disable double-click handling
        * Set to a function to substitute an external double-click handler
        */
+      
+       // Custom handle fullscreen have watermark when double-click in video
+      if (!document.fullscreenElement) {
+        // @ts-ignore
+        document.getElementById('vid-cont').requestFullscreen();
+        return
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+        return
+      }
+      
       if (this.options_ === undefined || this.options_.userActions === undefined || this.options_.userActions.doubleClick === undefined || this.options_.userActions.doubleClick !== false) {
         if (this.options_ !== undefined && this.options_.userActions !== undefined && typeof this.options_.userActions.doubleClick === 'function') {
           this.options_.userActions.doubleClick.call(this, event);
